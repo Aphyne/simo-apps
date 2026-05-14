@@ -1,0 +1,17 @@
+{
+  "name": "simo-migrations",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "node migrate.js up",
+    "seed": "node migrate.js seed",
+    "fresh": "node migrate.js fresh",
+    "reset": "node migrate.js reset",
+    "status": "node migrate.js status"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1"
+  }
+}
