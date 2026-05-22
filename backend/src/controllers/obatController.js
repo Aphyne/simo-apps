@@ -220,6 +220,21 @@ async function update(req, res) {
   }
 }
 
+async function getReorderAlert(req, res) {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, kode, nama, satuan, stok, rop, safety_stock, eoq
+       FROM obat
+       WHERE rop IS NOT NULL AND stok <= rop
+       ORDER BY (stok - rop) ASC`
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('obat.getReorderAlert:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
+
 async function getPerhitungan(req, res) {
   try {
     const { rows } = await pool.query('SELECT * FROM obat WHERE id = $1', [req.params.id]);
@@ -264,4 +279,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getById, create, update, remove, getPerhitungan, hitungUlang };
+module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang };

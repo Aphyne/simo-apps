@@ -5,6 +5,15 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const supplierRoutes = require('./routes/supplier');
 const obatRoutes = require('./routes/obat');
+const barangMasukRoutes = require('./routes/barangMasuk');
+const barangKeluarRoutes = require('./routes/barangKeluar');
+const dashboardRoutes = require('./routes/dashboard');
+const monitoringRoutes = require('./routes/monitoring');
+const analisisRoutes = require('./routes/analisis');
+const laporanRoutes = require('./routes/laporan');
+const simulasiRoutes = require('./routes/simulasi');
+const userRoutes = require('./routes/users');
+const pengaturanRoutes = require('./routes/pengaturan');
 
 const app = express();
 
@@ -23,6 +32,15 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/supplier', supplierRoutes);
 app.use('/api/obat', obatRoutes);
+app.use('/api/barang-masuk', barangMasukRoutes);
+app.use('/api/barang-keluar', barangKeluarRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/analisis', analisisRoutes);
+app.use('/api/laporan', laporanRoutes);
+app.use('/api/simulasi', simulasiRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/pengaturan', pengaturanRoutes);
 
 // 404
 app.use((req, res) => {

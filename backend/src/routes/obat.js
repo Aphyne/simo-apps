@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { getAll, getById, create, update, remove, getPerhitungan, hitungUlang } = require('../controllers/obatController');
+const { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang } = require('../controllers/obatController');
 const { verifyToken } = require('../middleware/authMiddleware');
 
 const router = Router();
@@ -7,6 +7,7 @@ const router = Router();
 router.use(verifyToken);
 
 router.get('/', getAll);
+router.get('/reorder-alert', getReorderAlert);
 router.get('/:id/perhitungan', getPerhitungan);
 router.get('/:id', getById);
 router.post('/', create);
