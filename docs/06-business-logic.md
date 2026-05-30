@@ -302,7 +302,33 @@ Contoh: obat dengan `satuan_per_dus = 100` (1 dus = 100 tablet)
 
 ---
 
-## 12. Format Tampilan Step-by-Step (untuk Skripsi)
+## 12. Batasan Model
+
+### TC Menggunakan Q/2 Tanpa Safety Stock
+
+Rumus TC yang diimplementasikan menggunakan model EOQ klasik:
+
+```
+TC = (D/Q × S) + (Q/2 × H)
+```
+
+Komponen biaya simpan `Q/2 × H` menghitung rata-rata **siklus stok** saja, tanpa memasukkan safety stock. Secara teknis, rata-rata stok aktual yang ditahan adalah `Q/2 + SS`, sehingga biaya simpan yang lebih akurat seharusnya:
+
+```
+Biaya simpan aktual = (Q/2 + SS) × H
+```
+
+**Alasan tidak dimasukkan:**
+Safety stock (`SS × H`) adalah biaya tetap — nilainya tidak berubah terhadap Q, sehingga tidak mempengaruhi nilai EOQ optimal hasil optimasi. Untuk keperluan perbandingan TC sebelum vs sesudah EOQ, komponen ini konsisten di kedua sisi sehingga tidak mengubah selisih/penghematan.
+
+**Implikasi untuk skripsi:**
+Nilai TC yang ditampilkan di halaman Analisis Komparatif merepresentasikan **biaya siklus** (cycle cost), bukan biaya total persediaan secara keseluruhan. Ini adalah pendekatan yang umum digunakan pada model EOQ deterministik (Heizer & Render; Tersine).
+
+> Dokumentasikan sebagai batasan penelitian: *"Perhitungan TC menggunakan model EOQ klasik dengan komponen biaya simpan Q/2 × H. Safety stock tidak dimasukkan ke dalam TC karena merupakan biaya tetap yang tidak mempengaruhi optimasi EOQ, melainkan digunakan sebagai dasar perhitungan ROP."*
+
+---
+
+## 13. Format Tampilan Step-by-Step (untuk Skripsi)
 
 Format yang harus ditampilkan di halaman Perhitungan & Laporan EOQ-ROP:
 

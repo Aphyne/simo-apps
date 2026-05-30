@@ -2,15 +2,6 @@
 
 import { useForm, Controller } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useCreateBarangMasuk } from '@/hooks/useBarangMasuk'
 import { useObatList } from '@/hooks/useObat'
 import { useSupplierList } from '@/hooks/useSupplier'
@@ -19,6 +10,17 @@ import type { BarangMasukFormData } from '@/types/obat'
 interface Props {
   onSuccess: () => void
 }
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <label className="text-sm font-medium text-gray-700 mb-1 block">
+      {children}
+      {required && <span className="text-red-500 ml-0.5">*</span>}
+    </label>
+  )
+}
+
+const fieldCls = "h-9 w-full border border-gray-300 rounded-lg px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 
 export default function BarangMasukForm({ onSuccess }: Props) {
   const { data: obatData } = useObatList({ limit: 999 })
@@ -71,115 +73,139 @@ export default function BarangMasukForm({ onSuccess }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Tanggal */}
-      <div className="space-y-1">
-        <Label>Tanggal <span className="text-red-500">*</span></Label>
-        <Input type="date" {...register('tanggal', { required: true })} />
-        {errors.tanggal && <p className="text-xs text-red-500">Tanggal wajib diisi</p>}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+
+      {/* Tanggal + Jumlah Dus */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <FieldLabel required>Tanggal</FieldLabel>
+          <input
+            type="date"
+            className={fieldCls}
+            {...register('tanggal', { required: true })}
+          />
+          {errors.tanggal && <p className="text-xs text-red-500 mt-1">Wajib diisi</p>}
+        </div>
+        <div>
+          <FieldLabel required>Jumlah Dus</FieldLabel>
+          <input
+            type="number"
+            step="any"
+            min="0.01"
+            placeholder="Contoh: 2.5"
+            className={fieldCls}
+            {...register('jumlah_dus', { required: true, min: 0.01, valueAsNumber: true })}
+          />
+          {errors.jumlah_dus && <p className="text-xs text-red-500 mt-1">Harus lebih dari 0</p>}
+        </div>
       </div>
 
+      {jumlahSatuanPreview !== null && (
+        <p className="text-xs text-blue-600 font-medium -mt-1">
+          = {jumlahSatuanPreview} {selectedObat?.satuan} akan ditambahkan ke stok
+        </p>
+      )}
+
       {/* Obat */}
-      <div className="space-y-1">
-        <Label>Obat <span className="text-red-500">*</span></Label>
+      <div>
+        <FieldLabel required>Obat</FieldLabel>
         <Controller
           name="obat_id_str"
           control={control}
           rules={{ required: true }}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih obat..." />
-              </SelectTrigger>
-              <SelectContent>
-                {obatList.map((o) => (
-                  <SelectItem key={o.id} value={String(o.id)}>
-                    {o.nama} <span className="text-gray-400">({o.kode})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select {...field} className={fieldCls}>
+              <option value="">Pilih obat...</option>
+              {obatList.map((o) => (
+                <option key={o.id} value={String(o.id)}>
+                  {o.nama} ({o.kode})
+                </option>
+              ))}
+            </select>
           )}
         />
-        {errors.obat_id_str && <p className="text-xs text-red-500">Obat wajib dipilih</p>}
+        {errors.obat_id_str && <p className="text-xs text-red-500 mt-1">Obat wajib dipilih</p>}
         {selectedObat && (
-          <p className="text-xs text-gray-500">
-            Stok saat ini: <span className="font-medium">{selectedObat.stok} {selectedObat.satuan}</span>
+          <p className="text-xs text-gray-400 mt-1">
+            Stok:{' '}
+            <span className="font-medium text-gray-600">{selectedObat.stok} {selectedObat.satuan}</span>
             {' · '}1 dus = {selectedObat.satuan_per_dus} {selectedObat.satuan}
           </p>
         )}
       </div>
 
-      {/* Jumlah Dus */}
-      <div className="space-y-1">
-        <Label>Jumlah Dus <span className="text-red-500">*</span></Label>
-        <Input
-          type="number"
-          step="any"
-          min="0.01"
-          placeholder="Contoh: 2.5"
-          {...register('jumlah_dus', { required: true, min: 0.01, valueAsNumber: true })}
-        />
-        {errors.jumlah_dus && <p className="text-xs text-red-500">Jumlah harus lebih dari 0</p>}
-        {jumlahSatuanPreview !== null && (
-          <p className="text-xs text-blue-600 font-medium">
-            = {jumlahSatuanPreview} {selectedObat?.satuan} yang akan ditambahkan ke stok
-          </p>
-        )}
+      {/* Divider */}
+      <div className="border-t border-gray-100 pt-1">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Detail Tambahan</p>
       </div>
 
       {/* Supplier */}
-      <div className="space-y-1">
-        <Label>Supplier</Label>
+      <div>
+        <FieldLabel>Supplier</FieldLabel>
         <Controller
           name="supplier_id_str"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih supplier (opsional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Tidak ada —</SelectItem>
-                {(supplierList ?? []).map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>{s.nama}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select {...field} className={fieldCls}>
+              <option value="">Pilih supplier (opsional)</option>
+              <option value="none">— Tidak ada —</option>
+              {(supplierList ?? []).map((s) => (
+                <option key={s.id} value={String(s.id)}>{s.nama}</option>
+              ))}
+            </select>
           )}
         />
       </div>
 
-      {/* No. Faktur & Expired Batch */}
+      {/* No. Faktur + Expired Batch */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label>No. Faktur</Label>
-          <Input placeholder="Opsional" {...register('no_faktur')} />
+        <div>
+          <FieldLabel>No. Faktur</FieldLabel>
+          <input
+            placeholder="Opsional"
+            className={fieldCls}
+            {...register('no_faktur')}
+          />
         </div>
-        <div className="space-y-1">
-          <Label>Expired Batch</Label>
-          <Input type="date" {...register('expired_batch')} />
+        <div>
+          <FieldLabel>Expired Batch</FieldLabel>
+          <input
+            type="date"
+            className={fieldCls}
+            {...register('expired_batch')}
+          />
         </div>
       </div>
 
       {/* Catatan */}
-      <div className="space-y-1">
-        <Label>Catatan</Label>
-        <Input placeholder="Opsional" {...register('catatan')} />
+      <div>
+        <FieldLabel>Catatan</FieldLabel>
+        <input
+          placeholder="Catatan tambahan (opsional)"
+          className={fieldCls}
+          {...register('catatan')}
+        />
       </div>
 
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="button" variant="outline" onClick={() => { reset(); onSuccess() }}>
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+        <Button
+          type="button"
+          variant="outline"
+          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm"
+          onClick={() => { reset(); onSuccess() }}
+        >
           Batal
         </Button>
         <Button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm"
           disabled={createMutation.isPending}
         >
           {createMutation.isPending ? 'Menyimpan...' : 'Simpan'}
         </Button>
       </div>
+
     </form>
   )
 }

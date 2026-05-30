@@ -100,6 +100,29 @@ async function create(req, res) {
       [stok_sesudah, obat_id]
     );
 
+    // Auto-update expired_terdekat → ambil yang paling dekat dari semua barang masuk
+    if (expired_batch) {
+      await pool.query(
+        `UPDATE obat
+         SET expired_terdekat = (
+           SELECT MIN(expired_batch)
+           FROM barang_masuk
+           WHERE obat_id = $1 AND expired_batch IS NOT NULL
+         ),
+         updated_at = NOW()
+         WHERE id = $1`,
+        [obat_id]
+      );
+    }
+
+    // Auto-update supplier → pakai supplier dari barang masuk terbaru
+    if (supplier_id) {
+      await pool.query(
+        'UPDATE obat SET supplier_id = $1, updated_at = NOW() WHERE id = $2',
+        [supplier_id, obat_id]
+      );
+    }
+
     res.status(201).json({
       success: true,
       data: { ...rows[0], nama_obat: obat.nama, kode_obat: obat.kode, satuan: obat.satuan },

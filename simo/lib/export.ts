@@ -10,6 +10,7 @@ export function exportPDF(
   kolom: string[],
   baris: (string | number)[][],
   catatan?: string,
+  kaki?: (string | number)[][],
 ) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
 
@@ -41,6 +42,11 @@ export function exportPDF(
   autoTable(doc, {
     head: [kolom],
     body: baris,
+    ...(kaki && kaki.length > 0 ? {
+      foot: kaki,
+      footStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+      showFoot: 'lastPage',
+    } : {}),
     startY: catatan ? 37 : 33,
     styles: { fontSize: 8, cellPadding: 2 },
     headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
@@ -56,8 +62,10 @@ export function exportExcel(
   namaFile: string,
   kolom: string[],
   baris: (string | number)[][],
+  kaki?: (string | number)[][],
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([kolom, ...baris])
+  const allRows = kaki && kaki.length > 0 ? [...baris, ...kaki] : baris
+  const ws = XLSX.utils.aoa_to_sheet([kolom, ...allRows])
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'Laporan')
 
@@ -65,7 +73,7 @@ export function exportExcel(
   const colWidths = kolom.map((h, i) => ({
     wch: Math.max(
       h.length,
-      ...baris.map((r) => String(r[i] ?? '').length),
+      ...allRows.map((r) => String(r[i] ?? '').length),
     ) + 2,
   }))
   ws['!cols'] = colWidths

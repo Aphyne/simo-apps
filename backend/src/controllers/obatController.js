@@ -223,10 +223,12 @@ async function update(req, res) {
 async function getReorderAlert(req, res) {
   try {
     const { rows } = await pool.query(
-      `SELECT id, kode, nama, satuan, stok, rop, safety_stock, eoq
-       FROM obat
-       WHERE rop IS NOT NULL AND stok <= rop
-       ORDER BY (stok - rop) ASC`
+      `SELECT o.id, o.kode, o.nama, o.satuan, o.stok, o.rop, o.safety_stock, o.eoq,
+              o.nama_supplier, s.whatsapp AS supplier_whatsapp
+       FROM obat o
+       LEFT JOIN supplier s ON s.id = o.supplier_id
+       WHERE o.rop IS NOT NULL AND o.stok <= o.rop
+       ORDER BY (o.stok - o.rop) ASC`
     );
     res.json({ success: true, data: rows });
   } catch (err) {

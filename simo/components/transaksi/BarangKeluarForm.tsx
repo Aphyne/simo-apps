@@ -3,7 +3,6 @@
 import { useForm, Controller } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -19,6 +18,15 @@ const KETERANGAN_OPTIONS = ['Penjualan', 'Retur', 'Rusak', 'Kedaluarsa', 'Lainny
 
 interface Props {
   onSuccess: () => void
+}
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <label className="text-sm font-medium text-gray-700 mb-1 block">
+      {children}
+      {required && <span className="text-red-500 ml-0.5">*</span>}
+    </label>
+  )
 }
 
 export default function BarangKeluarForm({ onSuccess }: Props) {
@@ -45,9 +53,9 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
   })
 
   const watchedObatIdStr = watch('obat_id_str')
-  const watchedJumlah = watch('jumlah')
-  const selectedObat = obatList.find((o) => String(o.id) === watchedObatIdStr)
-  const stokSetelah =
+  const watchedJumlah   = watch('jumlah')
+  const selectedObat    = obatList.find((o) => String(o.id) === watchedObatIdStr)
+  const stokSetelah     =
     selectedObat && watchedJumlah > 0
       ? selectedObat.stok - Number(watchedJumlah)
       : null
@@ -55,11 +63,11 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
   async function onSubmit(values: BarangKeluarFormData & { obat_id_str: string; keterangan_str: string }) {
     if (!values.obat_id_str || !values.keterangan_str) return
     const payload: BarangKeluarFormData = {
-      tanggal: values.tanggal,
-      obat_id: parseInt(values.obat_id_str),
-      jumlah: parseInt(String(values.jumlah)),
+      tanggal:    values.tanggal,
+      obat_id:    parseInt(values.obat_id_str),
+      jumlah:     parseInt(String(values.jumlah)),
       keterangan: values.keterangan_str,
-      catatan: values.catatan || undefined,
+      catatan:    values.catatan || undefined,
     }
     await createMutation.mutateAsync(payload)
     reset()
@@ -67,17 +75,37 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Tanggal */}
-      <div className="space-y-1">
-        <Label>Tanggal <span className="text-red-500">*</span></Label>
-        <Input type="date" {...register('tanggal', { required: true })} />
-        {errors.tanggal && <p className="text-xs text-red-500">Tanggal wajib diisi</p>}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+
+      {/* Tanggal + Jumlah */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <FieldLabel required>Tanggal</FieldLabel>
+          <Input type="date" {...register('tanggal', { required: true })} />
+          {errors.tanggal && <p className="text-xs text-red-500 mt-1">Wajib diisi</p>}
+        </div>
+        <div>
+          <FieldLabel required>Jumlah</FieldLabel>
+          <Input
+            type="number"
+            min="1"
+            placeholder="Contoh: 10"
+            {...register('jumlah', { required: true, min: 1, valueAsNumber: true })}
+          />
+          {errors.jumlah && <p className="text-xs text-red-500 mt-1">Harus lebih dari 0</p>}
+          {stokSetelah !== null && (
+            <p className={`text-xs font-medium mt-1 ${stokSetelah < 0 ? 'text-red-600' : stokSetelah <= (selectedObat?.rop ?? 0) ? 'text-orange-600' : 'text-gray-500'}`}>
+              Stok setelah: {stokSetelah} {selectedObat?.satuan}
+              {stokSetelah < 0 && ' — tidak cukup!'}
+              {stokSetelah >= 0 && stokSetelah <= (selectedObat?.rop ?? 0) && ' — akan di bawah ROP ⚠️'}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Obat */}
-      <div className="space-y-1">
-        <Label>Obat <span className="text-red-500">*</span></Label>
+      <div>
+        <FieldLabel required>Obat</FieldLabel>
         <Controller
           name="obat_id_str"
           control={control}
@@ -90,49 +118,35 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
               <SelectContent>
                 {obatList.map((o) => (
                   <SelectItem key={o.id} value={String(o.id)}>
-                    {o.nama} <span className="text-gray-400">({o.kode})</span>
+                    {o.nama} ({o.kode})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
         />
-        {errors.obat_id_str && <p className="text-xs text-red-500">Obat wajib dipilih</p>}
+        {errors.obat_id_str && <p className="text-xs text-red-500 mt-1">Obat wajib dipilih</p>}
         {selectedObat && (
-          <p className="text-xs text-gray-500">
-            Stok tersedia:{' '}
-            <span className={`font-medium ${selectedObat.stok <= 0 ? 'text-red-600' : 'text-gray-700'}`}>
+          <p className="text-xs text-gray-400 mt-1">
+            Stok:{' '}
+            <span className={`font-medium ${selectedObat.stok <= 0 ? 'text-red-600' : 'text-gray-600'}`}>
               {selectedObat.stok} {selectedObat.satuan}
             </span>
             {selectedObat.rop !== null && (
-              <span className="ml-2 text-gray-400">· ROP: {selectedObat.rop} {selectedObat.satuan}</span>
+              <span className="ml-2">· ROP: {selectedObat.rop} {selectedObat.satuan}</span>
             )}
           </p>
         )}
       </div>
 
-      {/* Jumlah */}
-      <div className="space-y-1">
-        <Label>Jumlah <span className="text-red-500">*</span></Label>
-        <Input
-          type="number"
-          min="1"
-          placeholder="Contoh: 10"
-          {...register('jumlah', { required: true, min: 1, valueAsNumber: true })}
-        />
-        {errors.jumlah && <p className="text-xs text-red-500">Jumlah harus lebih dari 0</p>}
-        {stokSetelah !== null && (
-          <p className={`text-xs font-medium ${stokSetelah < 0 ? 'text-red-600' : stokSetelah <= (selectedObat?.rop ?? 0) ? 'text-orange-600' : 'text-gray-500'}`}>
-            Stok setelah: {stokSetelah} {selectedObat?.satuan}
-            {stokSetelah < 0 && ' — tidak cukup!'}
-            {stokSetelah >= 0 && stokSetelah <= (selectedObat?.rop ?? 0) && ' — akan di bawah ROP ⚠️'}
-          </p>
-        )}
+      {/* Divider */}
+      <div className="border-t border-gray-100 pt-1">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Detail Tambahan</p>
       </div>
 
       {/* Keterangan */}
-      <div className="space-y-1">
-        <Label>Keterangan <span className="text-red-500">*</span></Label>
+      <div>
+        <FieldLabel required>Keterangan</FieldLabel>
         <Controller
           name="keterangan_str"
           control={control}
@@ -150,27 +164,34 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
             </Select>
           )}
         />
-        {errors.keterangan_str && <p className="text-xs text-red-500">Keterangan wajib dipilih</p>}
+        {errors.keterangan_str && <p className="text-xs text-red-500 mt-1">Keterangan wajib dipilih</p>}
       </div>
 
       {/* Catatan */}
-      <div className="space-y-1">
-        <Label>Catatan</Label>
-        <Input placeholder="Opsional" {...register('catatan')} />
+      <div>
+        <FieldLabel>Catatan</FieldLabel>
+        <Input placeholder="Catatan tambahan (opsional)" {...register('catatan')} />
       </div>
 
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="button" variant="outline" onClick={() => { reset(); onSuccess() }}>
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+        <Button
+          type="button"
+          variant="outline"
+          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm"
+          onClick={() => { reset(); onSuccess() }}
+        >
           Batal
         </Button>
         <Button
           type="submit"
-          className="bg-red-600 hover:bg-red-700 text-white"
+          className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm"
           disabled={createMutation.isPending}
         >
           {createMutation.isPending ? 'Menyimpan...' : 'Simpan'}
         </Button>
       </div>
+
     </form>
   )
 }

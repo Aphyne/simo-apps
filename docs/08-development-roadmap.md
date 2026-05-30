@@ -349,20 +349,23 @@ Yang perlu diperhatikan:
 - [ ] Screenshot semua halaman untuk lampiran skripsi
 
 **Opsional (jika waktu cukup):**
-- [ ] **Ubah layout halaman Supplier menjadi card per supplier** — saat ini berbentuk tabel, ingin diubah menjadi tampilan card (satu card per supplier) agar lebih visual dan mudah dibaca
+- [x] **Ubah layout halaman Supplier menjadi card per supplier** — saat ini berbentuk tabel, ingin diubah menjadi tampilan card (satu card per supplier) agar lebih visual dan mudah dibaca
 
 - [ ] Chart "Top 5 Obat Paling Laris" di bagian bawah halaman Barang Keluar
   - Bar chart horizontal, toggle periode: 1 Minggu / 2 Minggu / 1 Bulan
   - Backend: `GET /api/barang-keluar/top-laris?periode=14` → GROUP BY obat_id, SUM jumlah WHERE keterangan='Penjualan'
   - Berguna untuk user yang pesan barang tiap 2 minggu agar tahu obat prioritas
 
-- [ ] **Ringkasan/Summary card per halaman** — tambah bar ringkasan di atas atau bawah tabel tiap halaman agar user langsung tahu kondisi tanpa harus hitung manual:
+- [x] **Ringkasan/Summary card per halaman** *(sebagian selesai — Fase 10 FE Polish)*
+  - ✅ Barang Masuk — 4 StatCard: Transaksi Hari Ini, Transaksi Bulan Ini, Satuan Masuk Bulan Ini, Terakhir Masuk
+  - ✅ Barang Keluar — 4 StatCard: Transaksi Hari Ini, Transaksi Bulan Ini, Satuan Keluar Bulan Ini, Terakhir Keluar
+  - ⬜ Data Obat, Perhitungan EOQ/ROP, Supplier — belum
 
   | Halaman | Ringkasan yang cocok |
   |---|---|
   | **Data Obat** | Total obat terdaftar · Sudah dihitung EOQ: X · Belum dihitung: Y · Perlu reorder sekarang: Z |
-  | **Barang Masuk** | Total transaksi · Total satuan masuk · Total dus masuk (berguna untuk rekap harian/bulanan) |
-  | **Barang Keluar** | Total transaksi · Total satuan keluar · Breakdown: Penjualan X \| Expired Y \| Rusak Z (penting untuk tahu berapa yang terbuang vs terjual) |
+  | **Barang Masuk** | ✅ Selesai — StatCard (transaksi hari ini, bulan ini, satuan masuk, terakhir masuk) |
+  | **Barang Keluar** | ✅ Selesai — StatCard (transaksi hari ini, bulan ini, satuan keluar, terakhir keluar) |
   | **Perhitungan EOQ/ROP** | Total obat terhitung · Total biaya persediaan optimal/tahun (sum total_biaya semua obat) |
   | **Supplier** | Total supplier terdaftar |
   | **Dashboard** | ✅ Sudah ada — 5 stat card, tidak perlu tambah |
@@ -370,15 +373,23 @@ Yang perlu diperhatikan:
   | **Simulasi** | Jumlah skenario tersimpan (sudah tampil di riwayat, tidak perlu card khusus) |
   | **Laporan** | ❌ Tidak perlu — halaman ini khusus cetak/export, bukan analisis |
 
-  Catatan implementasi:
-  - Ringkasan dihitung client-side dari data yang sudah di-fetch, tidak butuh endpoint baru
-  -  Belum diputuskan: default tampilan ringkasan perhari/perminggu/perbulan atau berdasarkan apa — perlu diskusi saat Fase 10. Atau Bisa Periode ringkasan **mengikuti filter tanggal aktif** — bukan hardcode harian/mingguan/bulanan. Jadi kalau user filter "Januari", ringkasan otomatis jadi total Januari. Default tanpa filter = tampil semua
-  - ⚠️ Belum diputuskan: format/bentuk tampilan ringkasan per halaman seperti apa — perlu diskusi saat Fase 10
+- [x] **Filter di halaman Barang Masuk & Barang Keluar:** *(selesai — filter per hari)*
+  - ✅ Filter tanggal **per hari** — input tanggal tunggal, Reset button, timezone-safe (`toLocalYMD`)
+  - ✅ Filter keterangan (Barang Keluar) — dropdown Penjualan/Retur/Rusak/Kedaluarsa/Lainnya
+  - ⬜ Filter kategori obat — belum (backend sudah support, tinggal disambung di frontend)
 
-- [ ] **Filter di halaman Barang Masuk & Barang Keluar:**
-  - Filter tanggal **per hari** (satu input tanggal, bukan range dari–sampai) agar simpel — user tinggal pilih tanggal berapa, langsung tampil transaksi hari itu
-  - Filter kategori obat (dropdown sama seperti di halaman Laporan)
-  - Backend sudah support filter tanggal dan kategori, tinggal disambung di frontend
+- [ ] **Card "Rekomendasi Keputusan" di Dashboard** *(Decision Support — belum implementasi)*
+  - Tujuan: bantu decision making berbasis EOQ/ROP, bukan sekadar monitoring stok
+  - Tampil di row baru dashboard, full-width atau grid 2–3 kolom
+  - **Backend perlu diubah:** query `obat_mendesak` di `dashboardController.js` harus:
+    1. Tambah kolom `demand_harian` ke SELECT (saat ini belum ada)
+    2. Ubah kondisi dari hanya `stok <= rop` menjadi juga include `MENDEKATI_ROP` (stok ≤ ROP × 1.5)
+  - **Frontend:** komponen baru `RekomendCard.tsx` atau kolom tambahan di `ReorderTable.tsx`
+  - Format rekomendasi per baris:
+    - `HARUS_REORDER` (stok ≤ ROP) → 🔴 **"Pesan sekarang: X unit (1 EOQ)"**
+    - `MENDEKATI_ROP` (stok ≤ ROP × 1.5) → 🟡 **"Perkiraan habis dalam ~X hari"** (dihitung dari sisa stok ÷ demand_harian)
+  - Prioritas: urutkan dari yang paling kritis (stok paling rendah relatif terhadap ROP)
+
 
 ---
 

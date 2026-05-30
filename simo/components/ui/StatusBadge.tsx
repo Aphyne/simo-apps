@@ -12,7 +12,7 @@ const config: Record<StatusStok, { label: string; className: string }> = {
   },
   MENDEKATI_ROP: {
     label: 'Mendekati ROP',
-    className: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-yellow-200',
+    className: 'bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200',
   },
   HARUS_REORDER: {
     label: 'Harus Reorder',

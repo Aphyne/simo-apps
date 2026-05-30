@@ -3,9 +3,9 @@
 import { useState, useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
+  Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { FlaskConical, Save, Trash2, ChevronDown, RefreshCw } from 'lucide-react'
+import { Save, Trash2, ChevronDown, RefreshCw, HelpCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useSimpanSimulasi, useDeleteSimulasi, useSimulasiList,
@@ -40,7 +40,7 @@ function Selisih({ val, isRupiah = false }: { val: number | null; isRupiah?: boo
   const plus = val > 0
   const label = isRupiah ? formatRupiah(Math.abs(val)) : Math.abs(val).toLocaleString('id-ID')
   return (
-    <span className={`text-xs font-semibold ${plus ? 'text-red-600' : 'text-green-600'}`}>
+    <span className={`text-xs font-semibold ${plus ? 'text-red-600' : 'text-emerald-600'}`}>
       {plus ? '+' : '-'}{label}
     </span>
   )
@@ -59,13 +59,13 @@ function BarisBanding({
     : `${Math.round(v).toLocaleString('id-ID')}${satuan ? ' ' + satuan : ''}`
 
   return (
-    <tr className="border-b last:border-0">
+    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors last:border-0">
       <td className="px-4 py-2.5 text-sm">
         <div className="font-medium text-gray-700">{label}</div>
         {desc && <div className="text-xs text-gray-400">{desc}</div>}
       </td>
       <td className="px-4 py-2.5 text-sm text-right text-gray-700">{fmt(sekarang)}</td>
-      <td className="px-4 py-2.5 text-sm text-right font-semibold text-blue-700">{fmt(simulasi)}</td>
+      <td className="px-4 py-2.5 text-sm text-right font-semibold text-blue-600">{fmt(simulasi)}</td>
       <td className="px-4 py-2.5 text-sm text-right"><Selisih val={selisih} isRupiah={isRupiah} /></td>
     </tr>
   )
@@ -77,13 +77,13 @@ function RiwayatSimulasi() {
   const deleteMutation = useDeleteSimulasi()
   const [expanded, setExpanded] = useState<number | null>(null)
 
-  if (isLoading) return <div className="h-16 bg-gray-50 animate-pulse rounded-lg mx-5 mb-4" />
+  if (isLoading) return <div className="h-16 animate-pulse bg-gray-100 rounded-xl mx-5 mb-4" />
   if (list.length === 0) return (
-    <p className="text-sm text-gray-400 text-center py-8">Belum ada simulasi yang disimpan.</p>
+    <p className="text-center py-10 text-gray-400 text-sm">Belum ada simulasi yang disimpan.</p>
   )
 
   return (
-    <div className="divide-y">
+    <div className="divide-y divide-gray-100">
       {list.map((s: SimulasiTersimpan) => {
         const p = s.parameter_input
         const h = s.hasil_simulasi
@@ -91,7 +91,7 @@ function RiwayatSimulasi() {
         return (
           <div key={s.id}>
             <div
-              className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 cursor-pointer"
+              className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
               onClick={() => setExpanded(isOpen ? null : s.id)}
             >
               <div>
@@ -107,7 +107,7 @@ function RiwayatSimulasi() {
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(s.id) }}
-                  className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg p-1.5 transition-colors"
                   title="Hapus"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -116,14 +116,14 @@ function RiwayatSimulasi() {
               </div>
             </div>
             {isOpen && (
-              <div className="px-5 pb-4 bg-gray-50">
+              <div className="px-5 pb-4 bg-gray-50/50">
                 <table className="w-full text-sm mt-2">
                   <thead>
-                    <tr className="text-xs text-gray-500">
-                      <th className="text-left py-1.5 font-medium">Metrik</th>
-                      <th className="text-right py-1.5 font-medium">Sekarang</th>
-                      <th className="text-right py-1.5 font-medium text-blue-600">Simulasi</th>
-                      <th className="text-right py-1.5 font-medium">Selisih</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Metrik</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Sekarang</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-blue-600 uppercase tracking-wide">Simulasi</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Selisih</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -148,6 +148,8 @@ export default function SimulasiPage() {
   const obatList = obatData?.data ?? []
   const simpan = useSimpanSimulasi()
 
+  const [showInfo1, setShowInfo1] = useState(false)
+  const [showInfo2, setShowInfo2] = useState(false)
   const [obatId, setObatId]   = useState('')
   const [pct,    setPct]      = useState('0')
   const [ltBaru, setLtBaru]   = useState('')
@@ -260,335 +262,332 @@ export default function SimulasiPage() {
     setNama('')
   }
 
-  // chart data
   const chartMetrik = hasil ? [
-    { metrik: 'EOQ',          Sekarang: Math.round(hasil.sekarang.eoq ?? 0), Simulasi: Math.round(hasil.simulasi.eoq ?? 0) },
+    ...(hasil.sekarang.eoq !== null ? [{ metrik: 'EOQ', Sekarang: Math.round(hasil.sekarang.eoq), Simulasi: Math.round(hasil.simulasi.eoq ?? 0) }] : []),
     { metrik: 'Safety Stock', Sekarang: Math.round(hasil.sekarang.safety_stock), Simulasi: Math.round(hasil.simulasi.safety_stock) },
-    { metrik: 'ROP',          Sekarang: Math.round(hasil.sekarang.rop), Simulasi: Math.round(hasil.simulasi.rop) },
+    { metrik: 'ROP',          Sekarang: Math.round(hasil.sekarang.rop),          Simulasi: Math.round(hasil.simulasi.rop) },
   ] : []
 
+  const inputCls = 'border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
 
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <FlaskConical className="w-5 h-5 text-blue-600" />
-          Simulasi Skenario
-          <span className="text-xs font-medium bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">NOVELTY</span>
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Uji coba "bagaimana jika…" tanpa mengubah data aktual apotek
-        </p>
-      </div>
-
-      {/* Layout utama: kiri | kanan */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-
-        {/* ── KOLOM KIRI ──────────────────────────────────────────────────── */}
-        <div className="space-y-4">
-
-          {/* Pilih obat */}
-          <div className="bg-white rounded-xl border p-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Obat yang Disimulasikan
-            </label>
-            <select
-              value={obatId}
-              onChange={(e) => handleSelectObat(e.target.value)}
-              className="w-full text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">— Pilih obat —</option>
-              {obatList.map((x) => (
-                <option key={x.id} value={x.id}>{x.nama} ({x.kode})</option>
-              ))}
-            </select>
-
-            {/* Nilai saat ini — compact grid */}
-            {o && (
-              <div className="mt-3 rounded-lg bg-gray-50 border px-3 py-2.5">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                  Nilai Saat Ini
-                </p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">D/tahun</span>
-                    <span className="font-medium">{Math.round(o.demand_tahunan ?? 0).toLocaleString('id-ID')} {o.satuan}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">D/hari</span>
-                    <span className="font-medium">{o.demand_harian ?? 0} {o.satuan}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Biaya pesan (S)</span>
-                    <span className="font-medium">{formatRupiah(o.biaya_pesan ?? 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Biaya simpan (H)</span>
-                    <span className="font-medium">{formatRupiah(o.biaya_simpan ?? 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Lead time</span>
-                    <span className="font-medium">{o.lead_time ?? 1} hari</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">σ (std dev)</span>
-                    <span className="font-medium">{o.std_dev_demand ?? 0}</span>
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* ── Pilih obat — selalu full width ──────────────────────────────── */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Obat yang Disimulasikan</p>
+            <p className="text-xs text-gray-400 mt-0.5">Coba-coba skenario, data asli tidak akan berubah.</p>
           </div>
-
-          {/* Parameter skenario */}
-          <div className="bg-white rounded-xl border p-5 space-y-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Parameter Skenario
-            </p>
-
-            {/* Perubahan permintaan */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Perubahan Permintaan (%)
-                {o && (
-                  <span className="ml-2 text-xs text-gray-400 font-normal">
-                    → {Math.round((o.demand_tahunan ?? 0) * (1 + (parseFloat(pct) || 0) / 100)).toLocaleString('id-ID')} {o.satuan}/thn
-                  </span>
-                )}
-              </label>
-              <div className="flex items-center gap-2 flex-wrap">
-                <input
-                  type="number"
-                  value={pct}
-                  onChange={(e) => setPct(e.target.value)}
-                  step="5"
-                  className="w-24 text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-400">%</span>
-                <div className="flex gap-1 flex-wrap">
-                  {[-20, -10, 0, 10, 20, 30].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setPct(String(v))}
-                      className={`text-xs px-2 py-1 rounded border transition-colors ${
-                        pct === String(v) ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 hover:border-blue-400'
-                      }`}
-                    >
-                      {v > 0 ? '+' : ''}{v}%
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Lead time */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lead Time baru <span className="text-gray-400 font-normal">(hari)</span>
-              </label>
-              <input
-                type="number"
-                value={ltBaru}
-                onChange={(e) => setLtBaru(e.target.value)}
-                min="1"
-                className="w-28 text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Biaya pesan */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Biaya sekali pesan baru <span className="text-gray-400 font-normal">(Rp)</span>
-              </label>
-              <input
-                type="number"
-                value={bpBaru}
-                onChange={(e) => setBpBaru(e.target.value)}
-                step="any"
-                className="w-48 text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Biaya simpan */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Biaya simpan baru <span className="text-gray-400 font-normal">(Rp / unit / tahun)</span>
-              </label>
-              <input
-                type="number"
-                value={bsBaru}
-                onChange={(e) => setBsBaru(e.target.value)}
-                step="any"
-                className="w-48 text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Reset */}
-            <button
-              onClick={handleReset}
-              disabled={!o}
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40 transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Reset ke nilai aktual
-            </button>
+          <button
+            onClick={() => setShowInfo1((v) => !v)}
+            className={`p-1.5 rounded-lg transition-colors ${showInfo1 ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+            title="Tentang halaman ini"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </div>
+        {showInfo1 && (
+          <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 leading-relaxed">
+            Halaman ini untuk mencoba skenario bagaimana jika terjadi perubahan. Misalnya menjelang musim hujan saat permintaan obat flu dan batuk mulai naik, atau saat supplier akan menaikkan harga. Coba ubah angkanya, lihat hasilnya, lalu putuskan kapan harus pesan dan berapa banyak. Hasilnya hanya perkiraan dan tidak mengubah data yang sudah ada.
           </div>
-
-          {/* Simpan skenario */}
-          {hasil && (
-            <div className="bg-white rounded-xl border p-5">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Simpan Skenario Ini
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Nama skenario (misal: Penjualan naik 20%)"
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                  className="flex-1 text-sm border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleSimpan}
-                  disabled={simpan.isPending}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0"
-                >
-                  <Save className="w-4 h-4" />
-                  {simpan.isPending ? 'Menyimpan…' : 'Simpan'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Info box */}
-          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-            Simulasi tidak mengubah data aktual obat. Hasil dapat disimpan sebagai catatan untuk pengambilan keputusan.
-          </div>
+        )}
+        <div className="relative">
+          <select
+            value={obatId}
+            onChange={(e) => handleSelectObat(e.target.value)}
+            className={`w-full appearance-none ${inputCls} pr-8`}
+          >
+            <option value="">— Pilih obat untuk memulai simulasi —</option>
+            {obatList.map((x) => (
+              <option key={x.id} value={x.id}>{x.nama} ({x.kode})</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         </div>
 
-        {/* ── KOLOM KANAN ─────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-xl border">
-          <div className="flex items-center justify-between px-5 py-3 border-b">
-            <p className="text-sm font-semibold text-gray-700">Tabel Perbandingan</p>
-            {o && (
-              <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                Live update
-              </span>
-            )}
-          </div>
-
-          {!o ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400 space-y-2">
-              <FlaskConical className="w-8 h-8 text-gray-300" />
-              <p className="text-sm">Pilih obat di kolom kiri</p>
-              <p className="text-xs">Tabel perbandingan akan muncul otomatis</p>
-            </div>
-          ) : (
-            <>
-              {/* Tabel perbandingan */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-gray-50 text-xs text-gray-500">
-                      <th className="px-4 py-2.5 text-left font-medium">Parameter</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Sekarang</th>
-                      <th className="px-4 py-2.5 text-right font-medium text-blue-600">Simulasi</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Selisih</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <BarisBanding
-                      label="Permintaan / tahun" satuan={o.satuan}
-                      sekarang={hasil!.sekarang.demand_tahunan}
-                      simulasi={hasil!.simulasi.demand_tahunan}
-                      selisih={hasil!.simulasi.demand_tahunan - hasil!.sekarang.demand_tahunan}
-                    />
-                    <BarisBanding
-                      label="EOQ" desc="jumlah pesan optimal" satuan={o.satuan}
-                      sekarang={hasil!.sekarang.eoq}
-                      simulasi={hasil!.simulasi.eoq}
-                      selisih={hasil!.selisih.eoq}
-                    />
-                    <BarisBanding
-                      label="Safety Stock" desc="stok pengaman" satuan={o.satuan}
-                      sekarang={hasil!.sekarang.safety_stock}
-                      simulasi={hasil!.simulasi.safety_stock}
-                      selisih={hasil!.selisih.safety_stock}
-                    />
-                    <BarisBanding
-                      label="ROP" desc="titik pemesanan ulang" satuan={o.satuan}
-                      sekarang={hasil!.sekarang.rop}
-                      simulasi={hasil!.simulasi.rop}
-                      selisih={hasil!.selisih.rop}
-                    />
-                    <BarisBanding
-                      label="Total Biaya / tahun" isRupiah
-                      sekarang={hasil!.sekarang.total_biaya}
-                      simulasi={hasil!.simulasi.total_biaya}
-                      selisih={hasil!.selisih.total_biaya}
-                    />
-                  </tbody>
-                </table>
+        {/* Nilai saat ini — muncul setelah pilih */}
+        {o && (
+          <div className="mt-3 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Nilai Saat Ini</p>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-x-4 gap-y-1 text-xs">
+              <div>
+                <p className="text-gray-400">D/tahun</p>
+                <p className="font-medium text-gray-700">{Math.round(o.demand_tahunan ?? 0).toLocaleString('id-ID')} {o.satuan}</p>
               </div>
+              <div>
+                <p className="text-gray-400">D/hari</p>
+                <p className="font-medium text-gray-700">{o.demand_harian ?? 0} {o.satuan}</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Biaya pesan (S)</p>
+                <p className="font-medium text-gray-700">{formatRupiah(o.biaya_pesan ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Biaya simpan (H)</p>
+                <p className="font-medium text-gray-700">{formatRupiah(o.biaya_simpan ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Lead time</p>
+                <p className="font-medium text-gray-700">{o.lead_time ?? 1} hari</p>
+              </div>
+              <div>
+                <p className="text-gray-400">σ (std dev)</p>
+                <p className="font-medium text-gray-700">{o.std_dev_demand ?? 0}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-              {/* Interpretasi singkat */}
-              {hasil && (hasil.selisih.eoq !== null || hasil.selisih.total_biaya !== null) && (
-                <div className="mx-4 my-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800">
-                  <ul className="space-y-0.5 list-disc list-inside">
-                    {hasil.selisih.eoq !== null && Math.abs(hasil.selisih.eoq) >= 0.5 && (
-                      <li>
-                        Perlu memesan <strong>{Math.abs(Math.round(hasil.selisih.eoq))} {o.satuan}{' '}
-                        {hasil.selisih.eoq > 0 ? 'lebih banyak' : 'lebih sedikit'}</strong> per pemesanan.
-                      </li>
-                    )}
-                    {Math.abs(hasil.selisih.rop) >= 0.5 && (
-                      <li>
-                        Titik pesan ulang (ROP) {hasil.selisih.rop > 0 ? 'naik' : 'turun'} menjadi{' '}
-                        <strong>{Math.round(hasil.simulasi.rop)} {o.satuan}</strong>.
-                      </li>
-                    )}
-                    {hasil.selisih.total_biaya !== null && Math.abs(hasil.selisih.total_biaya) >= 1 && (
-                      <li>
-                        Biaya persediaan/tahun{' '}
-                        <strong>{hasil.selisih.total_biaya > 0 ? 'naik' : 'turun'}{' '}
-                        {formatRupiah(Math.abs(hasil.selisih.total_biaya))}</strong>.
-                      </li>
-                    )}
-                  </ul>
+      {/* ── Parameter + Perbandingan — hanya muncul setelah pilih obat ─── */}
+      {o && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          {/* KOLOM KIRI — Parameter */}
+          <div className="flex flex-col gap-4 h-full">
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4 flex-1">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-700">Parameter Skenario</p>
+                <button
+                  onClick={() => setShowInfo2((v) => !v)}
+                  className={`p-1.5 rounded-lg transition-colors ${showInfo2 ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                  title="Penjelasan parameter"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+              </div>
+              {showInfo2 && (
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 leading-relaxed space-y-2">
+                  <p><span className="font-semibold">Perubahan Permintaan.</span> Naikkan jika perkiraan bulan depan penjualan lebih ramai (misal musim hujan), turunkan jika diperkirakan sepi. Misal +10% artinya jika biasanya terjual 100/bulan, jadi 110/bulan. Sistem akan hitung ulang berapa jumlah pesanan dan kapan harus pesan agar stok tidak kurang dan tidak berlebihan.</p>
+                  <p><span className="font-semibold">Lead Time.</span> Berapa hari dari pesan ke supplier sampai obat tiba. Kalau supplier pernah telat, coba naikkan angkanya, sistem akan tunjukkan apakah stok pengaman masih cukup.</p>
+                  <p><span className="font-semibold">Biaya sekali pesan.</span> Ongkir ditambah biaya admin per pemesanan. Kalau ongkir naik, sistem hitung ulang apakah lebih hemat pesan sedikit-sering atau banyak-jarang.</p>
+                  <p><span className="font-semibold">Biaya simpan.</span> Biaya menyimpan 1 unit obat selama setahun (listrik, ruang, dll). Kalau gudang penuh dan ada biaya tambahan, ubah angkanya dan lihat pengaruhnya ke jumlah pesanan paling hemat.</p>
                 </div>
               )}
 
-              {/* Chart EOQ · SS · ROP */}
-              <div className="px-4 pb-4">
-                <p className="text-xs text-gray-500 font-medium mb-1">EOQ · SS · ROP — Sekarang vs Skenario</p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={chartMetrik} margin={{ top: 2, right: 4, left: -10, bottom: 2 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="metrik" tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                    <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                    <Tooltip
-                      contentStyle={{ fontSize: 11, borderRadius: 6 }}
-                      formatter={(v: number) => [`${v} ${o.satuan}`, '']}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="Sekarang" fill="#94a3b8" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="Simulasi"  fill="#2563eb" radius={[3, 3, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Perubahan Permintaan (%)
+                  <span className="ml-2 text-xs text-gray-400 font-normal">
+                    → {Math.round((o.demand_tahunan ?? 0) * (1 + (parseFloat(pct) || 0) / 100)).toLocaleString('id-ID')} {o.satuan}/thn
+                  </span>
+                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="number"
+                    value={pct}
+                    onChange={(e) => setPct(e.target.value)}
+                    step="5"
+                    className={`w-24 ${inputCls}`}
+                  />
+                  <span className="text-sm text-gray-400">%</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {[-20, -10, 0, 10, 20, 30].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setPct(String(v))}
+                        className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                          pct === String(v)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {v > 0 ? '+' : ''}{v}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </>
-          )}
-        </div>
-      </div>
 
-      {/* Riwayat tersimpan */}
-      <div className="bg-white rounded-xl border">
-        <div className="px-5 py-3 border-b flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-700">Riwayat Skenario Tersimpan</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Klik baris untuk lihat detail</p>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Lead Time baru <span className="text-gray-400 font-normal">(hari)</span>
+                </label>
+                <input
+                  type="number"
+                  value={ltBaru}
+                  onChange={(e) => setLtBaru(e.target.value)}
+                  min="1"
+                  className={`w-28 ${inputCls}`}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Biaya sekali pesan baru <span className="text-gray-400 font-normal">(Rp)</span>
+                </label>
+                <input
+                  type="number"
+                  value={bpBaru}
+                  onChange={(e) => setBpBaru(e.target.value)}
+                  step="any"
+                  className={`w-48 ${inputCls}`}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Biaya simpan baru <span className="text-gray-400 font-normal">(Rp / unit / tahun)</span>
+                </label>
+                <input
+                  type="number"
+                  value={bsBaru}
+                  onChange={(e) => setBsBaru(e.target.value)}
+                  step="any"
+                  className={`w-48 ${inputCls}`}
+                />
+              </div>
+
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Reset ke nilai aktual
+              </button>
+            </div>
+
+            {/* Simpan skenario */}
+            {hasil && (
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <p className="text-sm font-semibold text-gray-700 mb-3">Simpan Skenario Ini</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Nama skenario (misal: Penjualan naik 20%)"
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    className={`flex-1 ${inputCls}`}
+                  />
+                  <button
+                    onClick={handleSimpan}
+                    disabled={simpan.isPending}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0"
+                  >
+                    <Save className="w-4 h-4" />
+                    {simpan.isPending ? 'Menyimpan…' : 'Simpan'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* KOLOM KANAN — Tabel + Chart */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+              <p className="text-sm font-semibold text-gray-700">Tabel Perbandingan</p>
+              <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full">
+                Live update
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Parameter</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Sekarang</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-blue-600 uppercase tracking-wide">Simulasi</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Selisih</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  <BarisBanding
+                    label="Permintaan / tahun" satuan={o.satuan}
+                    sekarang={hasil!.sekarang.demand_tahunan}
+                    simulasi={hasil!.simulasi.demand_tahunan}
+                    selisih={hasil!.simulasi.demand_tahunan - hasil!.sekarang.demand_tahunan}
+                  />
+                  <BarisBanding
+                    label="EOQ" desc="jumlah pesan optimal" satuan={o.satuan}
+                    sekarang={hasil!.sekarang.eoq}
+                    simulasi={hasil!.simulasi.eoq}
+                    selisih={hasil!.selisih.eoq}
+                  />
+                  <BarisBanding
+                    label="Safety Stock" desc="stok pengaman" satuan={o.satuan}
+                    sekarang={hasil!.sekarang.safety_stock}
+                    simulasi={hasil!.simulasi.safety_stock}
+                    selisih={hasil!.selisih.safety_stock}
+                  />
+                  <BarisBanding
+                    label="ROP" desc="titik pemesanan ulang" satuan={o.satuan}
+                    sekarang={hasil!.sekarang.rop}
+                    simulasi={hasil!.simulasi.rop}
+                    selisih={hasil!.selisih.rop}
+                  />
+                  <BarisBanding
+                    label="Total Biaya / tahun" isRupiah
+                    sekarang={hasil!.sekarang.total_biaya}
+                    simulasi={hasil!.simulasi.total_biaya}
+                    selisih={hasil!.selisih.total_biaya}
+                  />
+                </tbody>
+              </table>
+            </div>
+
+            {/* Interpretasi singkat — hanya tampil jika ada perubahan bermakna */}
+            {hasil && (() => {
+              const lines = [
+                hasil.selisih.eoq !== null && Math.abs(hasil.selisih.eoq) >= 0.5
+                  ? <p key="eoq">Jumlah pesanan optimal <strong>{hasil.selisih.eoq > 0 ? 'naik' : 'turun'} {Math.abs(Math.round(hasil.selisih.eoq))} {o.satuan}</strong> per pemesanan.</p>
+                  : null,
+                Math.abs(hasil.selisih.rop) >= 0.5
+                  ? <p key="rop">Titik pesan ulang (ROP) {hasil.selisih.rop > 0 ? 'naik' : 'turun'} menjadi <strong>{Math.round(hasil.simulasi.rop)} {o.satuan}</strong>.</p>
+                  : null,
+                hasil.selisih.total_biaya !== null && Math.abs(hasil.selisih.total_biaya) >= 1
+                  ? <p key="biaya">Biaya persediaan per tahun <strong>{hasil.selisih.total_biaya > 0 ? 'naik' : 'turun'} {formatRupiah(Math.abs(hasil.selisih.total_biaya))}</strong>.</p>
+                  : null,
+              ].filter(Boolean)
+              return lines.length > 0 ? (
+                <div className="mx-4 my-3 rounded-lg bg-orange-100 border border-orange-200 px-3 py-2.5 text-xs text-orange-700 space-y-1">
+                  {lines}
+                </div>
+              ) : null
+            })()}
+
+            {/* Chart */}
+            <div className="border-t border-gray-100 bg-gray-50/50 px-5 pt-4 pb-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-semibold text-gray-500">Perbandingan Sekarang vs Skenario</p>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <span className="w-2 h-2 rounded-full bg-[#94a3b8] inline-block flex-shrink-0" />
+                    Sekarang
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block flex-shrink-0" />
+                    Simulasi
+                  </span>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={190}>
+                <BarChart data={chartMetrik} margin={{ top: 4, right: 8, left: -8, bottom: 0 }} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <XAxis dataKey="metrik" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, fontSize: 12, border: '1px solid #e5e7eb', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+                    formatter={(v: number) => [`${v} ${o.satuan}`, '']}
+                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                  />
+                  <Bar dataKey="Sekarang" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Simulasi"  fill="#2563eb" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ── Riwayat — selalu full width di bawah ─────────────────────────── */}
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-700">Riwayat Skenario Tersimpan</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Klik baris untuk lihat detail</p>
         </div>
         <RiwayatSimulasi />
       </div>

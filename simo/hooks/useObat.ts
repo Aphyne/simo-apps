@@ -100,7 +100,7 @@ export function useReorderAlerts() {
   return useQuery({
     queryKey: ['reorder-alerts'],
     queryFn: async () => {
-      const res = await api.get<{ success: boolean; data: { id: number; kode: string; nama: string; satuan: string; stok: number; rop: number }[] }>('/obat/reorder-alert')
+      const res = await api.get<{ success: boolean; data: { id: number; kode: string; nama: string; satuan: string; stok: number; rop: number; eoq: number | null; nama_supplier: string | null; supplier_whatsapp: string | null }[] }>('/obat/reorder-alert')
       return res.data.data
     },
     refetchInterval: 60000,

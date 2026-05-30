@@ -34,8 +34,8 @@ export default function TrenPermintaanChart({ data }: Props) {
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#6b7280' }} />
-        <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} width={40} />
+        <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+        <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} width={40} />
         <Tooltip
           formatter={(value: number) => [`${value.toLocaleString('id-ID')} unit`, 'Total Penjualan']}
           labelStyle={{ fontSize: 12 }}
