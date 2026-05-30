@@ -212,6 +212,40 @@ Willow style: white bg, colored icon circle, dark value text. Semua card konsist
 "text-center py-10 text-gray-400 text-sm"
 ```
 
+### Pagination
+Selalu muncul di footer tabel, hanya tampil jika `last_page > 1`.
+
+```tsx
+// Wrapper footer
+"flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50/50"
+
+// Teks kiri — range item
+"text-xs text-gray-500 tabular-nums"
+// Format: "{(page-1)*limit+1}–{Math.min(page*limit, total)} dari {total} {entitas}"
+
+// Tombol Prev / Next
+"px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+
+// Tombol nomor halaman — inactive
+"min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
+
+// Tombol nomor halaman — active
+"min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white border border-blue-600"
+
+// Ellipsis
+"px-1.5 text-xs text-gray-400 select-none"
+```
+
+Helper `getPageNumbers` wajib dipakai di semua tabel:
+```ts
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  if (current <= 4) return [1, 2, 3, 4, 5, '...', total]
+  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
+  return [1, '...', current - 1, current, current + 1, '...', total]
+}
+```
+
 ---
 
 ## 5. SIMO Domain — Pemetaan Per Halaman
@@ -276,17 +310,17 @@ Update checklist ini setiap kali sebuah halaman sudah di-acc user.
 
 - [x] Layout (Sidebar + Header)
 - [x] Dashboard
-- [ ] Data Obat (list, tambah, detail, edit)
-- [ ] Barang Masuk
-- [ ] Barang Keluar
+- [x] Data Obat (list, tambah, detail, edit)
+- [x] Barang Masuk
+- [x] Barang Keluar
 - [ ] Monitoring
-- [ ] Perhitungan EOQ/ROP
-- [ ] Laporan
-- [ ] Simulasi
-- [ ] Analisis Komparatif
-- [ ] Supplier (list, tambah, edit)
-- [ ] Manajemen User
-- [ ] Pengaturan
+- [x] Perhitungan EOQ/ROP
+- [x] Laporan
+- [x] Simulasi
+- [x] Analisis Komparatif
+- [x] Supplier (list, tambah, edit)
+- [x] Manajemen User
+- [x] Pengaturan
 - [ ] Login
 
 ---

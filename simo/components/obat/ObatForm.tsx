@@ -54,9 +54,14 @@ function Info_({text}: { text: string }) {
 }
 
 // ─── Section header ───────────────────────────────────────────────────────────
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <h3 className="text-sm font-semibold text-gray-700 border-b pb-2 mb-4">{children}</h3>
+    <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-gray-100">
+      <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+        {num}
+      </span>
+      <h3 className="text-sm font-semibold text-gray-700">{children}</h3>
+    </div>
   )
 }
 
@@ -152,11 +157,11 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
       {/* ── SEKSI 1: INFORMASI DASAR ─────────────────────────────────────── */}
-      <div>
-        <SectionTitle>Informasi Dasar</SectionTitle>
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <SectionTitle num={1}>Informasi Dasar</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="md:col-span-2 space-y-1.5">
@@ -197,29 +202,33 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
 
           <div className="space-y-1.5">
             <Label htmlFor="satuan_per_dus">
-              Isi per Dus
+              Isi per Dus <span className="text-red-500">*</span>
               <Info_ text={`Berapa ${satuanValue || 'satuan'} dalam 1 dus/box kemasan besar. Contoh: 1 dus Paracetamol = 100 tablet, isi "100".`} />
             </Label>
             <Input id="satuan_per_dus" type="number" min={1}
-              {...register('satuan_per_dus', { valueAsNumber: true, min: 1 })} />
+              {...register('satuan_per_dus', { valueAsNumber: true, min: { value: 1, message: 'Isi per dus minimal 1' }, required: 'Isi per dus wajib diisi' })} />
+            {errors.satuan_per_dus && <p className="text-xs text-red-500">{errors.satuan_per_dus.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="stok">Stok Awal
-              <Info_ text={`Jumlah stok saat ini dalam satuan terkecil (${satuanValue || 'satuan'}), bukan dus.`} />
+            <Label htmlFor="stok">
+              Stok Awal <span className="text-red-500">*</span>
+              <Info_ text={`Jumlah stok saat ini dalam satuan terkecil (${satuanValue || 'satuan'}), bukan dus. Isi 0 jika obat belum tersedia.`} />
             </Label>
             <Input id="stok" type="number" min={0}
-              {...register('stok', { valueAsNumber: true, min: 0 })} />
+              {...register('stok', { valueAsNumber: true, min: { value: 0, message: 'Stok tidak boleh negatif' } })} />
+            {errors.stok && <p className="text-xs text-red-500">{errors.stok.message}</p>}
           </div>
 
           {/* Harga Beli */}
           <div className="space-y-1.5">
             <Label htmlFor="harga_beli">
-              Harga Beli per {satuanValue || 'Satuan'} (Rp)
+              Harga Beli per {satuanValue || 'Satuan'} (Rp) <span className="text-red-500">*</span>
               <Info_ text={`Harga beli per ${satuanValue || 'satuan terkecil'}, BUKAN per dus. Contoh: jika 1 dus 100 tablet seharga Rp 50.000, maka harga beli per tablet = Rp 500.`} />
             </Label>
             <Input id="harga_beli" type="number" min={0} step={10}
-              {...register('harga_beli', { valueAsNumber: true, min: 0 })} />
+              {...register('harga_beli', { valueAsNumber: true, min: { value: 1, message: 'Harga beli harus lebih dari 0' }, required: 'Harga beli wajib diisi' })} />
+            {errors.harga_beli && <p className="text-xs text-red-500">{errors.harga_beli.message}</p>}
           </div>
 
           {/* Harga Jual */}
@@ -236,8 +245,8 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── SEKSI 2: DATA PERMINTAAN ─────────────────────────────────────── */}
-      <div>
-        <SectionTitle>Data Permintaan (Demand)</SectionTitle>
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <SectionTitle num={2}>Data Permintaan (Demand)</SectionTitle>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -393,8 +402,8 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── SEKSI 3: PARAMETER EOQ ───────────────────────────────────────── */}
-      <div>
-        <SectionTitle>Parameter Kalkulasi EOQ/ROP</SectionTitle>
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <SectionTitle num={3}>Parameter Kalkulasi EOQ/ROP</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Biaya Pesan */}
@@ -504,8 +513,8 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── SEKSI 4: INFO TAMBAHAN ───────────────────────────────────────── */}
-      <div>
-        <SectionTitle>Informasi Tambahan</SectionTitle>
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <SectionTitle num={4}>Informasi Tambahan</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="space-y-1.5">
@@ -535,12 +544,13 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── TOMBOL AKSI ──────────────────────────────────────────────────── */}
-      <div className="flex gap-3 pt-2 border-t">
-        <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
-          {isLoading ? 'Menyimpan...' : submitLabel}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => { window.location.href = '/obat' }}>
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+        <Button type="button" variant="outline" onClick={() => { window.location.href = '/obat' }}
+          className="border-gray-300 text-gray-700 hover:bg-gray-50">
           Batal
+        </Button>
+        <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[110px]">
+          {isLoading ? 'Menyimpan...' : submitLabel}
         </Button>
       </div>
 

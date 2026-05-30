@@ -6,6 +6,7 @@ interface StatCardProps {
   sublabel?: string
   icon: LucideIcon
   warna: 'blue' | 'red' | 'green' | 'orange' | 'purple'
+  featured?: boolean
 }
 
 const warnaMap = {
@@ -16,7 +17,22 @@ const warnaMap = {
   purple: { iconBg: 'bg-purple-100',  iconColor: 'text-purple-600' },
 }
 
-export default function StatCard({ label, value, sublabel, icon: Icon, warna }: StatCardProps) {
+export default function StatCard({ label, value, sublabel, icon: Icon, warna, featured }: StatCardProps) {
+  if (featured) {
+    return (
+      <div className="rounded-xl bg-blue-600 p-5 shadow-md flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-blue-100 font-medium truncate">{label}</p>
+          <p className="text-2xl font-bold leading-tight text-white">{value}</p>
+          {sublabel && <p className="text-xs text-blue-200 mt-0.5">{sublabel}</p>}
+        </div>
+      </div>
+    )
+  }
+
   const w = warnaMap[warna]
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">

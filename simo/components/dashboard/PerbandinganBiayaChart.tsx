@@ -25,8 +25,8 @@ interface Props {
 export default function PerbandinganBiayaChart({ data }: Props) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
-        Belum ada data biaya (isi biaya pesan & simpan pada data obat)
+      <div className="text-center py-10 text-gray-400 text-sm">
+        Belum ada data biaya — isi biaya pesan &amp; simpan pada data obat.
       </div>
     )
   }
@@ -35,9 +35,9 @@ export default function PerbandinganBiayaChart({ data }: Props) {
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis dataKey="nama" tick={{ fontSize: 10, fill: '#6b7280' }} />
+        <XAxis dataKey="nama" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
         <YAxis
-          tick={{ fontSize: 10, fill: '#6b7280' }}
+          tick={{ fontSize: 10, fill: '#9CA3AF' }}
           width={60}
           tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
         />
