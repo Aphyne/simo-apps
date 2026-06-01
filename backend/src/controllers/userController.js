@@ -5,7 +5,7 @@ const pool = require('../db/pool');
 async function getUsers(req, res) {
   try {
     const { rows } = await pool.query(`
-      SELECT u.id, u.username, u.nama, u.role, u.is_active, u.created_at,
+      SELECT u.id, u.username, u.nama, u.email, u.role, u.is_active, u.created_at,
              (SELECT COUNT(*) FROM barang_masuk WHERE user_id = u.id) +
              (SELECT COUNT(*) FROM barang_keluar WHERE user_id = u.id) AS jumlah_transaksi
       FROM users u
@@ -20,7 +20,7 @@ async function getUsers(req, res) {
 
 // POST /api/users
 async function createUser(req, res) {
-  const { username, password, nama, role } = req.body;
+  const { username, password, nama, role, email } = req.body;
   if (!username || !password || !nama || !role) {
     return res.status(400).json({ success: false, message: 'Semua field wajib diisi' });
   }
@@ -33,13 +33,13 @@ async function createUser(req, res) {
   try {
     const hashed = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      'INSERT INTO users (username, password, nama, role) VALUES ($1, $2, $3, $4) RETURNING id, username, nama, role, is_active, created_at',
-      [username, hashed, nama, role]
+      'INSERT INTO users (username, password, nama, role, email) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, nama, email, role, is_active, created_at',
+      [username, hashed, nama, role, email || null]
     );
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
     if (err.code === '23505') {
-      return res.status(400).json({ success: false, message: 'Username sudah digunakan' });
+      return res.status(400).json({ success: false, message: 'Username atau email sudah digunakan' });
     }
     console.error('users.create:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -49,22 +49,21 @@ async function createUser(req, res) {
 // PUT /api/users/:id
 async function updateUser(req, res) {
   const { id } = req.params;
-  const { nama, role, is_active } = req.body;
+  const { nama, role, is_active, email } = req.body;
   if (!nama || !role) {
     return res.status(400).json({ success: false, message: 'Nama dan role wajib diisi' });
   }
   if (!['admin', 'staf'].includes(role)) {
     return res.status(400).json({ success: false, message: 'Role tidak valid' });
   }
-  // Tidak boleh non-aktifkan diri sendiri
   if (req.user.id === parseInt(id) && is_active === false) {
     return res.status(400).json({ success: false, message: 'Tidak bisa menonaktifkan akun sendiri' });
   }
   try {
     const { rows } = await pool.query(
-      `UPDATE users SET nama=$1, role=$2, is_active=$3, updated_at=NOW()
-       WHERE id=$4 RETURNING id, username, nama, role, is_active, created_at`,
-      [nama, role, is_active ?? true, id]
+      `UPDATE users SET nama=$1, role=$2, is_active=$3, email=$4, updated_at=NOW()
+       WHERE id=$5 RETURNING id, username, nama, email, role, is_active, created_at`,
+      [nama, role, is_active ?? true, email || null, id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User tidak ditemukan' });

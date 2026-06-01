@@ -14,6 +14,8 @@ import {
 import BarangKeluarForm from '@/components/transaksi/BarangKeluarForm'
 import { useBarangKeluarList } from '@/hooks/useBarangKeluar'
 import { formatTanggalPendek } from '@/lib/utils'
+import BarangKeluarTrendChart from '@/components/transaksi/BarangKeluarTrendChart'
+import BarangKeluarPerObatChart from '@/components/transaksi/BarangKeluarPerObatChart'
 import type { BarangKeluar } from '@/types/obat'
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -128,6 +130,13 @@ export default function BarangKeluarTable() {
           </>
         )}
       </div>
+
+      {/* Charts Row 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <BarangKeluarTrendChart allList={allList} isLoading={summaryLoading} />
+        <BarangKeluarPerObatChart allList={allList} isLoading={summaryLoading} />
+      </div>
+
 
       {/* Controls row */}
       <div className="flex items-center gap-3 flex-wrap">

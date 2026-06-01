@@ -8,6 +8,7 @@ export interface UserItem {
   id: number
   username: string
   nama: string
+  email: string | null
   role: 'admin' | 'staf'
   is_active: boolean
   created_at: string
@@ -27,7 +28,7 @@ export function useUserList() {
 export function useCreateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: { username: string; password: string; nama: string; role: string }) => {
+    mutationFn: async (payload: { username: string; password: string; nama: string; role: string; email?: string }) => {
       const res = await api.post('/users', payload)
       return res.data.data as UserItem
     },
@@ -44,7 +45,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...payload }: { id: number; nama: string; role: string; is_active: boolean }) => {
+    mutationFn: async ({ id, ...payload }: { id: number; nama: string; role: string; is_active: boolean; email?: string }) => {
       const res = await api.put(`/users/${id}`, payload)
       return res.data.data as UserItem
     },

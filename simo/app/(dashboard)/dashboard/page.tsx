@@ -4,13 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pill, AlertTriangle, ShoppingCart, ArrowLeftRight, CalendarX, PackagePlus, PackageMinus, PlusCircle } from 'lucide-react'
 import StatCard from '@/components/dashboard/StatCard'
-import ReorderTable from '@/components/dashboard/ReorderTable'
 import TrenPermintaanChart from '@/components/dashboard/TrenPermintaanChart'
+import DaftarExpiredCard from '@/components/dashboard/DaftarExpiredCard'
+import StokMenipisCard from '@/components/dashboard/StokMenipisCard'
 import BarangMasukForm from '@/components/transaksi/BarangMasukForm'
 import BarangKeluarForm from '@/components/transaksi/BarangKeluarForm'
 import ObatForm from '@/components/obat/ObatForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useDashboardSummary, useTrenPermintaan } from '@/hooks/useDashboard'
+import AktivitasHariIni from '@/components/dashboard/AktivitasHariIni'
 import { useCreateObat } from '@/hooks/useObat'
 import type { ObatFormData } from '@/types/obat'
 
@@ -22,7 +24,8 @@ export default function DashboardPage() {
   const createObatMutation = useCreateObat()
 
   const cards = summary?.cards
-  const obatMendesak = summary?.obat_mendesak ?? []
+  const daftarExpired = summary?.daftar_expired ?? []
+  const stokMenipis = summary?.stok_menipis ?? []
 
   const [openMasuk, setOpenMasuk]           = useState(false)
   const [openKeluar, setOpenKeluar]         = useState(false)
@@ -65,29 +68,11 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Row 2: Obat Mendesak (2/3) + Aksi Cepat (1/3) ──────────── */}
+      {/* ── Row 2: Daftar Expired + Stok Menipis + Aksi Cepat ───────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {/* Obat Perlu Reorder */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            Obat Perlu Reorder
-            {obatMendesak.length > 0 && (
-              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded-full">
-                {obatMendesak.length}
-              </span>
-            )}
-          </h2>
-          {loadingSummary ? (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 bg-gray-100 animate-pulse rounded-lg" />
-              ))}
-            </div>
-          ) : (
-            <ReorderTable data={obatMendesak} />
-          )}
-        </div>
+        <StokMenipisCard data={stokMenipis} isLoading={loadingSummary} />
+        <DaftarExpiredCard data={daftarExpired} isLoading={loadingSummary} />
 
         {/* Aksi Cepat */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-4">
@@ -119,7 +104,6 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Expired warning */}
           {(cards?.obat_expiring ?? 0) > 0 && (
             <div className="mt-auto p-3 rounded-lg bg-orange-50 border border-orange-200">
               <p className="text-xs font-semibold text-orange-700">
@@ -136,16 +120,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Row 3: Tren Permintaan ───────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">
-          Tren Permintaan — 6 Bulan Terakhir
-        </h2>
-        {loadingTren ? (
-          <div className="h-52 bg-gray-100 animate-pulse rounded-lg" />
-        ) : (
-          <TrenPermintaanChart data={tren ?? []} />
-        )}
+      {/* ── Row 3: Tren Permintaan + Aktivitas Hari Ini ─────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+            Tren Permintaan — 6 Bulan Terakhir
+          </h2>
+          {loadingTren ? (
+            <div className="h-52 bg-gray-100 animate-pulse rounded-lg" />
+          ) : (
+            <TrenPermintaanChart data={tren ?? []} />
+          )}
+        </div>
+        <AktivitasHariIni />
       </div>
 
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
