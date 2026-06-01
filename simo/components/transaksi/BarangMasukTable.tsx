@@ -14,6 +14,8 @@ import {
 import BarangMasukForm from '@/components/transaksi/BarangMasukForm'
 import { useBarangMasukList } from '@/hooks/useBarangMasuk'
 import { formatTanggalPendek } from '@/lib/utils'
+import BarangMasukTrendChart from '@/components/transaksi/BarangMasukTrendChart'
+import BarangMasukPerObatChart from '@/components/transaksi/BarangMasukPerObatChart'
 import type { BarangMasuk } from '@/types/obat'
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -116,6 +118,12 @@ export default function BarangMasukTable() {
             <StatCard icon={Clock}       label="Terakhir Masuk"        value={lastTanggal}                        sublabel={daysAgoLabel}                warna="orange" />
           </>
         )}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <BarangMasukTrendChart allList={allList} isLoading={summaryLoading} />
+        <BarangMasukPerObatChart allList={allList} isLoading={summaryLoading} />
       </div>
 
       {/* Controls row */}

@@ -15,6 +15,7 @@ export default function UserForm({ initial, onClose }: Props) {
   const [nama, setNama] = useState(initial?.nama ?? '')
   const [username, setUsername] = useState(initial?.username ?? '')
   const [password, setPassword] = useState('')
+  const [email, setEmail] = useState(initial?.email ?? '')
   const [role, setRole] = useState<'admin' | 'staf'>(initial?.role ?? 'staf')
   const [isActive, setIsActive] = useState(initial?.is_active ?? true)
   const [confirmHapus, setConfirmHapus] = useState(false)
@@ -30,9 +31,9 @@ export default function UserForm({ initial, onClose }: Props) {
   function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     if (isEdit) {
-      update.mutate({ id: initial!.id, nama, role, is_active: isActive }, { onSuccess: onClose })
+      update.mutate({ id: initial!.id, nama, role, is_active: isActive, email: email || undefined }, { onSuccess: onClose })
     } else {
-      create.mutate({ username, password, nama, role }, { onSuccess: onClose })
+      create.mutate({ username, password, nama, role, email: email || undefined }, { onSuccess: onClose })
     }
   }
 
@@ -74,6 +75,20 @@ export default function UserForm({ initial, onClose }: Props) {
               </div>
             </>
           )}
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Email Google <span className="text-gray-400 font-normal">(opsional)</span>
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="contoh@gmail.com"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-400">Isi jika user ingin login menggunakan Google.</p>
+          </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Role</label>

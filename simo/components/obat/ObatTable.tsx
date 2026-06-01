@@ -18,6 +18,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useObatList, useDeleteObat } from '@/hooks/useObat'
 import { formatAngka, formatTanggalPendek } from '@/lib/utils'
 import { KATEGORI_OBAT } from '@/lib/constants'
+import ObatKategoriChart from '@/components/obat/ObatKategoriChart'
 import type { Obat } from '@/types/obat'
 
 // ─── Helper: estimasi hari habis ─────────────────────────────────────────────
@@ -110,12 +111,15 @@ export default function ObatTable() {
     <div className="space-y-4">
 
       {/* ── Summary Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon={Pill}          label="Total Obat"     value={totalObat}    sublabel="jenis terdaftar" warna="blue"   />
         <StatCard icon={AlertTriangle} label="Perlu Reorder"  value={perluReorder} sublabel="stok ≤ ROP"      warna="red"    />
         <StatCard icon={TrendingDown}  label="Mendekati ROP"  value={mendekatiROP} sublabel="perlu diawasi"   warna="orange" />
         <StatCard icon={CalendarX}     label="Akan Expired"   value={akanExpired}  sublabel="dalam 90 hari"   warna="orange" />
       </div>
+
+      {/* ── Kategori Chart ────────────────────────────────────────────────── */}
+      <ObatKategoriChart allObat={allObat} isLoading={!dataAll} />
 
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3">

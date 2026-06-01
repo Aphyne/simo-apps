@@ -321,7 +321,7 @@ Update checklist ini setiap kali sebuah halaman sudah di-acc user.
 - [x] Supplier (list, tambah, edit)
 - [x] Manajemen User
 - [x] Pengaturan
-- [ ] Login
+- [x] Login
 
 ---
 

@@ -1,6 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const pool = require('../db/pool');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 async function login(req, res) {
   const { username, password } = req.body;
@@ -68,4 +71,48 @@ async function me(req, res) {
   }
 }
 
-module.exports = { login, logout, me };
+async function googleLogin(req, res) {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({ success: false, message: 'Token Google tidak ditemukan' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email tidak ditemukan dari akun Google' });
+    }
+
+    const { rows } = await pool.query(
+      'SELECT id, username, nama, role FROM users WHERE email = $1 AND is_active = true',
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Akun Google ini tidak terdaftar di sistem. Hubungi admin.' });
+    }
+
+    const user = rows[0];
+    const token = jwt.sign(
+      { id: user.id, username: user.username, nama: user.nama, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    return res.json({
+      success: true,
+      data: { token, user: { id: user.id, username: user.username, nama: user.nama, role: user.role } },
+    });
+  } catch (err) {
+    console.error('Google login error:', err);
+    return res.status(401).json({ success: false, message: 'Verifikasi Google gagal' });
+  }
+}
+
+module.exports = { login, logout, me, googleLogin };

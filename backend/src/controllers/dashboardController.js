@@ -9,6 +9,8 @@ async function getSummary(req, res) {
       transaksiHariIni,
       obatExpiring,
       obatMendesak,
+      daftarExpired,
+      stokMenipis,
     ] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM obat'),
       pool.query('SELECT COUNT(*) FROM obat WHERE rop IS NOT NULL AND stok <= rop'),
@@ -32,6 +34,22 @@ async function getSummary(req, res) {
         ORDER BY (stok - rop) ASC
         LIMIT 5
       `),
+      pool.query(`
+        SELECT nama, satuan, stok, expired_terdekat
+        FROM obat
+        WHERE expired_terdekat IS NOT NULL
+          AND expired_terdekat >= CURRENT_DATE
+        ORDER BY expired_terdekat ASC
+        LIMIT 5
+      `),
+      pool.query(`
+        SELECT o.id, o.kode, o.nama, o.satuan, o.stok, o.rop, o.eoq,
+               (o.stok - o.rop) AS selisih
+        FROM obat o
+        WHERE o.rop IS NOT NULL AND o.stok <= o.rop * 1.5
+        ORDER BY (o.stok::float / NULLIF(o.rop, 0)) ASC
+        LIMIT 5
+      `),
     ]);
 
     res.json({
@@ -45,6 +63,8 @@ async function getSummary(req, res) {
           obat_expiring: parseInt(obatExpiring.rows[0].count),
         },
         obat_mendesak: obatMendesak.rows,
+        daftar_expired: daftarExpired.rows,
+        stok_menipis: stokMenipis.rows,
       },
     });
   } catch (err) {

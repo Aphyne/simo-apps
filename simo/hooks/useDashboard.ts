@@ -26,6 +26,22 @@ export function useDashboardSummary() {
           eoq: number | null
           selisih: number
         }[]
+        daftar_expired: {
+          nama: string
+          satuan: string
+          stok: number
+          expired_terdekat: string
+        }[]
+        stok_menipis: {
+          id: number
+          kode: string
+          nama: string
+          satuan: string
+          stok: number
+          rop: number
+          eoq: number | null
+          selisih: number
+        }[]
       }
     },
     refetchInterval: 60000,
