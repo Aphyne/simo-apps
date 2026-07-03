@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, PackagePlus, Package, CalendarDays, TrendingUp, Clock } from 'lucide-react'
+import { Search, PackagePlus, Package, CalendarDays, TrendingUp, Clock, Eye } from 'lucide-react'
 import StatCard from '@/components/dashboard/StatCard'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import BarangMasukForm from '@/components/transaksi/BarangMasukForm'
 import { useBarangMasukList } from '@/hooks/useBarangMasuk'
-import { formatTanggalPendek } from '@/lib/utils'
+import { formatTanggalPendek, formatRupiah } from '@/lib/utils'
 import BarangMasukTrendChart from '@/components/transaksi/BarangMasukTrendChart'
 import BarangMasukPerObatChart from '@/components/transaksi/BarangMasukPerObatChart'
 import type { BarangMasuk } from '@/types/obat'
@@ -30,7 +30,7 @@ function SkeletonRows() {
     <>
       {Array.from({ length: 5 }).map((_, i) => (
         <tr key={i} className="border-b border-gray-100">
-          {Array.from({ length: 8 }).map((_, j) => (
+          {Array.from({ length: 10 }).map((_, j) => (
             <td key={j} className="py-3 px-4">
               <div className="h-4 bg-gray-100 rounded-xl animate-pulse" />
             </td>
@@ -49,6 +49,7 @@ export default function BarangMasukTable() {
   const [page, setPage] = useState(1)
   const [date, setDate] = useState('')
   const [open, setOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<BarangMasuk | null>(null)
 
   const { data, isLoading } = useBarangMasukList({ page, limit: 10, search })
   const rawList: BarangMasuk[] = data?.data ?? []
@@ -163,7 +164,7 @@ export default function BarangMasukTable() {
                 Catat Barang Masuk
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle className="text-sm font-semibold text-gray-800">Catat Barang Masuk</DialogTitle>
               </DialogHeader>
@@ -172,6 +173,50 @@ export default function BarangMasukTable() {
           </Dialog>
         </div>
       </div>
+
+      {/* Detail Dialog */}
+      {selectedItem && (
+        <Dialog open={!!selectedItem} onOpenChange={(o) => { if (!o) setSelectedItem(null) }}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold text-gray-800">Detail Barang Masuk</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Obat + Tanggal */}
+              <div className="bg-gray-50 rounded-lg px-4 py-3">
+                <p className="font-semibold text-gray-900">{selectedItem.nama_obat}</p>
+                <p className="text-xs text-gray-400 font-mono mt-0.5">{selectedItem.kode_obat} · {formatTanggalPendek(selectedItem.tanggal)}</p>
+              </div>
+              {/* Grid detail */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                {[
+                  { label: 'Jumlah Masuk', value: `${selectedItem.jumlah_satuan} ${selectedItem.satuan} (${selectedItem.jumlah_dus} dus)` },
+                  { label: 'Perubahan Stok', value: `${selectedItem.stok_sebelum} → ${selectedItem.stok_sesudah} ${selectedItem.satuan}` },
+                  { label: 'No. Faktur', value: selectedItem.no_faktur ?? '—' },
+                  { label: 'Supplier', value: selectedItem.nama_supplier ?? '—' },
+                  { label: 'No. Batch', value: selectedItem.no_batch ?? '—', mono: true },
+                  { label: 'Expired Batch', value: selectedItem.expired_batch ? formatTanggalPendek(selectedItem.expired_batch) : '—' },
+                  { label: 'Harga Beli / Dus', value: selectedItem.harga_beli != null ? formatRupiah(selectedItem.harga_beli * (selectedItem.jumlah_satuan / selectedItem.jumlah_dus || 1)) : '—' },
+                  { label: `Harga Beli / ${selectedItem.satuan}`, value: selectedItem.harga_beli != null ? formatRupiah(selectedItem.harga_beli) : '—' },
+                  { label: 'Harga Jual', value: selectedItem.harga_jual != null ? formatRupiah(selectedItem.harga_jual) : '—' },
+                  { label: 'Dicatat oleh', value: selectedItem.nama_user ?? '—' },
+                ].map(({ label, value, mono }) => (
+                  <div key={label}>
+                    <p className="text-xs text-gray-400 mb-0.5">{label}</p>
+                    <p className={`text-sm font-medium text-gray-800 ${mono ? 'font-mono' : ''}`}>{value}</p>
+                  </div>
+                ))}
+                {selectedItem.catatan && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-400 mb-0.5">Catatan</p>
+                    <p className="text-sm text-gray-800">{selectedItem.catatan}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Table */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -184,9 +229,11 @@ export default function BarangMasukTable() {
                 <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Jumlah Masuk</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Supplier</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">No. Faktur</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">No. Batch</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Expired</th>
                 <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Perubahan Stok</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Catatan</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Dicatat oleh</th>
+                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Harga</th>
+                <th className="py-3 px-3 w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -194,7 +241,7 @@ export default function BarangMasukTable() {
                 <SkeletonRows />
               ) : list.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-gray-400 text-sm">
+                  <td colSpan={10} className="text-center py-16 text-gray-400 text-sm">
                     {search || date ? 'Tidak ada hasil untuk filter ini' : 'Belum ada riwayat barang masuk'}
                   </td>
                 </tr>
@@ -212,31 +259,45 @@ export default function BarangMasukTable() {
                       <p className="font-semibold text-emerald-600">+{item.jumlah_satuan} {item.satuan}</p>
                       <p className="text-xs text-gray-400">{item.jumlah_dus} dus</p>
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-700">
+                    <td className="py-3 px-4 whitespace-nowrap text-xs text-gray-700">
                       {item.nama_supplier ?? <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-gray-500 font-mono text-xs">
+                    <td className="py-3 px-4 whitespace-nowrap text-xs font-mono text-gray-600">
                       {item.no_faktur ?? <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap text-xs font-mono text-gray-600">
+                      {item.no_batch ?? <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {item.expired_batch ? (
+                        <span className={`text-xs font-medium ${
+                          Math.floor((new Date(item.expired_batch).getTime() - Date.now()) / (1000*60*60*24)) <= 90
+                            ? 'text-red-500' : 'text-gray-600'
+                        }`}>
+                          {formatTanggalPendek(item.expired_batch)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap text-xs text-gray-500">
                       <span className="text-gray-400">{item.stok_sebelum}</span>
                       <span className="mx-1 text-emerald-500">→</span>
                       <span className="font-medium text-gray-800">{item.stok_sesudah}</span>
                     </td>
-                    <td className="py-3 px-4 text-gray-500 text-xs max-w-[150px] truncate">
-                      {item.catatan ?? <span className="text-gray-300">—</span>}
+                    <td className="py-3 px-4 text-right whitespace-nowrap text-xs text-gray-700">
+                      {item.harga_beli != null && item.jumlah_dus > 0
+                        ? formatRupiah(item.harga_beli * (item.jumlah_satuan / item.jumlah_dus))
+                        : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {item.nama_user ? (
-                        <div>
-                          <p className="text-xs font-medium text-gray-700">{item.nama_user}</p>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full inline-block mt-0.5 font-medium ${item.role_user === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                            {item.role_user === 'admin' ? 'Admin' : 'Staf'}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-300 text-xs">—</span>
-                      )}
+                    <td className="py-3 px-3">
+                      <button
+                        onClick={() => setSelectedItem(item)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        title="Lihat detail"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))

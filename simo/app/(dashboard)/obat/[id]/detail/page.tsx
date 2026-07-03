@@ -7,6 +7,7 @@ import { ChevronLeft, RefreshCw, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import StatusBadge from '@/components/ui/StatusBadge'
 import RumusDisplay from '@/components/obat/RumusDisplay'
+import ObatBatchSummary from '@/components/obat/ObatBatchSummary'
 import { useObatById, useObatPerhitungan, useHitungUlang } from '@/hooks/useObat'
 import { formatRupiah, formatAngka, formatTanggal } from '@/lib/utils'
 
@@ -82,8 +83,8 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         {[
           { label: 'Stok Saat Ini',    nilai: `${formatAngka(obat.stok, 0)} ${obat.satuan}`, alert: obat.status === 'HARUS_REORDER' },
           { label: 'Estimasi Habis',   nilai: obat.estimasi_habis_hari != null ? `${obat.estimasi_habis_hari} hari` : '—' },
-          { label: 'Harga Beli',       nilai: formatRupiah(obat.harga_beli) },
-          { label: 'Harga Jual',       nilai: formatRupiah(obat.harga_jual) },
+          { label: `Harga Beli Terkini / ${obat.satuan}`, nilai: formatRupiah(obat.harga_beli) },
+          { label: `Harga Jual Terkini / ${obat.satuan}`, nilai: formatRupiah(obat.harga_jual) },
           { label: 'Satuan per Dus',   nilai: `${obat.satuan_per_dus} ${obat.satuan}` },
           { label: 'Lead Time',        nilai: `${obat.lead_time} hari` },
           { label: 'Supplier',         nilai: obat.nama_supplier ?? '—' },
@@ -124,6 +125,9 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </div>
+
+      {/* ── Estimasi Sisa per Batch ───────────────────────────────────────── */}
+      <ObatBatchSummary id={id} />
 
     </div>
   )

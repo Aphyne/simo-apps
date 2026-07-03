@@ -6,6 +6,7 @@ export interface Supplier {
   whatsapp: string | null
   jenis_obat: string | null
   lead_time_avg: number
+  biaya_pesan: number
   created_at: string
   updated_at: string
 }
@@ -17,4 +18,5 @@ export interface SupplierFormData {
   whatsapp?: string
   jenis_obat?: string
   lead_time_avg: number
+  biaya_pesan: number
 }

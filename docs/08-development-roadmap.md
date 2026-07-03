@@ -393,6 +393,42 @@ Yang perlu diperhatikan:
 
 ---
 
+## Fase 11 — Fitur Tambahan Post-ACC
+
+### Estimasi Sisa Stok per Batch (FIFO) ⬜ Belum
+
+**Latar belakang:**
+Sistem mencatat `expired_batch` di setiap transaksi Barang Masuk. Namun halaman Detail Obat belum menampilkan estimasi sisa stok per batch. Apotek menerapkan FIFO secara fisik, sehingga sistem bisa menghitung estimasi sisa per batch dengan asumsi stok tertua keluar lebih dulu.
+
+**Yang perlu diimplementasi:**
+
+| No | File | Aksi |
+|---|---|---|
+| 1 | `backend/src/controllers/obatController.js` | Tambah fungsi `getBatchSummary` — FIFO kalkulasi dari barang_masuk & barang_keluar |
+| 2 | `backend/src/routes/obat.js` | Tambah route `GET /api/obat/:id/batch-summary` |
+| 3 | `simo/hooks/useObat.ts` | Tambah hook `useObatBatchSummary(id)` |
+| 4 | `simo/components/obat/ObatBatchSummary.tsx` | Komponen baru — tabel estimasi sisa per batch |
+| 5 | `simo/app/(dashboard)/obat/[id]/detail/page.tsx` | Integrasikan komponen di halaman Detail Obat |
+
+**Tampilan di Detail Obat:**
+```
+Estimasi Sisa per Batch (FIFO)
+┌─────────────┬──────────────┬────────────────────┐
+│ Expired     │ Est. Sisa    │ Sisa Hari          │
+├─────────────┼──────────────┼────────────────────┤
+│ 26/07/2026  │ 90 sachet    │ 🔴 55 hari lagi    │
+│ 26/08/2026  │ 20 sachet    │ 🟡 86 hari lagi    │
+└─────────────┴──────────────┴────────────────────┘
+⚠️ Estimasi berdasarkan asumsi FIFO
+```
+
+**Keterbatasan (dokumentasikan di skripsi):**
+Estimasi akurat hanya jika apotek konsisten menerapkan FIFO secara fisik. Sistem tidak bisa memverifikasi batch mana yang benar-benar diambil saat barang keluar.
+
+**Status:** ⬜ Belum diimplementasi
+
+---
+
 ## Catatan Pengembangan
 
 1. **Urutan coding:** Database → Backend (service + controller + route) → Frontend (hook + komponen + halaman). Jangan membangun frontend sebelum API-nya siap. Backend Express dijalankan dengan `npm run dev` dari folder `/backend`.

@@ -25,6 +25,7 @@ export default function DashboardPage() {
 
   const cards = summary?.cards
   const daftarExpired = summary?.daftar_expired ?? []
+  const totalUrgent = summary?.total_urgent ?? 0
   const stokMenipis = summary?.stok_menipis ?? []
 
   const [openMasuk, setOpenMasuk]           = useState(false)
@@ -72,7 +73,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         <StokMenipisCard data={stokMenipis} isLoading={loadingSummary} />
-        <DaftarExpiredCard data={daftarExpired} isLoading={loadingSummary} />
+        <DaftarExpiredCard data={daftarExpired} isLoading={loadingSummary} totalUrgent={totalUrgent} />
 
         {/* Aksi Cepat */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-4">

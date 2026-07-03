@@ -108,6 +108,8 @@ async function create(req, res) {
     return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
   }
 
+  const stok_awal = parseInt(stok) || 0;
+
   try {
     // Auto-generate kode: ambil nomor terbesar dari kode OBT-xxx
     const { rows: kodeRows } = await pool.query(
@@ -126,6 +128,7 @@ async function create(req, res) {
       if (supRows.length) nama_supplier = supRows[0].nama;
     }
 
+    // Insert obat dengan stok=0; stok awal dicatat via barang_masuk di bawah
     const { rows } = await pool.query(
       `INSERT INTO obat (
         kode, nama, kategori, satuan, satuan_per_dus,
@@ -138,7 +141,7 @@ async function create(req, res) {
       RETURNING *`,
       [
         kode, nama, kategori, satuan,
-        satuan_per_dus || 1, harga_beli || 0, harga_jual || 0, stok || 0,
+        satuan_per_dus || 1, harga_beli || 0, harga_jual || 0, 0,
         demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
         biaya_pesan || 0, biaya_simpan || 0,
         lead_time || 1, service_level || 95,
@@ -146,14 +149,29 @@ async function create(req, res) {
         supplier_id || null, nama_supplier,
       ]
     );
-    // Auto-kalkulasi EOQ/SS/ROP setelah insert
     const obatBaru = rows[0];
-    const kalkulasi = kalkulasiLengkap(obatBaru);
-    const { rows: updated } = await pool.query(
-      `UPDATE obat SET eoq=$1, safety_stock=$2, rop=$3, total_biaya=$4 WHERE id=$5 RETURNING *`,
-      [kalkulasi.eoq, kalkulasi.safety_stock, kalkulasi.rop, kalkulasi.total_biaya, obatBaru.id]
-    );
-    res.status(201).json({ success: true, data: formatObat(updated[0]), message: 'Obat berhasil ditambahkan' });
+
+    // Auto-kalkulasi EOQ/SS/ROP setelah insert (pakai lead_time & biaya_pesan dari supplier)
+    await hitungUlangObat(obatBaru.id);
+
+    // Jika ada stok awal, catat sebagai barang masuk agar expired_batch terbaca di batch summary
+    if (stok_awal > 0) {
+      const spd = obatBaru.satuan_per_dus || 1;
+      const jumlah_dus = parseFloat((stok_awal / spd).toFixed(4));
+      await pool.query(
+        `INSERT INTO barang_masuk
+           (tanggal, obat_id, jumlah_dus, jumlah_satuan, expired_batch, catatan, user_id, stok_sebelum, stok_sesudah)
+         VALUES (CURRENT_DATE, $1, $2, $3, $4, 'Stok Awal', $5, 0, $3)`,
+        [obatBaru.id, jumlah_dus, stok_awal, expired_terdekat || null, req.user?.id ?? null]
+      );
+      await pool.query(
+        'UPDATE obat SET stok = $1, updated_at = NOW() WHERE id = $2',
+        [stok_awal, obatBaru.id]
+      );
+    }
+
+    const { rows: final } = await pool.query('SELECT * FROM obat WHERE id = $1', [obatBaru.id]);
+    res.status(201).json({ success: true, data: formatObat(final[0]), message: 'Obat berhasil ditambahkan' });
   } catch (err) {
     console.error('obat.create:', err);
     if (err.code === '23505') {
@@ -166,10 +184,9 @@ async function create(req, res) {
 async function update(req, res) {
   const {
     nama, kategori, satuan, satuan_per_dus,
-    harga_beli, harga_jual, stok,
+    stok,
     demand_harian, demand_tahunan, std_dev_demand,
-    biaya_pesan, biaya_simpan,
-    lead_time, service_level, expired_terdekat, supplier_id,
+    biaya_pesan, service_level, expired_terdekat, supplier_id,
   } = req.body;
 
   if (!nama || !kategori || !satuan) {
@@ -177,7 +194,6 @@ async function update(req, res) {
   }
 
   try {
-    // Ambil nama supplier jika supplier_id diisi
     let nama_supplier = null;
     if (supplier_id) {
       const { rows: supRows } = await pool.query('SELECT nama FROM supplier WHERE id = $1', [supplier_id]);
@@ -186,34 +202,26 @@ async function update(req, res) {
 
     const { rows } = await pool.query(
       `UPDATE obat SET
-        nama = $1, kategori = $2, satuan = $3, satuan_per_dus = $4,
-        harga_beli = $5, harga_jual = $6, stok = $7,
-        demand_harian = $8, demand_tahunan = $9, std_dev_demand = $10,
-        biaya_pesan = $11, biaya_simpan = $12,
-        lead_time = $13, service_level = $14, expired_terdekat = $15,
-        supplier_id = $16, nama_supplier = $17, updated_at = NOW()
-       WHERE id = $18
+        nama=$1, kategori=$2, satuan=$3, satuan_per_dus=$4,
+        stok=$5,
+        demand_harian=$6, demand_tahunan=$7, std_dev_demand=$8,
+        biaya_pesan=$9, service_level=$10, expired_terdekat=$11,
+        supplier_id=$12, nama_supplier=$13, updated_at=NOW()
+       WHERE id=$14
        RETURNING *`,
       [
         nama, kategori, satuan,
-        satuan_per_dus || 1, harga_beli || 0, harga_jual || 0, stok || 0,
+        satuan_per_dus || 1, stok || 0,
         demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
-        biaya_pesan || 0, biaya_simpan || 0,
-        lead_time || 1, service_level || 95,
-        expired_terdekat || null,
+        biaya_pesan || 0, service_level || 95, expired_terdekat || null,
         supplier_id || null, nama_supplier, req.params.id,
       ]
     );
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
     }
-    // Auto-kalkulasi EOQ/SS/ROP setelah update
-    const kalkulasi = kalkulasiLengkap(rows[0]);
-    const { rows: updated } = await pool.query(
-      `UPDATE obat SET eoq=$1, safety_stock=$2, rop=$3, total_biaya=$4 WHERE id=$5 RETURNING *`,
-      [kalkulasi.eoq, kalkulasi.safety_stock, kalkulasi.rop, kalkulasi.total_biaya, req.params.id]
-    );
-    res.json({ success: true, data: formatObat(updated[0]), message: 'Obat berhasil diperbarui' });
+    const obatUpdated = await hitungUlangObat(req.params.id);
+    res.json({ success: true, data: formatObat(obatUpdated), message: 'Obat berhasil diperbarui' });
   } catch (err) {
     console.error('obat.update:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -281,4 +289,44 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang };
+async function getBatchSummary(req, res) {
+  try {
+    const { id } = req.params;
+
+    const [obatRes, batchRes, keluarRes] = await Promise.all([
+      pool.query('SELECT satuan FROM obat WHERE id = $1', [id]),
+      pool.query(`
+        SELECT no_batch, expired_batch, SUM(jumlah_satuan)::int AS total_masuk
+        FROM barang_masuk
+        WHERE obat_id = $1 AND expired_batch IS NOT NULL
+        GROUP BY no_batch, expired_batch
+        ORDER BY expired_batch ASC
+      `, [id]),
+      pool.query(`
+        SELECT COALESCE(SUM(jumlah), 0)::int AS total_keluar
+        FROM barang_keluar WHERE obat_id = $1
+      `, [id]),
+    ]);
+
+    if (!obatRes.rows.length)
+      return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
+
+    const satuan = obatRes.rows[0].satuan;
+    let remaining = parseInt(keluarRes.rows[0].total_keluar);
+
+    const data = batchRes.rows.map(batch => {
+      const masuk = parseInt(batch.total_masuk);
+      let sisa;
+      if (remaining >= masuk) { sisa = 0; remaining -= masuk; }
+      else { sisa = masuk - remaining; remaining = 0; }
+      return { no_batch: batch.no_batch, expired_batch: batch.expired_batch, total_masuk: masuk, estimasi_sisa: sisa, satuan };
+    }).filter(b => b.estimasi_sisa > 0);
+
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('obat.getBatchSummary:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
+
+module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary };

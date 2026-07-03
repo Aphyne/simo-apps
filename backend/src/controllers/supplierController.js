@@ -29,7 +29,7 @@ async function getById(req, res) {
 }
 
 async function create(req, res) {
-  const { nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg } = req.body;
+  const { nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg, biaya_pesan } = req.body;
 
   if (!nama) {
     return res.status(400).json({ success: false, message: 'Nama supplier wajib diisi' });
@@ -37,10 +37,10 @@ async function create(req, res) {
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO supplier (nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO supplier (nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg, biaya_pesan)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1]
+      [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1, biaya_pesan || 0]
     );
     res.status(201).json({ success: true, data: rows[0], message: 'Supplier berhasil ditambahkan' });
   } catch (err) {
@@ -50,7 +50,7 @@ async function create(req, res) {
 }
 
 async function update(req, res) {
-  const { nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg } = req.body;
+  const { nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg, biaya_pesan } = req.body;
 
   if (!nama) {
     return res.status(400).json({ success: false, message: 'Nama supplier wajib diisi' });
@@ -60,10 +60,10 @@ async function update(req, res) {
     const { rows } = await pool.query(
       `UPDATE supplier
        SET nama = $1, alamat = $2, telepon = $3, whatsapp = $4,
-           jenis_obat = $5, lead_time_avg = $6, updated_at = NOW()
-       WHERE id = $7
+           jenis_obat = $5, lead_time_avg = $6, biaya_pesan = $7, updated_at = NOW()
+       WHERE id = $8
        RETURNING *`,
-      [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1, req.params.id]
+      [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1, biaya_pesan || 0, req.params.id]
     );
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Supplier tidak ditemukan' });

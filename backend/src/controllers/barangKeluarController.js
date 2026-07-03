@@ -1,5 +1,5 @@
 const pool = require('../db/pool');
-const { hitungUlangObat } = require('../services/stokService');
+const { hitungUlangObat, updateExpiredTerdekat } = require('../services/stokService');
 const { hitungDemandDariRiwayat } = require('../services/demandService');
 
 async function getAll(req, res) {
@@ -37,6 +37,7 @@ async function getAll(req, res) {
          o.nama AS nama_obat,
          o.kode AS kode_obat,
          o.satuan,
+         o.harga_jual,
          u.nama AS nama_user,
          u.username,
          u.role AS role_user
@@ -116,6 +117,8 @@ async function create(req, res) {
         );
       }
     }
+
+    await updateExpiredTerdekat(obat_id);
 
     // Hitung ulang EOQ/SS/ROP
     const obatUpdated = await hitungUlangObat(obat_id);

@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   { label: 'Barang Masuk', href: '/barang-masuk', icon: PackagePlus },
   { label: 'Barang Keluar', href: '/barang-keluar', icon: PackageMinus },
   { label: 'Perhitungan EOQ/ROP', href: '/perhitungan', icon: Calculator },
-  { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
+  // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
   { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, adminOnly: true },
   { label: 'Laporan', href: '/laporan', icon: FileText },
   { label: 'Supplier', href: '/supplier', icon: Truck },

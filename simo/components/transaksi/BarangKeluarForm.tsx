@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import ObatCombobox from '@/components/ui/ObatCombobox'
 import { useCreateBarangKeluar } from '@/hooks/useBarangKeluar'
 import { useObatList } from '@/hooks/useObat'
 import type { BarangKeluarFormData } from '@/types/obat'
@@ -85,16 +86,22 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
           {errors.tanggal && <p className="text-xs text-red-500 mt-1">Wajib diisi</p>}
         </div>
         <div>
-          <FieldLabel required>Jumlah</FieldLabel>
+          <FieldLabel required>Jumlah ({selectedObat?.satuan ?? 'satuan'})</FieldLabel>
           <Input
             type="number"
             min="1"
-            placeholder="Contoh: 10"
+            placeholder="cth. 10"
             {...register('jumlah', { required: true, min: 1, valueAsNumber: true })}
           />
           {errors.jumlah && <p className="text-xs text-red-500 mt-1">Harus lebih dari 0</p>}
           {stokSetelah !== null && (
-            <p className={`text-xs font-medium mt-1 ${stokSetelah < 0 ? 'text-red-600' : stokSetelah <= (selectedObat?.rop ?? 0) ? 'text-orange-600' : 'text-gray-500'}`}>
+            <p className={`text-xs font-medium mt-1 ${
+              stokSetelah < 0
+                ? 'text-red-600'
+                : stokSetelah <= (selectedObat?.rop ?? 0)
+                ? 'text-orange-600'
+                : 'text-gray-500'
+            }`}>
               Stok setelah: {stokSetelah} {selectedObat?.satuan}
               {stokSetelah < 0 && ' — tidak cukup!'}
               {stokSetelah >= 0 && stokSetelah <= (selectedObat?.rop ?? 0) && ' — akan di bawah ROP ⚠️'}
@@ -111,18 +118,12 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
           control={control}
           rules={{ required: true }}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih obat..." />
-              </SelectTrigger>
-              <SelectContent>
-                {obatList.map((o) => (
-                  <SelectItem key={o.id} value={String(o.id)}>
-                    {o.nama} ({o.kode})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ObatCombobox
+              obatList={obatList}
+              value={field.value}
+              onChange={field.onChange}
+              error={!!errors.obat_id_str}
+            />
           )}
         />
         {errors.obat_id_str && <p className="text-xs text-red-500 mt-1">Obat wajib dipilih</p>}
@@ -153,7 +154,7 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
           rules={{ required: true }}
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full h-9">
                 <SelectValue placeholder="Pilih keterangan..." />
               </SelectTrigger>
               <SelectContent>

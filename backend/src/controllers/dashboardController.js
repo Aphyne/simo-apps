@@ -35,11 +35,54 @@ async function getSummary(req, res) {
         LIMIT 5
       `),
       pool.query(`
-        SELECT nama, satuan, stok, expired_terdekat
-        FROM obat
-        WHERE expired_terdekat IS NOT NULL
-          AND expired_terdekat >= CURRENT_DATE
-        ORDER BY expired_terdekat ASC
+        WITH batch_masuk AS (
+          SELECT obat_id, expired_batch,
+            SUM(jumlah_satuan)::int AS total_masuk
+          FROM barang_masuk
+          WHERE expired_batch IS NOT NULL
+          GROUP BY obat_id, expired_batch
+        ),
+        total_keluar AS (
+          SELECT obat_id,
+            COALESCE(SUM(jumlah), 0)::int AS total_keluar
+          FROM barang_keluar
+          GROUP BY obat_id
+        ),
+        batch_calc AS (
+          SELECT
+            bm.obat_id, bm.expired_batch, bm.total_masuk,
+            GREATEST(0,
+              bm.total_masuk - GREATEST(0,
+                COALESCE(tk.total_keluar, 0) -
+                COALESCE(SUM(bm.total_masuk) OVER (
+                  PARTITION BY bm.obat_id ORDER BY bm.expired_batch
+                  ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+                ), 0)
+              )
+            ) AS estimasi_sisa
+          FROM batch_masuk bm
+          LEFT JOIN total_keluar tk ON tk.obat_id = bm.obat_id
+        ),
+        nearest_batch AS (
+          SELECT DISTINCT ON (obat_id)
+            obat_id, expired_batch, estimasi_sisa
+          FROM batch_calc
+          WHERE expired_batch >= CURRENT_DATE AND estimasi_sisa > 0
+          ORDER BY obat_id, expired_batch ASC
+        )
+        SELECT
+          o.nama,
+          o.satuan,
+          COALESCE(nb.estimasi_sisa, o.stok) AS stok,
+          COALESCE(nb.expired_batch, o.expired_terdekat) AS expired_terdekat
+        FROM obat o
+        LEFT JOIN nearest_batch nb ON nb.obat_id = o.id
+        WHERE (
+          nb.obat_id IS NOT NULL
+          OR (o.expired_terdekat IS NOT NULL AND o.expired_terdekat >= CURRENT_DATE)
+        )
+          AND COALESCE(nb.expired_batch, o.expired_terdekat) <= CURRENT_DATE + INTERVAL '90 days'
+        ORDER BY COALESCE(nb.expired_batch, o.expired_terdekat) ASC
         LIMIT 5
       `),
       pool.query(`
@@ -64,6 +107,7 @@ async function getSummary(req, res) {
         },
         obat_mendesak: obatMendesak.rows,
         daftar_expired: daftarExpired.rows,
+        total_urgent: parseInt(obatExpiring.rows[0].count),
         stok_menipis: stokMenipis.rows,
       },
     });

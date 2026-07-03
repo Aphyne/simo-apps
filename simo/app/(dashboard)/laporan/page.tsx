@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Download, FileSpreadsheet, X, Eye, ChevronDown } from 'lucide-react'
 import {
   useLaporanStok,
@@ -856,7 +857,11 @@ function TabSimulasi() {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LaporanPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('stok')
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const tab = searchParams.get('tab')
+    return (TABS.some(t => t.id === tab) ? tab : 'stok') as Tab
+  })
 
   return (
     <div className="space-y-5">
