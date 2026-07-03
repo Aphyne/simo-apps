@@ -94,14 +94,53 @@ async function getLaporanKedaluarsa(req, res) {
     if (kategori) { params.push(kategori); extraWhere = ` AND kategori = $${params.length}`; }
 
     const { rows } = await pool.query(`
-      SELECT id, kode, nama, kategori, satuan, stok, expired_terdekat,
-             (expired_terdekat - CURRENT_DATE) AS sisa_hari
-      FROM obat
-      WHERE expired_terdekat IS NOT NULL
-        AND expired_terdekat >= CURRENT_DATE
-        AND expired_terdekat <= CURRENT_DATE + ($1 || ' days')::INTERVAL
+      WITH batch_masuk AS (
+        SELECT obat_id, expired_batch,
+          SUM(jumlah_satuan)::int AS total_masuk
+        FROM barang_masuk
+        WHERE expired_batch IS NOT NULL
+        GROUP BY obat_id, expired_batch
+      ),
+      total_keluar AS (
+        SELECT obat_id,
+          COALESCE(SUM(jumlah), 0)::int AS total_keluar
+        FROM barang_keluar
+        GROUP BY obat_id
+      ),
+      batch_calc AS (
+        SELECT
+          bm.obat_id, bm.expired_batch,
+          GREATEST(0,
+            bm.total_masuk - GREATEST(0,
+              COALESCE(tk.total_keluar, 0) -
+              COALESCE(SUM(bm.total_masuk) OVER (
+                PARTITION BY bm.obat_id ORDER BY bm.expired_batch
+                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+              ), 0)
+            )
+          ) AS estimasi_sisa
+        FROM batch_masuk bm
+        LEFT JOIN total_keluar tk ON tk.obat_id = bm.obat_id
+      ),
+      nearest_batch AS (
+        SELECT DISTINCT ON (obat_id)
+          obat_id, estimasi_sisa
+        FROM batch_calc
+        WHERE expired_batch >= CURRENT_DATE AND estimasi_sisa > 0
+        ORDER BY obat_id, expired_batch ASC
+      )
+      SELECT
+        o.id, o.kode, o.nama, o.kategori, o.satuan,
+        COALESCE(nb.estimasi_sisa, o.stok) AS stok,
+        o.expired_terdekat,
+        (o.expired_terdekat - CURRENT_DATE) AS sisa_hari
+      FROM obat o
+      LEFT JOIN nearest_batch nb ON nb.obat_id = o.id
+      WHERE o.expired_terdekat IS NOT NULL
+        AND o.expired_terdekat >= CURRENT_DATE
+        AND o.expired_terdekat <= CURRENT_DATE + ($1 || ' days')::INTERVAL
         ${extraWhere}
-      ORDER BY expired_terdekat ASC
+      ORDER BY o.expired_terdekat ASC
     `, params);
     res.json({ success: true, data: rows });
   } catch (err) {

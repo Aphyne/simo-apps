@@ -30,7 +30,7 @@ function SkeletonRows() {
     <>
       {Array.from({ length: 5 }).map((_, i) => (
         <tr key={i} className="border-b border-gray-100">
-          {Array.from({ length: 7 }).map((_, j) => (
+          {Array.from({ length: 8 }).map((_, j) => (
             <td key={j} className="py-3 px-4">
               <div className="h-4 bg-gray-100 rounded-xl animate-pulse" />
             </td>
@@ -188,7 +188,7 @@ export default function BarangKeluarTable() {
                 Catat Barang Keluar
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle className="text-sm font-semibold text-gray-800">Catat Barang Keluar</DialogTitle>
               </DialogHeader>
@@ -207,6 +207,7 @@ export default function BarangKeluarTable() {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Tanggal</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Obat</th>
                 <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Jumlah Keluar</th>
+                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Total</th>
                 <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Keterangan</th>
                 <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Perubahan Stok</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Catatan</th>
@@ -218,7 +219,7 @@ export default function BarangKeluarTable() {
                 <SkeletonRows />
               ) : list.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16 text-gray-400 text-sm">
+                  <td colSpan={8} className="text-center py-16 text-gray-400 text-sm">
                     {search || date || keterangan ? 'Tidak ada hasil untuk filter ini' : 'Belum ada riwayat barang keluar'}
                   </td>
                 </tr>
@@ -234,6 +235,15 @@ export default function BarangKeluarTable() {
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <p className="font-semibold text-red-600">−{item.jumlah} {item.satuan}</p>
+                    </td>
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      {item.harga_jual ? (
+                        <p className="font-medium text-emerald-700">
+                          Rp {(item.jumlah * item.harga_jual).toLocaleString('id-ID')}
+                        </p>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
                       <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${KETERANGAN_WARNA[item.keterangan] ?? 'bg-gray-100 text-gray-600'}`}>

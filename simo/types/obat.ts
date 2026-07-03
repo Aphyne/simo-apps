@@ -41,15 +41,11 @@ export interface ObatFormData {
   kategori: string
   satuan: string
   satuan_per_dus: number
-  harga_beli: number
-  harga_jual: number
   stok: number
   demand_harian: number
   demand_tahunan: number
   std_dev_demand: number
   biaya_pesan: number
-  biaya_simpan: number
-  lead_time: number
   service_level: number
   expired_terdekat?: string
   supplier_id?: number
@@ -67,7 +63,10 @@ export interface BarangMasuk {
   supplier_id: number | null
   nama_supplier: string | null
   no_faktur: string | null
+  no_batch: string | null
   expired_batch: string | null
+  harga_beli: number | null
+  harga_jual: number | null
   catatan: string | null
   stok_sebelum: number
   stok_sesudah: number
@@ -83,7 +82,11 @@ export interface BarangMasukFormData {
   jumlah_dus: number
   supplier_id?: number
   no_faktur?: string
+  no_batch?: string
   expired_batch?: string
+  harga_beli_dus?: number
+  harga_jual?: number
+  biaya_simpan_pct?: number
   catatan?: string
 }
 
@@ -95,6 +98,7 @@ export interface BarangKeluar {
   kode_obat: string
   satuan: string
   jumlah: number
+  harga_jual?: number
   keterangan: string
   catatan: string | null
   stok_sebelum: number

@@ -32,6 +32,7 @@ export function useDashboardSummary() {
           stok: number
           expired_terdekat: string
         }[]
+        total_urgent: number
         stok_menipis: {
           id: number
           kode: string

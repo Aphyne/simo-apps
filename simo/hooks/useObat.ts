@@ -107,6 +107,22 @@ export function useReorderAlerts() {
   })
 }
 
+export function useObatBatchSummary(id: number | string | undefined) {
+  return useQuery({
+    queryKey: ['obat', id, 'batch-summary'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<{
+        expired_batch: string
+        total_masuk: number
+        estimasi_sisa: number
+        satuan: string
+      }[]>>(`/obat/${id}/batch-summary`)
+      return res.data.data
+    },
+    enabled: !!id,
+  })
+}
+
 export function useHitungUlang() {
   const qc = useQueryClient()
   return useMutation({

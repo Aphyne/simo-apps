@@ -117,9 +117,9 @@ function KartuLangkah({
   )
 }
 
-// ─── Card hasil (dengan tombol ⓘ) ────────────────────────────────────────────
+// ─── Card hasil (dengan tombol ⓘ dan ?) ──────────────────────────────────────
 function HasilCard({
-  label, nilai, satuan, warna, bgWarna, borderColor, isRupiah, onInfo,
+  label, nilai, satuan, warna, bgWarna, borderColor, isRupiah, definisi, onInfo,
 }: {
   label: string
   nilai: number | null | undefined
@@ -128,10 +128,25 @@ function HasilCard({
   bgWarna: string
   borderColor: string
   isRupiah?: boolean
+  definisi: string
   onInfo: () => void
 }) {
+  const [showDef, setShowDef] = useState(false)
+
   return (
     <div className={`relative bg-white rounded-xl border border-gray-200 border-l-4 ${borderColor} shadow-sm p-5 text-center`}>
+      {/* ? — penjelasan konsep */}
+      <button
+        onClick={() => setShowDef((v) => !v)}
+        className={`absolute top-3 left-3 p-1 rounded-lg transition-colors ${
+          showDef ? 'text-blue-500 bg-blue-50' : 'text-gray-300 hover:text-blue-500 hover:bg-blue-50'
+        }`}
+        title="Apa ini?"
+      >
+        <span className="w-4 h-4 flex items-center justify-center rounded-full border-[1.5px] border-current text-[9px] font-bold leading-none">?</span>
+      </button>
+
+      {/* ⓘ — langkah perhitungan */}
       <button
         onClick={onInfo}
         className="absolute top-3 right-3 p-1 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
@@ -155,6 +170,13 @@ function HasilCard({
       {satuan && nilai !== null && nilai !== undefined && (
         <p className="text-xs text-gray-400 mt-1">{satuan}</p>
       )}
+
+      {/* Panel definisi — muncul saat ? diklik */}
+      {showDef && (
+        <div className="mt-3 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2.5 text-left">
+          <p className="text-xs text-blue-700 leading-relaxed">{definisi}</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -164,7 +186,21 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
   const { input, langkah_eoq, langkah_safety_stock, langkah_rop, langkah_tc } = data
   const [openModal, setOpenModal] = useState<ModalKey>(null)
 
-  const cards = [
+  const cards: {
+    key: ModalKey
+    label: string
+    nilai: number | null
+    satuan?: string
+    warna: string
+    bgWarna: string
+    judul: string
+    borderColor: string
+    badgeColor: string
+    langkah: LangkahPerhitungan
+    definisi: string
+    isRupiah?: boolean
+    params: { label: string; nilai: string }[]
+  }[] = [
     {
       key: 'eoq' as ModalKey,
       label: 'EOQ',
@@ -176,6 +212,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       borderColor: 'border-l-blue-500',
       badgeColor: 'bg-blue-100 text-blue-600',
       langkah: langkah_eoq,
+      definisi: 'Jumlah unit optimal yang sebaiknya dipesan setiap kali melakukan pemesanan, agar total biaya pemesanan dan biaya penyimpanan per tahun menjadi paling minimal.',
       params: [
         { label: 'D — Demand Tahunan', nilai: `${formatAngka(input.D, 0)} unit/tahun` },
         { label: 'S — Biaya Pesan',    nilai: formatRupiah(input.S) },
@@ -193,6 +230,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       borderColor: 'border-l-emerald-500',
       badgeColor: 'bg-emerald-100 text-emerald-600',
       langkah: langkah_safety_stock,
+      definisi: 'Stok cadangan yang disimpan sebagai penyangga apabila permintaan tiba-tiba melonjak atau barang dari supplier terlambat datang. Semakin tinggi fluktuasi penjualan, semakin besar safety stock yang dibutuhkan.',
       params: [
         { label: 'Z — Service Level', nilai: `${input.Z}` },
         { label: 'σ — Std. Deviasi',  nilai: `${formatAngka(input.sigma, 4)} unit/hari` },
@@ -210,6 +248,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       borderColor: 'border-l-orange-500',
       badgeColor: 'bg-orange-100 text-orange-500',
       langkah: langkah_rop,
+      definisi: 'Batas stok minimum. Ketika stok tersisa menyentuh angka ini, saatnya segera melakukan pemesanan ulang agar stok tidak habis sebelum barang baru tiba.',
       params: [
         { label: 'd — Demand Harian', nilai: `${formatAngka(input.demand_harian, 2)} unit/hari` },
         { label: 'LT — Lead Time',    nilai: `${input.LT} hari` },
@@ -226,6 +265,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       badgeColor: 'bg-purple-100 text-purple-600',
       langkah: langkah_tc,
       isRupiah: true,
+      definisi: 'Estimasi total biaya persediaan per tahun, yaitu gabungan biaya pemesanan (berapa kali pesan × biaya per pesan) dan biaya penyimpanan (rata-rata stok × biaya simpan per unit).',
       params: [
         { label: 'D — Demand Tahunan', nilai: `${formatAngka(input.D, 0)} unit/tahun` },
         { label: 'S — Biaya Pesan',    nilai: formatRupiah(input.S) },
@@ -258,6 +298,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
               bgWarna={c.bgWarna}
               borderColor={c.borderColor}
               isRupiah={c.isRupiah}
+              definisi={c.definisi}
               onInfo={() => setOpenModal(c.key)}
             />
           ))}

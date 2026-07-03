@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -76,8 +76,6 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
   const { data: suppliers = [] } = useSupplierList()
 
   // UI state
-  const [biayaSimpanMode, setBiayaSimpanMode] = useState<'rupiah' | 'persen'>('rupiah')
-  const [biayaSimpanPct, setBiayaSimpanPct] = useState(20)
   const [showBantuHitung, setShowBantuHitung] = useState(false)
   const [riwayatHarian, setRiwayatHarian] = useState(['', '', '', '', ''])
   const [isDemandFromTahunan, setIsDemandFromTahunan] = useState(false)
@@ -94,15 +92,11 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       kategori: defaultValues?.kategori ?? '',
       satuan: defaultValues?.satuan ?? '',
       satuan_per_dus: defaultValues?.satuan_per_dus ?? 1,
-      harga_beli: defaultValues?.harga_beli ?? 0,
-      harga_jual: defaultValues?.harga_jual ?? 0,
       stok: defaultValues?.stok ?? 0,
       demand_harian: defaultValues?.demand_harian ?? 0,
       demand_tahunan: defaultValues?.demand_tahunan ?? 0,
       std_dev_demand: defaultValues?.std_dev_demand ?? 0,
       biaya_pesan: defaultValues?.biaya_pesan ?? 0,
-      biaya_simpan: defaultValues?.biaya_simpan ?? 0,
-      lead_time: defaultValues?.lead_time ?? 1,
       service_level: defaultValues?.service_level ?? 95,
       expired_terdekat: defaultValues?.expired_terdekat
         ? defaultValues.expired_terdekat.slice(0, 10)
@@ -114,16 +108,8 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
   const satuanValue = watch('satuan')
   const kategoriValue = watch('kategori')
   const serviceLevelValue = watch('service_level')
-  const hargaBeli = watch('harga_beli')
   const demandHarian = watch('demand_harian')
   const demandTahunan = watch('demand_tahunan')
-
-  // Auto-kalkulasi biaya simpan saat mode persen
-  useEffect(() => {
-    if (biayaSimpanMode === 'persen' && hargaBeli > 0) {
-      setValue('biaya_simpan', parseFloat(((biayaSimpanPct / 100) * hargaBeli).toFixed(2)))
-    }
-  }, [biayaSimpanMode, biayaSimpanPct, hargaBeli, setValue])
 
   // Auto-link demand harian → tahunan
   // demand_tahunan selalu bilangan bulat, demand_harian maks 2 desimal
@@ -220,26 +206,6 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
             {errors.stok && <p className="text-xs text-red-500">{errors.stok.message}</p>}
           </div>
 
-          {/* Harga Beli */}
-          <div className="space-y-1.5">
-            <Label htmlFor="harga_beli">
-              Harga Beli per {satuanValue || 'Satuan'} (Rp) <span className="text-red-500">*</span>
-              <Info_ text={`Harga beli per ${satuanValue || 'satuan terkecil'}, BUKAN per dus. Contoh: jika 1 dus 100 tablet seharga Rp 50.000, maka harga beli per tablet = Rp 500.`} />
-            </Label>
-            <Input id="harga_beli" type="number" min={0} step={10}
-              {...register('harga_beli', { valueAsNumber: true, min: { value: 1, message: 'Harga beli harus lebih dari 0' }, required: 'Harga beli wajib diisi' })} />
-            {errors.harga_beli && <p className="text-xs text-red-500">{errors.harga_beli.message}</p>}
-          </div>
-
-          {/* Harga Jual */}
-          <div className="space-y-1.5">
-            <Label htmlFor="harga_jual">
-              Harga Jual per {satuanValue || 'Satuan'} (Rp)
-              <Info_ text={`Harga jual ke pelanggan per ${satuanValue || 'satuan terkecil'}. Digunakan untuk laporan margin keuntungan.`} />
-            </Label>
-            <Input id="harga_jual" type="number" min={0} step={10}
-              {...register('harga_jual', { valueAsNumber: true, min: 0 })} />
-          </div>
 
         </div>
       </div>
@@ -404,13 +370,14 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       {/* ── SEKSI 3: PARAMETER EOQ ───────────────────────────────────────── */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <SectionTitle num={3}>Parameter Kalkulasi EOQ/ROP</SectionTitle>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Biaya Pesan */}
           <div className="space-y-1.5">
             <Label htmlFor="biaya_pesan">
-              Biaya Pemesanan per Order (S)
-              <Info_ text="Biaya yang dikeluarkan setiap kali melakukan pemesanan ke supplier, misalnya biaya telepon, admin, atau ongkos kirim. Jika tidak ada biaya pemesanan (pemesanan gratis), isi 0." />
+              Biaya Pesan / Order (S) <span className="text-red-500">*</span>
+              <Info_ text="Biaya yang dikeluarkan setiap kali memesan obat ini, misalnya alokasi ongkos kirim atau biaya admin. Isi 0 jika tidak ada biaya pemesanan." />
             </Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
@@ -418,73 +385,6 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 {...register('biaya_pesan', { valueAsNumber: true, min: 0 })} />
             </div>
             <p className="text-xs text-gray-400">Isi 0 jika tidak ada biaya pemesanan</p>
-          </div>
-
-          {/* Lead Time */}
-          <div className="space-y-1.5">
-            <Label htmlFor="lead_time">
-              Lead Time (hari)
-              <Info_ text="Jumlah hari dari saat pemesanan dilakukan sampai barang tiba di apotek. Contoh: pesan ke PBF hari Senin, barang datang hari Kamis → lead time 3 hari." />
-            </Label>
-            <div className="relative">
-              <Input id="lead_time" type="number" min={1}
-                {...register('lead_time', { valueAsNumber: true, min: 1 })} />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">hari</span>
-            </div>
-          </div>
-
-          {/* Biaya Simpan */}
-          <div className="md:col-span-2 space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>
-                Biaya Penyimpanan per {satuanValue || 'Unit'}/Tahun (H)
-                <Info_ text="Biaya untuk menyimpan 1 satuan obat selama 1 tahun, mencakup biaya gudang, listrik, risiko kedaluarsa. Umumnya 20–25% dari harga beli. Gunakan toggle 'Hitung dari %' jika lebih mudah." />
-              </Label>
-              <div className="flex rounded-md border overflow-hidden text-xs font-medium">
-                <button
-                  type="button"
-                  onClick={() => setBiayaSimpanMode('rupiah')}
-                  className={`px-3 py-1.5 transition-colors ${biayaSimpanMode === 'rupiah' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                >
-                  Rp Langsung
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBiayaSimpanMode('persen')}
-                  className={`px-3 py-1.5 transition-colors ${biayaSimpanMode === 'persen' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                >
-                  % Harga Beli
-                </button>
-              </div>
-            </div>
-
-            {biayaSimpanMode === 'persen' ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 flex-1 max-w-sm">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={100}
-                    step={1}
-                    value={biayaSimpanPct}
-                    onChange={(e) => setBiayaSimpanPct(parseFloat(e.target.value) || 0)}
-                    className="w-20 text-center border-blue-200"
-                  />
-                  <span className="text-sm text-blue-700">% × Rp {hargaBeli.toLocaleString('id-ID')} =</span>
-                  <span className="font-semibold text-blue-800">
-                    Rp {((biayaSimpanPct / 100) * hargaBeli).toLocaleString('id-ID', { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400">Nilai Rp otomatis terisi ke kolom H</p>
-              </div>
-            ) : (
-              <div className="relative max-w-sm">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
-                <Input type="number" min={0} step={10} className="pl-9"
-                  {...register('biaya_simpan', { valueAsNumber: true, min: 0 })} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">/tahun</span>
-              </div>
-            )}
           </div>
 
           {/* Service Level */}
