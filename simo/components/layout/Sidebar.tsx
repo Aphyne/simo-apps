@@ -30,11 +30,13 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Data Obat', href: '/obat', icon: Pill },
-  { label: 'Barang Masuk', href: '/barang-masuk', icon: PackagePlus },
-  { label: 'Barang Keluar', href: '/barang-keluar', icon: PackageMinus },
-  { label: 'Perhitungan EOQ/ROP', href: '/perhitungan', icon: Calculator },
+  { label: 'Stok Masuk', href: '/barang-masuk', icon: PackagePlus },
+  { label: 'Stok Keluar', href: '/barang-keluar', icon: PackageMinus },
   // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
-  { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, adminOnly: true },
+  // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/analisis/page.tsx
+  // { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, adminOnly: true },
+  // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/perhitungan/page.tsx
+  // { label: 'Perhitungan EOQ/ROP', href: '/perhitungan', icon: Calculator, adminOnly: true },
   { label: 'Laporan', href: '/laporan', icon: FileText },
   { label: 'Supplier', href: '/supplier', icon: Truck },
   { label: 'Manajemen User', href: '/users', icon: Users, adminOnly: true },
@@ -90,7 +92,7 @@ export default function Sidebar() {
           <LogOut className="w-4 h-4 flex-shrink-0" />
           Keluar
         </button>
-        <p className="text-xs text-gray-400">SIMO v1.0 · 2026</p>
+        <p className="text-xs text-gray-500">SIMO v1.0 · 2026</p>
       </div>
     </aside>
   )

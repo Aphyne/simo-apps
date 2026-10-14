@@ -42,12 +42,15 @@ export default function BarangKeluarTrendChart({ allList, isLoading }: Props) {
   }
 
   const trendData = useMemo(() => {
+    // Hanya hitung Penjualan — pemusnahan/retur/rusak/dll bukan pendapatan
+    const salesList = allList.filter(item => item.keterangan === 'Penjualan')
+
     if (mode === 'mingguan') {
       return Array.from({ length: 7 }, (_, i) => {
         const d = new Date(now)
         d.setDate(d.getDate() - (6 - i))
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        const items = allList.filter(item => {
+        const items = salesList.filter(item => {
           if (!item.tanggal) return false
           const td = new Date(item.tanggal)
           return `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-${String(td.getDate()).padStart(2, '0')}` === key
@@ -57,7 +60,7 @@ export default function BarangKeluarTrendChart({ allList, isLoading }: Props) {
     }
 
     return Array.from({ length: 12 }, (_, i) => {
-      const items = allList.filter(item => {
+      const items = salesList.filter(item => {
         if (!item.tanggal) return false
         const td = new Date(item.tanggal)
         return td.getFullYear() === selectedYear && td.getMonth() === i
@@ -69,7 +72,10 @@ export default function BarangKeluarTrendChart({ allList, isLoading }: Props) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-        <p className="text-sm font-semibold text-gray-700">Tren Barang Keluar</p>
+        <div>
+          <p className="text-sm font-semibold text-gray-700">Tren Stok Keluar</p>
+          <p className="text-xs text-gray-500 mt-0.5">khusus Penjualan</p>
+        </div>
 
         <div className="flex items-center gap-2">
           {/* Toggle Unit / Nilai Rp */}

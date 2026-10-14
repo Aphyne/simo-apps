@@ -85,7 +85,7 @@ export default function DashboardPage() {
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors text-left"
             >
               <PackagePlus className="w-4 h-4 flex-shrink-0" />
-              Catat Barang Masuk
+              Catat Stok Masuk
             </button>
 
             <button
@@ -93,7 +93,7 @@ export default function DashboardPage() {
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 text-sm font-medium transition-colors text-left"
             >
               <PackageMinus className="w-4 h-4 flex-shrink-0" />
-              Catat Barang Keluar
+              Catat Stok Keluar
             </button>
 
             <button
@@ -112,7 +112,7 @@ export default function DashboardPage() {
               </p>
               <button
                 onClick={() => router.push('/monitoring')}
-                className="text-xs text-orange-500 hover:underline mt-1 block"
+                className="text-xs text-orange-700 hover:underline mt-1 block"
               >
                 Lihat di Monitoring →
               </button>
@@ -139,18 +139,18 @@ export default function DashboardPage() {
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
 
       <Dialog open={openMasuk} onOpenChange={setOpenMasuk}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Catat Barang Masuk</DialogTitle>
+            <DialogTitle>Catat Stok Masuk</DialogTitle>
           </DialogHeader>
           <BarangMasukForm onSuccess={handleBarangMasukSuccess} />
         </DialogContent>
       </Dialog>
 
       <Dialog open={openKeluar} onOpenChange={setOpenKeluar}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Catat Barang Keluar</DialogTitle>
+            <DialogTitle>Catat Stok Keluar</DialogTitle>
           </DialogHeader>
           <BarangKeluarForm onSuccess={handleBarangKeluarSuccess} />
         </DialogContent>

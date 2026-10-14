@@ -22,7 +22,7 @@ export default function Header() {
   return (
     <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
       {/* Kiri — nama apotek */}
-      <p className="text-sm font-medium text-gray-400">Apotek Rezky Medika</p>
+      <p className="text-sm font-medium text-gray-500">Apotek Rezky Medika</p>
 
       {/* Kanan — alert + profil */}
       <div className="flex items-center gap-3">
@@ -49,7 +49,7 @@ export default function Header() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900 leading-tight">{user?.nama ?? '—'}</p>
-                <p className="text-xs text-gray-400 mt-0.5">@{user?.username}</p>
+                <p className="text-xs text-gray-500 mt-0.5">@{user?.username}</p>
               </div>
             </div>
             <div className="border-t border-gray-100 pt-2">

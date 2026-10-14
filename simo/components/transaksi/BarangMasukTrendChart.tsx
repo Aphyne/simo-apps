@@ -69,7 +69,7 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-        <p className="text-sm font-semibold text-gray-700">Tren Barang Masuk</p>
+        <p className="text-sm font-semibold text-gray-700">Tren Stok Masuk</p>
 
         <div className="flex items-center gap-2">
           {/* Toggle Unit / Nilai Rp */}
