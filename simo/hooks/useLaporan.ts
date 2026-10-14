@@ -33,52 +33,73 @@ export interface LaporanEoqRopItem {
   eoq: number | null; safety_stock: number | null; rop: number | null; total_biaya: number | null
 }
 
-export function useLaporanStok(kategori?: string) {
+export interface LaporanKartuStokItem {
+  tanggal: string; jenis: 'Masuk' | 'Keluar'; keterangan: string
+  masuk: number; keluar: number; sisa: number
+  expired_batch: string | null; nama_user: string | null
+}
+
+export interface LaporanKartuStokObat {
+  id: number; kode: string; nama: string; satuan: string; stok: number
+}
+
+export function useLaporanStok(kategori?: string, obatId?: string) {
   return useQuery({
-    queryKey: ['laporan-stok', kategori],
+    queryKey: ['laporan-stok', kategori, obatId],
     queryFn: async () => {
-      const res = await api.get('/laporan/stok', { params: { kategori } })
+      const res = await api.get('/laporan/stok', { params: { kategori, obat_id: obatId } })
       return res.data.data as LaporanStokItem[]
     },
   })
 }
 
-export function useLaporanBarangMasuk(dari?: string, sampai?: string, kategori?: string) {
+export function useLaporanBarangMasuk(dari?: string, sampai?: string, kategori?: string, obatId?: string) {
   return useQuery({
-    queryKey: ['laporan-barang-masuk', dari, sampai, kategori],
+    queryKey: ['laporan-barang-masuk', dari, sampai, kategori, obatId],
     queryFn: async () => {
-      const res = await api.get('/laporan/barang-masuk', { params: { dari, sampai, kategori } })
+      const res = await api.get('/laporan/barang-masuk', { params: { dari, sampai, kategori, obat_id: obatId } })
       return res.data.data as LaporanBarangMasukItem[]
     },
   })
 }
 
-export function useLaporanBarangKeluar(dari?: string, sampai?: string, keterangan?: string, kategori?: string) {
+export function useLaporanBarangKeluar(dari?: string, sampai?: string, keterangan?: string, kategori?: string, obatId?: string) {
   return useQuery({
-    queryKey: ['laporan-barang-keluar', dari, sampai, keterangan, kategori],
+    queryKey: ['laporan-barang-keluar', dari, sampai, keterangan, kategori, obatId],
     queryFn: async () => {
-      const res = await api.get('/laporan/barang-keluar', { params: { dari, sampai, keterangan, kategori } })
+      const res = await api.get('/laporan/barang-keluar', { params: { dari, sampai, keterangan, kategori, obat_id: obatId } })
       return res.data.data as LaporanBarangKeluarItem[]
     },
   })
 }
 
-export function useLaporanKedaluarsa(hari: number = 90, kategori?: string) {
+export function useLaporanKedaluarsa(hari: number = 90, kategori?: string, obatId?: string) {
   return useQuery({
-    queryKey: ['laporan-kedaluarsa', hari, kategori],
+    queryKey: ['laporan-kedaluarsa', hari, kategori, obatId],
     queryFn: async () => {
-      const res = await api.get('/laporan/kedaluarsa', { params: { hari, kategori } })
+      const res = await api.get('/laporan/kedaluarsa', { params: { hari, kategori, obat_id: obatId } })
       return res.data.data as LaporanKedaluarsaItem[]
     },
   })
 }
 
-export function useLaporanEoqRop(kategori?: string) {
+export function useLaporanEoqRop(kategori?: string, obatId?: string) {
   return useQuery({
-    queryKey: ['laporan-eoq-rop', kategori],
+    queryKey: ['laporan-eoq-rop', kategori, obatId],
     queryFn: async () => {
-      const res = await api.get('/laporan/eoq-rop', { params: { kategori } })
+      const res = await api.get('/laporan/eoq-rop', { params: { kategori, obat_id: obatId } })
       return res.data.data as LaporanEoqRopItem[]
     },
+  })
+}
+
+export function useLaporanKartuStok(obatId?: string, dari?: string, sampai?: string) {
+  return useQuery({
+    queryKey: ['laporan-kartu-stok', obatId, dari, sampai],
+    queryFn: async () => {
+      const res = await api.get('/laporan/kartu-stok', { params: { obat_id: obatId, dari, sampai } })
+      return res.data as { success: boolean; data: LaporanKartuStokItem[]; obat: LaporanKartuStokObat }
+    },
+    enabled: !!obatId,
   })
 }

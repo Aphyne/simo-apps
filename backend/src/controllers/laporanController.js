@@ -1,12 +1,13 @@
 const pool = require('../db/pool');
 
-// GET /api/laporan/stok?kategori=
+// GET /api/laporan/stok?kategori=&obat_id=
 async function getLaporanStok(req, res) {
   try {
-    const { kategori } = req.query;
+    const { kategori, obat_id } = req.query;
     const params = [];
     let where = 'WHERE 1=1';
     if (kategori) { params.push(kategori); where += ` AND kategori = $${params.length}`; }
+    if (obat_id)  { params.push(obat_id);  where += ` AND id = $${params.length}`; }
 
     const { rows } = await pool.query(`
       SELECT id, kode, nama, kategori, satuan, stok,
@@ -23,16 +24,17 @@ async function getLaporanStok(req, res) {
   }
 }
 
-// GET /api/laporan/barang-masuk?dari=&sampai=&kategori=
+// GET /api/laporan/barang-masuk?dari=&sampai=&kategori=&obat_id=
 async function getLaporanBarangMasuk(req, res) {
   try {
-    const { dari, sampai, kategori } = req.query;
+    const { dari, sampai, kategori, obat_id } = req.query;
     const params = [];
     let where = 'WHERE 1=1';
 
     if (dari)     { params.push(dari);     where += ` AND bm.tanggal >= $${params.length}`; }
     if (sampai)   { params.push(sampai);   where += ` AND bm.tanggal <= $${params.length}`; }
     if (kategori) { params.push(kategori); where += ` AND o.kategori = $${params.length}`; }
+    if (obat_id)  { params.push(obat_id);  where += ` AND o.id = $${params.length}`; }
 
     const { rows } = await pool.query(`
       SELECT bm.id, bm.tanggal, bm.jumlah_dus, bm.jumlah_satuan,
@@ -54,10 +56,10 @@ async function getLaporanBarangMasuk(req, res) {
   }
 }
 
-// GET /api/laporan/barang-keluar?dari=&sampai=&keterangan=&kategori=
+// GET /api/laporan/barang-keluar?dari=&sampai=&keterangan=&kategori=&obat_id=
 async function getLaporanBarangKeluar(req, res) {
   try {
-    const { dari, sampai, keterangan, kategori } = req.query;
+    const { dari, sampai, keterangan, kategori, obat_id } = req.query;
     const params = [];
     let where = 'WHERE 1=1';
 
@@ -65,6 +67,7 @@ async function getLaporanBarangKeluar(req, res) {
     if (sampai)     { params.push(sampai);     where += ` AND bk.tanggal <= $${params.length}`; }
     if (keterangan) { params.push(keterangan); where += ` AND bk.keterangan = $${params.length}`; }
     if (kategori)   { params.push(kategori);   where += ` AND o.kategori = $${params.length}`; }
+    if (obat_id)    { params.push(obat_id);    where += ` AND o.id = $${params.length}`; }
 
     const { rows } = await pool.query(`
       SELECT bk.id, bk.tanggal, bk.jumlah, bk.keterangan, bk.catatan,
@@ -84,14 +87,15 @@ async function getLaporanBarangKeluar(req, res) {
   }
 }
 
-// GET /api/laporan/kedaluarsa?hari=90&kategori=
+// GET /api/laporan/kedaluarsa?hari=90&kategori=&obat_id=
 async function getLaporanKedaluarsa(req, res) {
   try {
     const hari = parseInt(req.query.hari) || 90;
-    const { kategori } = req.query;
+    const { kategori, obat_id } = req.query;
     const params = [hari];
     let extraWhere = '';
-    if (kategori) { params.push(kategori); extraWhere = ` AND kategori = $${params.length}`; }
+    if (kategori) { params.push(kategori); extraWhere += ` AND kategori = $${params.length}`; }
+    if (obat_id)  { params.push(obat_id);  extraWhere += ` AND o.id = $${params.length}`; }
 
     const { rows } = await pool.query(`
       WITH batch_masuk AS (
@@ -149,13 +153,77 @@ async function getLaporanKedaluarsa(req, res) {
   }
 }
 
-// GET /api/laporan/eoq-rop?kategori=
+// GET /api/laporan/kartu-stok?obat_id=&dari=&sampai=
+// Riwayat mutasi stok satu obat (gabungan barang_masuk + barang_keluar),
+// diurutkan kronologis lama -> baru, dengan saldo berjalan (stok_sesudah).
+async function getLaporanKartuStok(req, res) {
+  try {
+    const { obat_id, dari, sampai } = req.query;
+    if (!obat_id) {
+      return res.status(400).json({ success: false, message: 'obat_id wajib diisi' });
+    }
+
+    const { rows: obatRows } = await pool.query(
+      'SELECT id, kode, nama, satuan, stok FROM obat WHERE id = $1',
+      [obat_id]
+    );
+    if (!obatRows.length) {
+      return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
+    }
+
+    const params = [obat_id];
+    let dateWhere = '';
+    if (dari)   { params.push(dari);   dateWhere += ` AND tanggal >= $${params.length}`; }
+    if (sampai) { params.push(sampai); dateWhere += ` AND tanggal <= $${params.length}`; }
+
+    const { rows } = await pool.query(`
+      SELECT * FROM (
+        SELECT
+          bm.tanggal AS tanggal, bm.created_at AS created_at,
+          'Masuk' AS jenis,
+          ('No. Faktur ' || COALESCE(bm.no_faktur, '-')) AS keterangan,
+          bm.jumlah_satuan AS masuk,
+          0 AS keluar,
+          bm.stok_sesudah AS sisa,
+          bm.expired_batch AS expired_batch,
+          u.nama AS nama_user
+        FROM barang_masuk bm
+        LEFT JOIN users u ON u.id = bm.user_id
+        WHERE bm.obat_id = $1 ${dateWhere.replace(/tanggal/g, 'bm.tanggal')}
+
+        UNION ALL
+
+        SELECT
+          bk.tanggal AS tanggal, bk.created_at AS created_at,
+          'Keluar' AS jenis,
+          bk.keterangan AS keterangan,
+          0 AS masuk,
+          bk.jumlah AS keluar,
+          bk.stok_sesudah AS sisa,
+          NULL AS expired_batch,
+          u.nama AS nama_user
+        FROM barang_keluar bk
+        LEFT JOIN users u ON u.id = bk.user_id
+        WHERE bk.obat_id = $1 ${dateWhere.replace(/tanggal/g, 'bk.tanggal')}
+      ) gabungan
+      ORDER BY tanggal ASC, created_at ASC
+    `, params);
+
+    res.json({ success: true, data: rows, obat: obatRows[0] });
+  } catch (err) {
+    console.error('laporan.kartuStok:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
+
+// GET /api/laporan/eoq-rop?kategori=&obat_id=
 async function getLaporanEoqRop(req, res) {
   try {
-    const { kategori } = req.query;
+    const { kategori, obat_id } = req.query;
     const params = [];
     let where = 'WHERE 1=1';
     if (kategori) { params.push(kategori); where += ` AND kategori = $${params.length}`; }
+    if (obat_id)  { params.push(obat_id);  where += ` AND id = $${params.length}`; }
 
     const { rows } = await pool.query(`
       SELECT id, kode, nama, satuan, kategori,
@@ -179,4 +247,5 @@ module.exports = {
   getLaporanBarangKeluar,
   getLaporanKedaluarsa,
   getLaporanEoqRop,
+  getLaporanKartuStok,
 };
