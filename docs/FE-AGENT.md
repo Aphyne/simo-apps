@@ -42,7 +42,36 @@ File ini adalah design bible — baca seluruhnya sebelum mengadjust halaman apap
 | Border | `gray-200` | #E5E7EB | Border card, tabel, divider |
 | Text Primary | `gray-900` | #111827 | Judul, nilai angka utama |
 | Text Secondary | `gray-600` | #4B5563 | Label, teks konten |
-| Text Muted | `gray-400` / `gray-500` | #9CA3AF | Sublabel, placeholder, footer |
+| Text Muted | `gray-500` | #6B7280 | Sublabel, placeholder, footer, caption — **teks yang dibaca** |
+| Text Decorative | `gray-400` / `gray-300` | #9CA3AF / #D1D5DB | **Cuma untuk ikon & elemen non-teks** (search icon, tombol ikon, ellipsis paginasi, state disabled) |
+
+---
+
+## 1.1 Aksesibilitas & Kontras (WCAG AA) — WAJIB DIPATUHI
+
+Riset tipografi kesehatan menegaskan: karakter yang mirip (I/l/1, O/0) dan kontras rendah berisiko salah baca dosis obat, nomor batch, atau tanggal kedaluwarsa. SIMO menargetkan **WCAG 2.1 AA (rasio kontras ≥ 4.5:1)** untuk semua teks yang dibaca pengguna.
+
+**Aturan praktis (sudah diverifikasi & diterapkan — lihat `/barang-masuk` sebagai referensi):**
+
+| Warna lama (gagal AA) | Ganti jadi | Kapan dipakai |
+|---|---|---|
+| `text-gray-400` (2.54:1) | `text-gray-500` (4.83:1) | Setiap kali mewakili **teks/data yang dibaca**: label, sub-label, caption, pesan error/kosong, prefix satuan (Rp/%), nilai field |
+| `text-red-500` (3.76:1) | `text-red-600` (4.83:1) | Teks error validasi, peringatan data (misal tanggal mendekati kedaluwarsa) |
+| `text-emerald-600` (3.77:1) | `text-emerald-700` (5.48:1) | Angka/teks data berwarna hijau (misal jumlah masuk, margin positif) |
+| `text-orange-500` (2.80:1) / `text-orange-600` (3.56:1) | `text-orange-700` (5.18:1) | Angka/teks data berwarna oranye (ROP, peringatan mendekati expired, badge status teks) — **kedua shade gagal AA untuk teks biasa**, hanya `orange-700` yang lolos |
+| `text-yellow-500` (1.92:1) / `text-yellow-600` (2.94:1) | `text-yellow-700` (4.92:1) | Angka/teks data berwarna kuning (misal rentang waktu "menengah" di estimasi kedaluwarsa) — kuning paling lemah kontrasnya di semua shade Tailwind, butuh naik sampai 700 |
+| `text-blue-500` (3.68:1) | `text-blue-600` (5.17:1) | Teks data/link berwarna biru (misal label "akun kamu") |
+
+Rasio di atas dihitung terhadap latar putih (#FFFFFF) memakai formula WCAG 2.1 relative luminance. Kalau menambah warna baru yang belum ada di tabel ini, hitung dulu rasionya sebelum dipakai untuk teks — jangan asumsi "shade 600 pasti aman", karena terbukti `orange-600` dan `emerald-600` sama-sama gagal meski sama-sama shade 600.
+
+**Kapan TETAP pakai warna lama (dikecualikan):**
+- Warna ikon di dalam lingkaran berlatar tint (`bg-red-100` + `text-red-500` ikon, dst.) — konteks kontras ikon-di-atas-background-tint beda dari teks-di-atas-putih, umumnya sudah lolos.
+- Ikon murni tanpa teks (search icon, tombol ikon aksi, ellipsis paginasi "…").
+- Badge/step-number 1-2 karakter di dalam lingkaran kecil (misal digit "1" di langkah rumus) — diperlakukan setara ikon, bukan teks data.
+- State `disabled` — dikecualikan WCAG 1.4.3 (komponen UI tidak aktif).
+- **Catatan ukuran teks**: pengecualian "large text" WCAG (≥18px normal atau ≥14px bold, ambang 3:1 bukan 4.5:1) HAMPIR TIDAK PERNAH berlaku di SIMO karena mayoritas teks data pakai `text-xs` (12px) atau `text-sm` (14px reguler) — baik di bawah ambang large text. Jangan anggap `font-bold`/`font-semibold` otomatis membuat teks lolos di ambang 3:1; cek ukuran pxnya juga.
+
+**Font:** Inter (sudah diverifikasi sesuai riset tipografi kesehatan — baik untuk angka tabular & keterbacaan ukuran kecil). Jangan ganti ke font lain tanpa alasan kuat.
 
 ---
 
@@ -53,11 +82,11 @@ File ini adalah design bible — baca seluruhnya sebelum mengadjust halaman apap
 bg-white border-r border-gray-200 w-64 min-h-screen
 ```
 - Brand title: `text-xl font-bold text-gray-900 tracking-tight`
-- Brand subtitle (nama apotek): `text-xs text-gray-400 mt-0.5`
+- Brand subtitle (nama apotek): `text-xs text-gray-500 mt-0.5`
 - Nav item **normal**: `text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg px-3 py-2.5`
 - Nav item **active**: `bg-blue-600 text-white rounded-lg px-3 py-2.5`
 - Nav icon: `w-4 h-4 flex-shrink-0`
-- Footer: `text-xs text-gray-400 border-t border-gray-200 px-6 py-3`
+- Footer: `text-xs text-gray-500 border-t border-gray-200 px-6 py-3`
 
 ### Header
 ```
@@ -107,7 +136,7 @@ Willow style: white bg, colored icon circle, dark value text. Semua card konsist
 "text-2xl font-bold leading-tight text-gray-900"
 
 // Sublabel
-"text-xs text-gray-400 mt-0.5"
+"text-xs text-gray-500 mt-0.5"
 ```
 
 ### Card / Panel Container
@@ -137,7 +166,7 @@ Willow style: white bg, colored icon circle, dark value text. Semua card konsist
 "font-medium text-gray-900"
 
 // Secondary text dalam row (kode, tanggal, dsb)
-"text-xs text-gray-400 font-mono"
+"text-xs text-gray-500 font-mono"
 ```
 
 ### Status Badge (pill)
@@ -186,10 +215,10 @@ Willow style: white bg, colored icon circle, dark value text. Semua card konsist
 "text-sm font-medium text-gray-700 mb-1 block"
 
 // Error text
-"text-xs text-red-500 mt-1"
+"text-xs text-red-600 mt-1"
 
 // Hint text
-"text-xs text-gray-400 mt-1"
+"text-xs text-gray-500 mt-1"
 ```
 
 ### Chart Container
@@ -209,7 +238,7 @@ Willow style: white bg, colored icon circle, dark value text. Semua card konsist
 
 ### Empty State
 ```tsx
-"text-center py-10 text-gray-400 text-sm"
+"text-center py-10 text-gray-500 text-sm"
 ```
 
 ### Pagination
@@ -265,9 +294,10 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
 - Form di bagian atas → riwayat tabel di bawah
 - Badge jenis: Masuk (blue) / Keluar (orange)
 
-### Perhitungan EOQ/ROP (`/perhitungan`)
+### Perhitungan EOQ/ROP (`/perhitungan`) — admin only
 - Card per obat menampilkan hasil EOQ & ROP
 - RumusDisplay: styled code-block atau formula card
+- Staf tidak melihat menu ini; breakdown rumus di `/obat/[id]/detail` juga dikunci untuk staf (kolom EOQ/ROP hasil akhir di tabel Data Obat tetap tampil untuk staf)
 
 ### Monitoring (`/monitoring`)
 - Tabel semua obat + status stok real-time

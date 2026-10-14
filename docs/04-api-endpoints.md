@@ -194,7 +194,7 @@ Perbandingan biaya sebelum vs sesudah EOQ (dari analisis komparatif).
 **Response 200** jika sukses, **409 Conflict** jika obat masih punya transaksi
 
 ### GET `/api/obat/{id}/perhitungan`
-**Auth:** semua role
+**Auth:** admin only
 
 Step-by-step perhitungan manual format skripsi:
 

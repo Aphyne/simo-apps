@@ -163,7 +163,7 @@ router.get('/obat',  verifyToken, requireRole('admin', 'staf'), obatController.i
 | Barang Keluar (input) | ✅ | ✅ |
 | Laporan (lihat) | ✅ | ✅ |
 | Laporan (export) | ✅ | ✅ |
-| Perhitungan EOQ/ROP | ✅ | ✅ |
+| Perhitungan EOQ/ROP (halaman & breakdown rumus) | ✅ | ❌ |
 | Simulasi Skenario | ✅ | ❌ |
 | Analisis Komparatif | ✅ | ❌ |
 | Manajemen Supplier | ✅ | ✅ lihat |

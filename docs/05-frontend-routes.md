@@ -13,7 +13,7 @@
 | `/obat/[id]/detail` | `app/(dashboard)/obat/[id]/detail/page.tsx` | Detail Perhitungan | Semua |
 | `/barang-masuk` | `app/(dashboard)/barang-masuk/page.tsx` | Barang Masuk | Semua |
 | `/barang-keluar` | `app/(dashboard)/barang-keluar/page.tsx` | Barang Keluar | Semua |
-| `/perhitungan` | `app/(dashboard)/perhitungan/page.tsx` | Perhitungan EOQ & ROP | Semua |
+| `/perhitungan` | `app/(dashboard)/perhitungan/page.tsx` | Perhitungan EOQ & ROP | Admin |
 | `/simulasi` | `app/(dashboard)/simulasi/page.tsx` | Simulasi Skenario | Admin |
 | `/monitoring` | `app/(dashboard)/monitoring/page.tsx` | Monitoring Stok | Semua |
 | `/analisis` | `app/(dashboard)/analisis/page.tsx` | Analisis Komparatif | Admin |

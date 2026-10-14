@@ -36,9 +36,10 @@
 ## 2. Tipografi
 
 - **Font Utama:** Inter (dari Google Fonts via `next/font`)
-  - Menggantikan Geist yang sudah di-setup di template
+  - Menggantikan Geist yang sudah di-setup di template — diverifikasi aktif di `app/layout.tsx` + `app/globals.css` (sempat ada bug `--font-sans` salah arah, sudah diperbaiki)
+  - Dipilih berdasarkan riset tipografi kesehatan: dukungan angka tabular (penting untuk kolom Rupiah/stok), keterbacaan tinggi di ukuran kecil, dan karakter yang jelas beda (I/l/1, O/0) — krusial untuk data seperti dosis obat, No. Batch, tanggal kedaluwarsa
 - **Font Alternatif (fallback):** system-ui, sans-serif
-- **Font Mono (untuk rumus):** `font-mono` (Geist Mono tetap dipakai)
+- **Font Mono (untuk rumus & kode):** `font-mono` — pakai stack monospace default Tailwind (`ui-monospace, SFMono-Regular`, dst.), **bukan** Geist Mono (sempat ditulis begitu di versi sebelumnya, tapi tidak pernah benar-benar di-setup di kode)
 
 ### Ukuran Teks
 
@@ -51,6 +52,10 @@
 | Teks tabel | `text-sm text-gray-900` |
 | Teks kecil / caption | `text-xs text-gray-500` |
 | Rumus (monospace) | `font-mono text-sm` |
+
+### Kontras Warna (WCAG AA)
+
+Target minimal rasio kontras **4.5:1** untuk semua teks yang dibaca pengguna (bukan ikon/elemen dekoratif). `gray-400` dan `red-500` di atas putih **gagal** standar ini (±2.8:1 dan ±3.8:1) — pakai minimal `gray-500` untuk teks abu-abu dan `red-600` untuk teks merah (error/peringatan). Detail aturan & pengecualian ada di [FE-AGENT.md § 1.1](FE-AGENT.md#11-aksesibilitas--kontras-wcag-ag-wajib-dipatuhi).
 
 ---
 
@@ -150,7 +155,7 @@ Warna: merah (< 100% ROP) | kuning (100-120% ROP) | hijau (> 120% ROP)
     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
   />
-  <p className="text-xs text-red-500">Nama obat wajib diisi</p>  {/* error state */}
+  <p className="text-xs text-red-600">Nama obat wajib diisi</p>  {/* error state — red-600, bukan red-500, supaya lolos kontras WCAG AA */}
 </div>
 ```
 
@@ -163,7 +168,7 @@ Warna: merah (< 100% ROP) | kuning (100-120% ROP) | hijau (> 120% ROP)
 │ 💊 SIMO          │  ← logo + nama sistem
 │ Apotek Rezky     │  ← nama apotek
 ├──────────────────┤
-│ UTAMA            │  ← section header (text-xs uppercase gray-400)
+│ UTAMA            │  ← section header (text-xs uppercase gray-500)
 │  📊 Dashboard    │  ← menu item aktif: bg-blue-50 text-blue-700
 │  💊 Data Obat    │
 ├──────────────────┤
