@@ -139,6 +139,14 @@ async function getTrenPermintaan(req, res) {
 
 async function getPerbandinganBiaya(req, res) {
   try {
+    const asumsiRows = await pool.query(
+      `SELECT value FROM pengaturan WHERE key = 'asumsi_dus_tradisional'`
+    );
+    const asumsiParsed = parseFloat(asumsiRows.rows[0]?.value);
+    // Sama seperti analisisController — Q tradisional = asumsi (default 2 dus) × isi per dus,
+    // bukan lagi selalu 1 dus. Lihat docs/08-development-roadmap.md Fase 6 "Revisi Q Tradisional".
+    const asumsiDus = Number.isFinite(asumsiParsed) && asumsiParsed > 0 ? asumsiParsed : 2;
+
     const { rows } = await pool.query(`
       SELECT
         id, nama, satuan,
@@ -158,7 +166,7 @@ async function getPerbandinganBiaya(req, res) {
       const D = parseFloat(o.demand_tahunan);
       const S = parseFloat(o.biaya_pesan);
       const H = parseFloat(o.biaya_simpan);
-      const Q_trad = parseFloat(o.satuan_per_dus);
+      const Q_trad = asumsiDus * parseFloat(o.satuan_per_dus);
       const tc_tanpa_eoq = (D / Q_trad) * S + (Q_trad / 2) * H;
 
       return {

@@ -1,7 +1,18 @@
 const pool = require('../db/pool');
 
+async function getAsumsiDusTradisional() {
+  const { rows } = await pool.query(
+    `SELECT value FROM pengaturan WHERE key = 'asumsi_dus_tradisional'`
+  );
+  const nilai = parseFloat(rows[0]?.value);
+  // Fallback 2 kalau setting belum ada di database (mis. migration belum jalan)
+  return Number.isFinite(nilai) && nilai > 0 ? nilai : 2;
+}
+
 async function getPerbandingan(req, res) {
   try {
+    const asumsiDus = await getAsumsiDusTradisional();
+
     const { rows } = await pool.query(`
       SELECT id, kode, nama, satuan,
              demand_tahunan, biaya_pesan, biaya_simpan,
@@ -19,7 +30,10 @@ async function getPerbandingan(req, res) {
       const D = parseFloat(o.demand_tahunan);
       const S = parseFloat(o.biaya_pesan);
       const H = parseFloat(o.biaya_simpan);
-      const Q_trad = parseFloat(o.satuan_per_dus);
+      // Q tradisional = asumsi jumlah dus per pemesanan (setting, default 2) × isi per dus.
+      // Bukan dihitung dari riwayat barang_masuk — lihat docs/08-development-roadmap.md
+      // Fase 6 "Revisi Q Tradisional" untuk alasannya.
+      const Q_trad = asumsiDus * parseFloat(o.satuan_per_dus);
       const Q_eoq = parseFloat(o.eoq);
 
       const tc_tradisional = (D / Q_trad) * S + (Q_trad / 2) * H;
@@ -41,6 +55,7 @@ async function getPerbandingan(req, res) {
         biaya_pesan: Math.round(S),
         biaya_simpan: Math.round(H),
         q_tradisional: Q_trad,
+        asumsi_dus: asumsiDus,
         q_eoq: Math.round(Q_eoq),
         tc_tradisional: Math.round(tc_tradisional),
         tc_eoq: Math.round(tc_eoq),
@@ -66,6 +81,7 @@ async function getPerbandingan(req, res) {
           total_tc_eoq,
           total_penghematan,
           persen_hemat_total,
+          asumsi_dus_tradisional: asumsiDus,
         },
         detail,
       },

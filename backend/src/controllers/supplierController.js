@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { hitungUlangObat } = require('../services/stokService');
 
 async function getAll(req, res) {
   try {
@@ -57,6 +58,16 @@ async function update(req, res) {
   }
 
   try {
+    const { rows: before } = await pool.query(
+      'SELECT lead_time_avg, biaya_pesan FROM supplier WHERE id = $1',
+      [req.params.id]
+    );
+    if (!before.length) {
+      return res.status(404).json({ success: false, message: 'Supplier tidak ditemukan' });
+    }
+    const lamaLeadTime = before[0].lead_time_avg;
+    const lamaBiayaPesan = Number(before[0].biaya_pesan);
+
     const { rows } = await pool.query(
       `UPDATE supplier
        SET nama = $1, alamat = $2, telepon = $3, whatsapp = $4,
@@ -65,9 +76,19 @@ async function update(req, res) {
        RETURNING *`,
       [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1, biaya_pesan || 0, req.params.id]
     );
-    if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'Supplier tidak ditemukan' });
+
+    const baruLeadTime = rows[0].lead_time_avg;
+    const baruBiayaPesan = Number(rows[0].biaya_pesan);
+    if (lamaLeadTime !== baruLeadTime || lamaBiayaPesan !== baruBiayaPesan) {
+      const { rows: obatTerkait } = await pool.query(
+        'SELECT id FROM obat WHERE supplier_id = $1',
+        [req.params.id]
+      );
+      for (const o of obatTerkait) {
+        await hitungUlangObat(o.id);
+      }
     }
+
     res.json({ success: true, data: rows[0], message: 'Supplier berhasil diperbarui' });
   } catch (err) {
     console.error('supplier.update:', err);
