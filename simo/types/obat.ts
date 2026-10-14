@@ -67,6 +67,7 @@ export interface BarangMasuk {
   expired_batch: string | null
   harga_beli: number | null
   harga_jual: number | null
+  ppn_pct: number | null
   catatan: string | null
   stok_sebelum: number
   stok_sesudah: number
@@ -90,6 +91,55 @@ export interface BarangMasukFormData {
   catatan?: string
 }
 
+export interface BarangMasukUpdateFormData {
+  tanggal: string
+  jumlah_dus: number
+  supplier_id?: number
+  no_faktur?: string
+  no_batch?: string
+  expired_batch?: string
+  harga_beli_dus?: number
+  harga_jual?: number
+  biaya_simpan_pct?: number
+  ppn_pct?: number
+  catatan?: string
+}
+
+export interface BarangMasukBulkFormData {
+  tanggal: string
+  supplier_id: number
+  no_faktur: string
+  ppn_pct?: number
+  catatan?: string
+  items: {
+    obat_id: number
+    no_batch: string
+    expired_batch: string
+    jumlah_dus: number
+    harga_beli_dus?: number
+    harga_jual?: number
+    biaya_simpan_pct?: number
+  }[]
+}
+
+export interface BarangMasukBulkItemResult {
+  id: number
+  obat_id: number
+  nama_obat: string
+  kode_obat: string
+  satuan: string
+  jumlah_dus: number
+  jumlah_satuan: number
+  harga_beli: number | null
+  harga_jual: number | null
+}
+
+export interface BarangMasukBulkResponse {
+  success: boolean
+  data: BarangMasukBulkItemResult[]
+  message: string
+}
+
 export interface BarangKeluar {
   id: number
   tanggal: string
@@ -98,7 +148,7 @@ export interface BarangKeluar {
   kode_obat: string
   satuan: string
   jumlah: number
-  harga_jual?: number
+  harga_jual: number | null
   keterangan: string
   catatan: string | null
   stok_sebelum: number
@@ -115,6 +165,36 @@ export interface BarangKeluarFormData {
   jumlah: number
   keterangan: string
   catatan?: string
+}
+
+export interface BarangKeluarUpdateFormData {
+  tanggal: string
+  jumlah: number
+  keterangan: string
+  catatan?: string
+}
+
+export interface BarangKeluarBulkFormData {
+  tanggal: string
+  keterangan: string
+  catatan?: string
+  items: { obat_id: number; jumlah: number }[]
+}
+
+export interface BarangKeluarBulkItemResult {
+  obat_id: number
+  nama_obat: string
+  kode_obat: string
+  satuan: string
+  jumlah: number
+  stok_sesudah: number
+}
+
+export interface BarangKeluarBulkResponse {
+  success: boolean
+  data: BarangKeluarBulkItemResult[]
+  reorder_alerts: { obat_id: number; nama_obat: string; stok_sesudah: number; rop: number }[]
+  message: string
 }
 
 export interface BarangKeluarResponse {
