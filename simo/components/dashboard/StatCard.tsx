@@ -42,7 +42,7 @@ export default function StatCard({ label, value, sublabel, icon: Icon, warna, fe
       <div className="min-w-0">
         <p className="text-xs text-gray-500 font-medium truncate">{label}</p>
         <p className="text-2xl font-bold leading-tight text-gray-900">{value}</p>
-        {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
+        {sublabel && <p className="text-xs text-gray-500 mt-0.5">{sublabel}</p>}
       </div>
     </div>
   )

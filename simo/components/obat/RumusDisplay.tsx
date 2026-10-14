@@ -18,7 +18,7 @@ function ParamGrid({ items }: { items: { label: string; nilai: string }[] }) {
       <div className="grid grid-cols-2 gap-2">
         {items.map((p, idx) => (
           <div key={p.label} className={`bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100 ${idx === items.length - 1 && items.length % 2 !== 0 ? 'col-span-2' : ''}`}>
-            <p className="text-xs text-gray-400 mb-0.5">{p.label}</p>
+            <p className="text-xs text-gray-500 mb-0.5">{p.label}</p>
             <p className="text-sm font-semibold text-gray-800">{p.nilai}</p>
           </div>
         ))}
@@ -46,7 +46,7 @@ function ParamGridAll({ input }: { input: DetailPerhitungan['input'] }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {items.map((p, idx) => (
           <div key={p.label} className={`bg-gray-50 rounded-lg px-3 py-2 border border-gray-100 ${idx === items.length - 1 && items.length % 4 !== 0 ? 'col-span-2 sm:col-span-2' : ''}`}>
-            <p className="text-xs text-gray-400">{p.label}</p>
+            <p className="text-xs text-gray-500">{p.label}</p>
             <p className="text-sm font-semibold text-gray-800 mt-0.5 break-words">{p.nilai}</p>
           </div>
         ))}
@@ -86,13 +86,13 @@ function KartuLangkah({
           </div>
 
           <div className="text-sm text-gray-600 break-words">
-            <span className="text-xs text-gray-400 uppercase tracking-wide mr-2">Substitusi:</span>
+            <span className="text-xs text-gray-500 uppercase tracking-wide mr-2">Substitusi:</span>
             <span className="font-mono break-all">{langkah.substitusi}</span>
           </div>
 
           {langkah.langkah && (
             <div className="text-sm text-gray-600 break-words">
-              <span className="text-xs text-gray-400 uppercase tracking-wide mr-2">Kalkulasi:</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide mr-2">Kalkulasi:</span>
               <span className="font-mono break-all">{langkah.langkah}</span>
             </div>
           )}
@@ -102,7 +102,7 @@ function KartuLangkah({
             {langkah.hasil !== null ? (
               <span className="text-lg font-bold text-gray-900">{hasilStr}</span>
             ) : (
-              <span className="text-sm text-gray-400 italic">Tidak dapat dihitung</span>
+              <span className="text-sm text-gray-500 italic">Tidak dapat dihitung</span>
             )}
           </div>
 
@@ -164,11 +164,11 @@ function HasilCard({
           {isRupiah ? formatRupiah(nilai) : formatAngka(nilai, 2)}
         </p>
       ) : (
-        <p className="text-sm text-gray-300 italic">Tidak dapat dihitung</p>
+        <p className="text-sm text-gray-500 italic">Tidak dapat dihitung</p>
       )}
 
       {satuan && nilai !== null && nilai !== undefined && (
-        <p className="text-xs text-gray-400 mt-1">{satuan}</p>
+        <p className="text-xs text-gray-500 mt-1">{satuan}</p>
       )}
 
       {/* Panel definisi — muncul saat ? diklik */}
@@ -224,7 +224,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       label: 'SS',
       nilai: langkah_safety_stock.hasil,
       satuan: 'unit stok pengaman',
-      warna: 'text-emerald-600',
+      warna: 'text-emerald-700',
       bgWarna: 'bg-emerald-100',
       judul: 'Safety Stock (SS) — Stok Pengaman',
       borderColor: 'border-l-emerald-500',
@@ -242,7 +242,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       label: 'ROP',
       nilai: langkah_rop.hasil,
       satuan: 'unit titik pemesanan ulang',
-      warna: 'text-orange-500',
+      warna: 'text-orange-700',
       bgWarna: 'bg-orange-100',
       judul: 'Reorder Point (ROP) — Titik Pemesanan Ulang',
       borderColor: 'border-l-orange-500',
@@ -284,7 +284,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
 
       {/* ── 4 Hasil Kalkulasi ───────────────────────────────────────────── */}
       <div>
-        <p className="text-xs text-gray-400 mb-3 flex items-center gap-1">
+        <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
           Klik <Info className="w-3 h-3" /> pada kartu untuk melihat langkah perhitungan
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

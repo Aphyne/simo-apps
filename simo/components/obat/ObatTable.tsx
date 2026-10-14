@@ -25,7 +25,7 @@ import type { Obat } from '@/types/obat'
 function EstimasiHabis({ hari }: { hari: number | null }) {
   if (hari === null) return <span className="text-gray-300">—</span>
   if (hari <= 7)  return <span className="text-xs font-semibold text-red-600">{hari} hari</span>
-  if (hari <= 30) return <span className="text-xs font-medium text-orange-500">{hari} hari</span>
+  if (hari <= 30) return <span className="text-xs font-medium text-orange-700">{hari} hari</span>
   return <span className="text-xs text-gray-500">{hari} hari</span>
 }
 
@@ -43,8 +43,8 @@ function ExpiredCell({ tanggal }: { tanggal: string | null }) {
       </span>
     )
   if (selisihHari <= 180)
-    return <span className="text-xs font-medium text-orange-500">{label}</span>
-  return <span className="text-xs text-gray-400">{label}</span>
+    return <span className="text-xs font-medium text-orange-700">{label}</span>
+  return <span className="text-xs text-gray-500">{label}</span>
 }
 
 // ─── Helper: nilai kalkulasi (abu-abu jika belum ada) ─────────────────────────
@@ -54,7 +54,7 @@ function KalkulasiCell({ value, satuan }: { value: number | null; satuan?: strin
   return (
     <span className="text-sm text-gray-700">
       {formatAngka(value, 1)}
-      {satuan && <span className="text-gray-400 text-xs ml-0.5">{satuan}</span>}
+      {satuan && <span className="text-gray-500 text-xs ml-0.5">{satuan}</span>}
     </span>
   )
 }
@@ -175,19 +175,19 @@ export default function ObatTable() {
                 <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Stok</th>
                 <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   ROP
-                  <span className="block text-gray-400 normal-case font-normal tracking-normal">reorder point</span>
+                  <span className="block text-gray-500 normal-case font-normal tracking-normal">reorder point</span>
                 </th>
                 <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   EOQ
-                  <span className="block text-gray-400 normal-case font-normal tracking-normal">qty order optimal</span>
+                  <span className="block text-gray-500 normal-case font-normal tracking-normal">qty order optimal</span>
                 </th>
                 <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   Est. Habis
-                  <span className="block text-gray-400 normal-case font-normal tracking-normal">dari stok saat ini</span>
+                  <span className="block text-gray-500 normal-case font-normal tracking-normal">dari stok saat ini</span>
                 </th>
                 <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   Expired
-                  <span className="block text-gray-400 normal-case font-normal tracking-normal">terdekat</span>
+                  <span className="block text-gray-500 normal-case font-normal tracking-normal">terdekat</span>
                 </th>
                 <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Status</th>
                 <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Aksi</th>
@@ -198,7 +198,7 @@ export default function ObatTable() {
                 <SkeletonRows />
               ) : obatList.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-10 text-gray-400 text-sm">
+                  <td colSpan={10} className="text-center py-10 text-gray-500 text-sm">
                     Tidak ada data obat
                   </td>
                 </tr>
@@ -207,7 +207,7 @@ export default function ObatTable() {
                   <tr key={obat.id} className="hover:bg-gray-50 transition-colors">
 
                     {/* Kode */}
-                    <td className="px-3 py-3 font-mono text-xs text-gray-400 whitespace-nowrap">
+                    <td className="px-3 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
                       {obat.kode}
                     </td>
 
@@ -215,7 +215,7 @@ export default function ObatTable() {
                     <td className="px-3 py-3 whitespace-nowrap max-w-[200px]">
                       <span className="font-medium text-gray-900 truncate block">{obat.nama}</span>
                       {obat.nama_supplier && (
-                        <span className="text-xs text-gray-400">{obat.nama_supplier}</span>
+                        <span className="text-xs text-gray-500">{obat.nama_supplier}</span>
                       )}
                     </td>
 
@@ -225,7 +225,7 @@ export default function ObatTable() {
                     {/* Stok */}
                     <td className="px-3 py-3 text-right whitespace-nowrap">
                       <span className="font-semibold text-gray-900">{formatAngka(obat.stok, 0)}</span>
-                      <span className="text-gray-400 text-xs ml-1">{obat.satuan}</span>
+                      <span className="text-gray-500 text-xs ml-1">{obat.satuan}</span>
                     </td>
 
                     {/* ROP */}
@@ -353,7 +353,7 @@ export default function ObatTable() {
       </div>
 
       {/* ── Legenda ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-400 px-1">
+      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500 px-1">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-red-400 inline-block flex-shrink-0" />
           Est. habis ≤ 7 hari atau expired &lt; 3 bulan

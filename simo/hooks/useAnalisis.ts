@@ -12,6 +12,7 @@ export interface AnalisisDetail {
   biaya_pesan: number
   biaya_simpan: number
   q_tradisional: number
+  asumsi_dus: number
   q_eoq: number
   tc_tradisional: number
   tc_eoq: number
@@ -25,6 +26,7 @@ export interface AnalisisRingkasan {
   total_tc_eoq: number
   total_penghematan: number
   persen_hemat_total: number
+  asumsi_dus_tradisional: number
 }
 
 export interface AnalisisData {

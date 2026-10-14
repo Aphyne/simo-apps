@@ -32,7 +32,7 @@ export default function AnalisisStatCards({ ringkasan, isLoading }: Props) {
           <p className="text-2xl font-bold leading-tight text-gray-900">
             {ringkasan?.total_obat_dihitung ?? 0}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">jenis obat</p>
+          <p className="text-xs text-gray-500 mt-0.5">jenis obat</p>
         </div>
       </div>
 
@@ -46,7 +46,7 @@ export default function AnalisisStatCards({ ringkasan, isLoading }: Props) {
           <p className="text-lg font-bold leading-tight text-gray-900">
             {ringkasan ? formatRupiah(ringkasan.total_tc_tradisional) : '—'}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">per tahun</p>
+          <p className="text-xs text-gray-500 mt-0.5">per tahun</p>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export default function AnalisisStatCards({ ringkasan, isLoading }: Props) {
           <p className="text-lg font-bold leading-tight text-gray-900">
             {ringkasan ? formatRupiah(ringkasan.total_tc_eoq) : '—'}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">per tahun</p>
+          <p className="text-xs text-gray-500 mt-0.5">per tahun</p>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export default function AnalisisStatCards({ ringkasan, isLoading }: Props) {
           <TrendingDown className="w-5 h-5 text-emerald-600" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-emerald-600 font-medium truncate">Total Penghematan</p>
+          <p className="text-xs text-emerald-700 font-medium truncate">Total Penghematan</p>
           <p className="text-lg font-bold leading-tight text-emerald-700">
             {ringkasan ? formatRupiah(ringkasan.total_penghematan) : '—'}
           </p>

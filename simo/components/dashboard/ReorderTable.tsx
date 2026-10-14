@@ -17,13 +17,13 @@ function SeverityBadge({ selisih, rop }: { selisih: number; rop: number }) {
   if (ratio >= 0.5) {
     return <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full">Kritis</span>
   }
-  return <span className="bg-orange-100 text-orange-600 text-xs font-medium px-2 py-0.5 rounded-full">Reorder</span>
+  return <span className="bg-orange-100 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full">Reorder</span>
 }
 
 export default function ReorderTable({ data }: { data: ObatMendesak[] }) {
   if (data.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-400 text-sm">
+      <div className="text-center py-10 text-gray-500 text-sm">
         Semua stok aman ✓
       </div>
     )
@@ -46,12 +46,12 @@ export default function ReorderTable({ data }: { data: ObatMendesak[] }) {
               <td className="py-3 pr-3">
                 <Link href={`/obat/${o.id}/detail`} className="group">
                   <p className="font-medium text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">{o.nama}</p>
-                  <p className="text-xs text-gray-400 font-mono mt-0.5">{o.kode}</p>
+                  <p className="text-xs text-gray-500 font-mono mt-0.5">{o.kode}</p>
                 </Link>
               </td>
               <td className="py-3 text-right">
                 <span className="font-semibold text-red-600">{formatAngka(o.stok, 0)}</span>
-                <span className="text-xs text-gray-400 ml-1">{o.satuan}</span>
+                <span className="text-xs text-gray-500 ml-1">{o.satuan}</span>
               </td>
               <td className="py-3 text-right text-gray-500 text-xs">{formatAngka(o.rop, 1)}</td>
               <td className="py-3 text-right">

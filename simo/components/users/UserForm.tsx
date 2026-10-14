@@ -78,7 +78,7 @@ export default function UserForm({ initial, onClose }: Props) {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Email Google <span className="text-gray-400 font-normal">(opsional)</span>
+              Email Google <span className="text-gray-500 font-normal">(opsional)</span>
             </label>
             <input
               type="email"
@@ -87,7 +87,7 @@ export default function UserForm({ initial, onClose }: Props) {
               placeholder="contoh@gmail.com"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <p className="mt-1 text-xs text-gray-400">Isi jika user ingin login menggunakan Google.</p>
+            <p className="mt-1 text-xs text-gray-500">Isi jika user ingin login menggunakan Google.</p>
           </div>
 
           <div>
@@ -97,7 +97,7 @@ export default function UserForm({ initial, onClose }: Props) {
               <option value="staf">Staf</option>
               <option value="admin">Admin</option>
             </select>
-            <p className="mt-1 text-xs text-gray-400">Admin: akses penuh. Staf: hanya input transaksi.</p>
+            <p className="mt-1 text-xs text-gray-500">Admin: akses penuh. Staf: hanya input transaksi.</p>
           </div>
 
           {isEdit && (
@@ -127,19 +127,19 @@ export default function UserForm({ initial, onClose }: Props) {
           {isEdit && !isSelf && (
             <div className="border-t border-gray-100 pt-4">
               {initial!.jumlah_transaksi > 0 ? (
-                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
                   <Trash2 className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>Tidak bisa dihapus — user memiliki {initial!.jumlah_transaksi} transaksi. Gunakan toggle nonaktif.</span>
                 </div>
               ) : !confirmHapus ? (
                 <button type="button" onClick={() => setConfirmHapus(true)}
-                  className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors">
+                  className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 transition-colors">
                   <Trash2 className="h-3.5 w-3.5" /> Hapus Akun Ini
                 </button>
               ) : (
                 <div className="rounded-lg bg-red-50 border border-red-100 p-3">
                   <p className="text-sm font-medium text-red-700">Hapus akun <span className="font-bold">{initial!.nama}</span>?</p>
-                  <p className="mt-0.5 text-xs text-red-500">Akun akan dihapus permanen dan tidak bisa dikembalikan.</p>
+                  <p className="mt-0.5 text-xs text-red-600">Akun akan dihapus permanen dan tidak bisa dikembalikan.</p>
                   <div className="mt-3 flex gap-2">
                     <button type="button" onClick={() => setConfirmHapus(false)}
                       className="border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg px-3 py-1.5 text-xs transition-colors">

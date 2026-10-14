@@ -29,7 +29,7 @@ export default function DaftarExpiredCard({ data, isLoading, totalUrgent }: Prop
         </div>
       ) : data.length === 0 ? (
         <div className="flex-1 flex items-center justify-center py-6">
-          <p className="text-sm text-gray-400">Tidak ada obat urgent expired dalam 90 hari</p>
+          <p className="text-sm text-gray-500">Tidak ada obat urgent expired dalam 90 hari</p>
         </div>
       ) : (
         <>
@@ -57,7 +57,7 @@ export default function DaftarExpiredCard({ data, isLoading, totalUrgent }: Prop
                         <span className="text-xs text-gray-600">{item.stok} {item.satuan}</span>
                       </td>
                       <td className="py-2.5 text-right whitespace-nowrap">
-                        <span className={`text-xs font-medium ${isKritis ? 'text-red-600' : 'text-orange-500'}`}>
+                        <span className={`text-xs font-medium ${isKritis ? 'text-red-600' : 'text-orange-700'}`}>
                           {formatTanggalPendek(item.expired_terdekat)}
                         </span>
                       </td>

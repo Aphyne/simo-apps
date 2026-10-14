@@ -49,7 +49,7 @@ export default function ObatBatchSummary({ id }: Props) {
           ))}
         </div>
       ) : !data || data.length === 0 ? (
-        <p className="text-center py-10 text-gray-400 text-sm">
+        <p className="text-center py-10 text-gray-500 text-sm">
           Tidak ada data batch dengan expired tercatat
         </p>
       ) : (
@@ -80,7 +80,7 @@ export default function ObatBatchSummary({ id }: Props) {
                     </td>
                     <td className="py-3 px-2 text-right">
                       <span className="font-semibold text-gray-900">{batch.estimasi_sisa}</span>
-                      <span className="text-xs text-gray-400 ml-1">{batch.satuan}</span>
+                      <span className="text-xs text-gray-500 ml-1">{batch.satuan}</span>
                     </td>
                     <td className="py-3 px-2 text-right">
                       <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${badge.cls}`}>

@@ -2,12 +2,34 @@
 
 import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { formatRupiah } from '@/lib/utils'
 import type { BarangKeluar } from '@/types/obat'
 
 const MONTHS = [
   'Januari','Februari','Maret','April','Mei','Juni',
   'Juli','Agustus','September','Oktober','November','Desember',
 ]
+
+interface ChartPoint {
+  nama: string
+  total: number
+  pendapatan: number
+  label: string
+}
+
+// Tooltip custom — dua baris terpisah (unit keluar & total pendapatan),
+// bukan formatter bawaan Recharts yang cuma bisa 1 baris per Bar.
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartPoint }[] }) {
+  if (!active || !payload?.length) return null
+  const data = payload[0].payload
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm">
+      <p className="font-medium text-gray-800 mb-1">{data.nama}</p>
+      <p className="text-blue-600">Keluar: <span className="font-medium">{data.total} unit</span></p>
+      <p className="text-[#10B981]">Total Pendapatan: <span className="font-medium">{formatRupiah(data.pendapatan)}</span></p>
+    </div>
+  )
+}
 
 interface Props {
   allList: BarangKeluar[]
@@ -35,6 +57,8 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
   const chartData = useMemo(() => {
     const filtered = allList.filter(item => {
       if (!item.tanggal) return false
+      // Hanya hitung Penjualan — pemusnahan/retur/rusak/dll bukan pendapatan
+      if (item.keterangan !== 'Penjualan') return false
       const d = new Date(item.tanggal)
       if (mode === 'bulanan') {
         return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth
@@ -42,10 +66,11 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
       return d.getFullYear() === selectedYear
     })
 
-    const map: Record<string, { nama: string; total: number }> = {}
+    const map: Record<string, { nama: string; total: number; pendapatan: number }> = {}
     filtered.forEach(item => {
-      if (!map[item.nama_obat]) map[item.nama_obat] = { nama: item.nama_obat, total: 0 }
+      if (!map[item.nama_obat]) map[item.nama_obat] = { nama: item.nama_obat, total: 0, pendapatan: 0 }
       map[item.nama_obat].total += item.jumlah ?? 0
+      map[item.nama_obat].pendapatan += (item.jumlah ?? 0) * (item.harga_jual ?? 0)
     })
 
     return Object.values(map)
@@ -66,7 +91,7 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div>
           <p className="text-sm font-semibold text-gray-700">Keluar per Obat</p>
-          <p className="text-xs text-gray-400 mt-0.5">{periodeLabel}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{periodeLabel} · khusus Penjualan</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -114,7 +139,7 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
       {isLoading ? (
         <div className="h-[200px] animate-pulse bg-gray-100 rounded-xl" />
       ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-gray-400 text-sm">
+        <p className="text-center py-10 text-gray-500 text-sm">
           Tidak ada barang keluar di {periodeLabel}
         </p>
       ) : (
@@ -123,11 +148,7 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={28} />
-            <Tooltip
-              contentStyle={{ borderRadius: 8, fontSize: 12, border: '1px solid #E5E7EB' }}
-              formatter={(v) => [`${v} unit`, 'Keluar']}
-              labelFormatter={(label) => chartData.find(d => d.label === label)?.nama ?? label}
-            />
+            <Tooltip content={<ChartTooltip />} cursor={{ fill: '#F3F4F6' }} />
             <Bar dataKey="total" fill="#10B981" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

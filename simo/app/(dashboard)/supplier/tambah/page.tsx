@@ -27,7 +27,7 @@ export default function TambahSupplierPage() {
           </Link>
           <div>
             <h1 className="text-sm font-semibold text-gray-900">Tambah Supplier</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Tambahkan pemasok baru ke dalam sistem</p>
+            <p className="text-xs text-gray-500 mt-0.5">Tambahkan pemasok baru ke dalam sistem</p>
           </div>
         </div>
 

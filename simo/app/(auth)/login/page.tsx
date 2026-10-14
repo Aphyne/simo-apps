@@ -71,7 +71,7 @@ export default function LoginPage() {
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 {...register('username', { required: 'Username wajib diisi' })}
               />
-              {errors.username && <p className="text-xs text-red-500 mt-1">{errors.username.message}</p>}
+              {errors.username && <p className="text-xs text-red-600 mt-1">{errors.username.message}</p>}
             </div>
 
             <div>
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 {...register('password', { required: 'Password wajib diisi' })}
               />
-              {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
+              {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>}
             </div>
 
             {errorMsg && (
@@ -104,7 +104,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">atau</span>
+            <span className="text-xs text-gray-500 font-medium">atau</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
@@ -123,11 +123,11 @@ export default function LoginPage() {
           </div>
 
           {googleLoading && (
-            <p className="text-center text-xs text-gray-400 mt-3">Memverifikasi akun Google...</p>
+            <p className="text-center text-xs text-gray-500 mt-3">Memverifikasi akun Google...</p>
           )}
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-500 mt-6">
           Sistem Informasi Manajemen Persediaan Obat · 2026
         </p>
       </div>

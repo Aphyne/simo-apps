@@ -3,19 +3,21 @@
 import { use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, RefreshCw, Pencil } from 'lucide-react'
+import { ChevronLeft, RefreshCw, Pencil, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import StatusBadge from '@/components/ui/StatusBadge'
 import RumusDisplay from '@/components/obat/RumusDisplay'
 import ObatBatchSummary from '@/components/obat/ObatBatchSummary'
 import { useObatById, useObatPerhitungan, useHitungUlang } from '@/hooks/useObat'
+import { useAuthStore } from '@/store/auth.store'
 import { formatRupiah, formatAngka, formatTanggal } from '@/lib/utils'
 
 export default function DetailObatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const { data: obat, isLoading: loadingObat } = useObatById(id)
-  const { data: perhitungan, isLoading: loadingCalc } = useObatPerhitungan(id)
+  const { data: perhitungan, isLoading: loadingCalc } = useObatPerhitungan(id, isAdmin)
   const hitungUlang = useHitungUlang()
 
   if (loadingObat) {
@@ -32,7 +34,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
   }
 
   if (!obat) {
-    return <div className="text-red-500 py-16 text-center text-sm">Obat tidak ditemukan</div>
+    return <div className="text-red-600 py-16 text-center text-sm">Obat tidak ditemukan</div>
   }
 
   return (
@@ -43,7 +45,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         <div>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-600 mb-2 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             Kembali ke Data Obat
@@ -59,16 +61,18 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <div className="flex gap-2 flex-shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => hitungUlang.mutate(Number(id))}
-            disabled={hitungUlang.isPending}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${hitungUlang.isPending ? 'animate-spin' : ''}`} />
-            Hitung Ulang
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => hitungUlang.mutate(Number(id))}
+              disabled={hitungUlang.isPending}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${hitungUlang.isPending ? 'animate-spin' : ''}`} />
+              Hitung Ulang
+            </Button>
+          )}
           <Link href={`/obat/${id}/edit`}>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
               <Pencil className="w-3.5 h-3.5 mr-1.5" />
@@ -98,7 +102,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
                 : 'border-gray-200 bg-white'
             }`}
           >
-            <p className="text-xs text-gray-400 font-medium">{item.label}</p>
+            <p className="text-xs text-gray-500 font-medium">{item.label}</p>
             <p className={`text-sm font-semibold mt-0.5 ${item.alert ? 'text-red-700' : 'text-gray-800'}`}>
               {item.nilai}
             </p>
@@ -111,7 +115,12 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         <h2 className="text-sm font-semibold text-gray-700 mb-4">
           Detail Perhitungan EOQ / Safety Stock / ROP
         </h2>
-        {loadingCalc ? (
+        {!isAdmin ? (
+          <div className="flex flex-col items-center gap-2 py-10 text-gray-500 text-sm">
+            <Lock className="w-5 h-5" />
+            Breakdown rumus perhitungan hanya bisa dilihat oleh admin
+          </div>
+        ) : loadingCalc ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
@@ -120,7 +129,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         ) : perhitungan ? (
           <RumusDisplay data={perhitungan} />
         ) : (
-          <div className="text-center py-10 text-gray-400 text-sm">
+          <div className="text-center py-10 text-gray-500 text-sm">
             Data perhitungan tidak tersedia
           </div>
         )}

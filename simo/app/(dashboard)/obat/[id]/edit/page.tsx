@@ -19,11 +19,11 @@ export default function EditObatPage({ params }: { params: Promise<{ id: string 
   }
 
   if (isLoading) {
-    return <div className="text-gray-400 py-12 text-center">Memuat data obat...</div>
+    return <div className="text-gray-500 py-12 text-center">Memuat data obat...</div>
   }
 
   if (!obat) {
-    return <div className="text-red-500 py-12 text-center">Obat tidak ditemukan</div>
+    return <div className="text-red-600 py-12 text-center">Obat tidak ditemukan</div>
   }
 
   return (

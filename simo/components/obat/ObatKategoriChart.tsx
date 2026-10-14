@@ -31,7 +31,7 @@ export default function ObatKategoriChart({ allObat, isLoading }: Props) {
       {isLoading ? (
         <div className="h-[200px] animate-pulse bg-gray-100 rounded-xl" />
       ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-gray-400 text-sm">Belum ada data obat</p>
+        <p className="text-center py-10 text-gray-500 text-sm">Belum ada data obat</p>
       ) : (
         <div className="flex items-center gap-6">
           {/* Donut */}
@@ -72,7 +72,7 @@ export default function ObatKategoriChart({ allObat, isLoading }: Props) {
                 />
                 <span className="text-xs text-gray-700 flex-1 truncate">{item.name}</span>
                 <span className="text-xs font-semibold text-gray-900 flex-shrink-0">{item.value}</span>
-                <span className="text-xs text-gray-400 flex-shrink-0 w-8 text-right">
+                <span className="text-xs text-gray-500 flex-shrink-0 w-8 text-right">
                   {Math.round((item.value / total) * 100)}%
                 </span>
               </li>

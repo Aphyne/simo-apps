@@ -32,7 +32,7 @@ export default function ResetPasswordModal({ user, onClose }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
           <p className="text-sm text-gray-500">
             Reset password untuk <span className="font-semibold text-gray-700">{user.nama}</span>{' '}
-            <span className="font-mono text-xs text-gray-400">({user.username})</span>
+            <span className="font-mono text-xs text-gray-500">({user.username})</span>
           </p>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Password Baru</label>

@@ -33,7 +33,7 @@ export default function MonitoringPage() {
         </div>
         <div className="flex items-center gap-3">
           {lastUpdate && (
-            <span className="text-xs text-gray-400">Update: {lastUpdate}</span>
+            <span className="text-xs text-gray-500">Update: {lastUpdate}</span>
           )}
           <button
             onClick={() => qc.invalidateQueries({ queryKey: ['monitoring'] })}
@@ -74,7 +74,7 @@ export default function MonitoringPage() {
         {search && (
           <button
             onClick={() => setSearch('')}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+            className="text-xs text-gray-500 hover:text-red-600 transition-colors"
           >
             Reset
           </button>
@@ -87,7 +87,7 @@ export default function MonitoringPage() {
           <span className="text-sm font-medium text-gray-700">
             {data.length} obat dengan riwayat penjualan
           </span>
-          <div className="flex items-center gap-3 text-xs text-gray-400">
+          <div className="flex items-center gap-3 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> ≤ 7 hari
             </span>
@@ -112,7 +112,7 @@ export default function MonitoringPage() {
       </div>
 
       {/* Keterangan */}
-      <p className="text-xs text-gray-400 px-1">
+      <p className="text-xs text-gray-500 px-1">
         Estimasi habis = stok saat ini ÷ rata-rata penjualan harian (30 hari terakhir).
         Obat tanpa riwayat penjualan tidak ditampilkan di halaman ini.
       </p>

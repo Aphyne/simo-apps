@@ -85,14 +85,14 @@ export function useDeleteObat() {
   })
 }
 
-export function useObatPerhitungan(id: number | string | undefined) {
+export function useObatPerhitungan(id: number | string | undefined, enabled = true) {
   return useQuery({
     queryKey: ['obat', id, 'perhitungan'],
     queryFn: async () => {
       const res = await api.get<ApiResponse<DetailPerhitungan>>(`/obat/${id}/perhitungan`)
       return res.data.data
     },
-    enabled: !!id,
+    enabled: !!id && enabled,
   })
 }
 

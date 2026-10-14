@@ -56,7 +56,7 @@ export default function SupplierTable() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-center py-10 text-gray-400 text-sm">
+        <p className="text-center py-10 text-gray-500 text-sm">
           {search ? `Tidak ada supplier dengan kata kunci "${search}"` : 'Belum ada data supplier'}
         </p>
       ) : (
@@ -69,7 +69,7 @@ export default function SupplierTable() {
                 {s.alamat && (
                   <div className="flex items-start gap-1.5 mt-1">
                     <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-gray-400 leading-relaxed">{s.alamat}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{s.alamat}</p>
                   </div>
                 )}
               </div>
@@ -102,7 +102,7 @@ export default function SupplierTable() {
                   Chat WhatsApp
                 </a>
               ) : (
-                <div className="flex items-center justify-center gap-2 bg-gray-50 text-gray-400 border border-gray-200 rounded-lg px-3 py-2 text-xs">
+                <div className="flex items-center justify-center gap-2 bg-gray-50 text-gray-500 border border-gray-200 rounded-lg px-3 py-2 text-xs">
                   <MessageCircle className="w-3.5 h-3.5" />
                   WhatsApp belum tersedia
                 </div>

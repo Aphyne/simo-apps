@@ -55,7 +55,7 @@ export default function AlertNotification() {
                   <li key={alert.id} className="rounded-xl border border-gray-100 bg-white p-3 space-y-2 shadow-sm">
                     {/* Badge */}
                     <span className={`inline-flex items-center gap-1 text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full ${
-                      isKritis ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
+                      isKritis ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-700'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isKritis ? 'bg-red-500' : 'bg-orange-500'}`} />
                       {isKritis ? 'STOK HABIS' : 'REORDER ALERT'}

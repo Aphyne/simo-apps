@@ -25,7 +25,7 @@ export default function AnalisisTable({ detail, ringkasan, isLoading, onSelectIt
           ))}
         </div>
       ) : detail.length === 0 ? (
-        <p className="text-center py-10 text-gray-400 text-sm">
+        <p className="text-center py-10 text-gray-500 text-sm">
           Belum ada data. Lengkapi parameter biaya pada data obat terlebih dahulu.
         </p>
       ) : (
@@ -46,7 +46,7 @@ export default function AnalisisTable({ detail, ringkasan, isLoading, onSelectIt
                 <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{item.nama}</div>
-                    <div className="text-xs text-gray-400 font-mono">{item.kode} · {item.satuan}</div>
+                    <div className="text-xs text-gray-500 font-mono">{item.kode} · {item.satuan}</div>
                   </td>
                   <td className="px-4 py-3 text-right text-gray-700">
                     {formatRupiah(item.tc_tradisional)}
@@ -54,7 +54,7 @@ export default function AnalisisTable({ detail, ringkasan, isLoading, onSelectIt
                   <td className="px-4 py-3 text-right text-blue-600 font-medium">
                     {formatRupiah(item.tc_eoq)}
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-emerald-600">
+                  <td className="px-4 py-3 text-right font-medium text-emerald-700">
                     {formatRupiah(item.penghematan)}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -83,7 +83,7 @@ export default function AnalisisTable({ detail, ringkasan, isLoading, onSelectIt
                   <td className="px-4 py-3 text-sm">Total</td>
                   <td className="px-4 py-3 text-right text-sm">{formatRupiah(ringkasan.total_tc_tradisional)}</td>
                   <td className="px-4 py-3 text-right text-sm text-blue-600">{formatRupiah(ringkasan.total_tc_eoq)}</td>
-                  <td className="px-4 py-3 text-right text-sm text-emerald-600">{formatRupiah(ringkasan.total_penghematan)}</td>
+                  <td className="px-4 py-3 text-right text-sm text-emerald-700">{formatRupiah(ringkasan.total_penghematan)}</td>
                   <td className="px-4 py-3 text-right">
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
                       +{ringkasan.persen_hemat_total}%

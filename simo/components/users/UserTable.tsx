@@ -88,7 +88,7 @@ export default function UserTable({ users, isLoading }: Props) {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm text-gray-400">
+                  <td colSpan={6} className="py-10 text-center text-sm text-gray-500">
                     <div className="flex items-center justify-center gap-2">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                       Memuat data...
@@ -97,7 +97,7 @@ export default function UserTable({ users, isLoading }: Props) {
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm text-gray-400">
+                  <td colSpan={6} className="py-10 text-center text-sm text-gray-500">
                     {search || filterRole !== 'semua' || filterStatus !== 'semua'
                       ? 'Tidak ada user yang sesuai filter'
                       : 'Belum ada user'}
@@ -108,7 +108,7 @@ export default function UserTable({ users, isLoading }: Props) {
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{u.nama}</div>
                     {u.id === currentUser?.id && (
-                      <span className="text-xs text-blue-500">akun kamu</span>
+                      <span className="text-xs text-blue-600">akun kamu</span>
                     )}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">{u.username}</td>
@@ -161,7 +161,7 @@ export default function UserTable({ users, isLoading }: Props) {
 
         {/* Footer note */}
         <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-500">
             Hapus akun permanen tersedia di dalam menu Edit. User yang sudah memiliki transaksi tidak bisa dihapus.
           </p>
         </div>

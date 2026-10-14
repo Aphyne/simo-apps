@@ -66,7 +66,7 @@ export default function BarangMasukPerObatChart({ allList, isLoading }: Props) {
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div>
           <p className="text-sm font-semibold text-gray-700">Masuk per Obat</p>
-          <p className="text-xs text-gray-400 mt-0.5">{periodeLabel}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{periodeLabel}</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -114,7 +114,7 @@ export default function BarangMasukPerObatChart({ allList, isLoading }: Props) {
       {isLoading ? (
         <div className="h-[200px] animate-pulse bg-gray-100 rounded-xl" />
       ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-gray-400 text-sm">
+        <p className="text-center py-10 text-gray-500 text-sm">
           Tidak ada barang masuk di {periodeLabel}
         </p>
       ) : (

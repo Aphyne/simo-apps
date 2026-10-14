@@ -13,6 +13,7 @@ interface PengaturanData {
   default_lead_time?: { value: string }
   default_biaya_pesan?: { value: string }
   threshold_expired_hari?: { value: string }
+  asumsi_dus_tradisional?: { value: string }
 }
 
 interface Props {
@@ -30,6 +31,7 @@ export default function PengaturanForm({ data }: Props) {
     default_lead_time: '3',
     default_biaya_pesan: '0',
     threshold_expired_hari: '90',
+    asumsi_dus_tradisional: '2',
   })
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function PengaturanForm({ data }: Props) {
       default_lead_time:      data.default_lead_time?.value      ?? '3',
       default_biaya_pesan:    data.default_biaya_pesan?.value    ?? '0',
       threshold_expired_hari: data.threshold_expired_hari?.value ?? '90',
+      asumsi_dus_tradisional: data.asumsi_dus_tradisional?.value ?? '2',
     })
   }, [data])
 
@@ -65,7 +68,7 @@ export default function PengaturanForm({ data }: Props) {
             <input value={form.nama_apotek} onChange={e => set('nama_apotek', e.target.value)}
               placeholder="Apotek Rezky Medika"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-400">Tampil di header semua laporan yang dicetak</p>
+            <p className="mt-1 text-xs text-gray-500">Tampil di header semua laporan yang dicetak</p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Alamat Apotek</label>
@@ -85,7 +88,7 @@ export default function PengaturanForm({ data }: Props) {
       {/* Default Kalkulasi EOQ */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-700 mb-1">Default Kalkulasi EOQ</h2>
-        <p className="text-xs text-gray-400 mb-4">Nilai ini dipakai saat obat baru ditambahkan dan belum diisi manual. Bisa diubah per obat di halaman Edit Obat.</p>
+        <p className="text-xs text-gray-500 mb-4">Nilai ini dipakai saat obat baru ditambahkan dan belum diisi manual. Bisa diubah per obat di halaman Edit Obat.</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Service Level Default</label>
@@ -95,20 +98,36 @@ export default function PengaturanForm({ data }: Props) {
                 <option key={o.value} value={String(o.value)}>{o.label}</option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-gray-400">Dipakai untuk hitung Safety Stock</p>
+            <p className="mt-1 text-xs text-gray-500">Dipakai untuk hitung Safety Stock</p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Lead Time Default (hari)</label>
             <input type="number" min="1" value={form.default_lead_time} onChange={e => set('default_lead_time', e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-400">Berapa hari barang datang setelah dipesan</p>
+            <p className="mt-1 text-xs text-gray-500">Berapa hari barang datang setelah dipesan</p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Pesan Default (Rp)</label>
             <input type="number" min="0" value={form.default_biaya_pesan} onChange={e => set('default_biaya_pesan', e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-400">Apotek Rezky Medika: Rp 0 (tidak ada biaya pengiriman)</p>
+            <p className="mt-1 text-xs text-gray-500">Apotek Rezky Medika: Rp 0 (tidak ada biaya pengiriman)</p>
           </div>
+        </div>
+      </div>
+
+      {/* Analisis Komparatif */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Analisis Komparatif</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Dipakai untuk menghitung biaya skenario &quot;sebelum EOQ&quot; (tradisional) di halaman Analisis Komparatif dan chart Perbandingan Biaya Dashboard.
+        </p>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">Asumsi Jumlah Dus per Pemesanan (Tradisional)</label>
+          <input type="number" min="0.1" step="0.1" value={form.asumsi_dus_tradisional} onChange={e => set('asumsi_dus_tradisional', e.target.value)}
+            className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          <p className="mt-1 text-xs text-gray-500">
+            Angka asumsi tetap, bukan dihitung dari riwayat transaksi supaya tidak tercemar kebiasaan pesan yang sudah ikut rekomendasi EOQ dari sistem ini. Default 2 dus.
+          </p>
         </div>
       </div>
 
@@ -122,7 +141,7 @@ export default function PengaturanForm({ data }: Props) {
               className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             <span className="text-sm text-gray-500">hari sebelum expired</span>
           </div>
-          <p className="mt-1 text-xs text-gray-400">Obat dengan expired dalam rentang ini tampil di peringatan dashboard dan laporan kedaluarsa</p>
+          <p className="mt-1 text-xs text-gray-500">Obat dengan expired dalam rentang ini tampil di peringatan dashboard dan laporan kedaluarsa</p>
         </div>
       </div>
 

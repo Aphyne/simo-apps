@@ -39,7 +39,7 @@ export default function SimulasiChart({ hasil }: Props) {
 
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-3">
+      <p className="text-xs text-gray-500 mb-3">
         Satuan: {obat.satuan} — EOQ, Safety Stock, dan ROP dalam satuan terkecil
       </p>
       <ResponsiveContainer width="100%" height={220}>

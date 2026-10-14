@@ -151,17 +151,17 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="nama">Nama Obat <span className="text-red-500">*</span></Label>
+            <Label htmlFor="nama">Nama Obat <span className="text-red-600">*</span></Label>
             <Input
               id="nama"
               placeholder="cth. Paracetamol 500mg"
               {...register('nama', { required: 'Nama obat wajib diisi' })}
             />
-            {errors.nama && <p className="text-xs text-red-500">{errors.nama.message}</p>}
+            {errors.nama && <p className="text-xs text-red-600">{errors.nama.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Kategori <span className="text-red-500">*</span></Label>
+            <Label>Kategori <span className="text-red-600">*</span></Label>
             <Select value={kategoriValue} onValueChange={(v) => setValue('kategori', v)}>
               <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
               <SelectContent>
@@ -169,11 +169,11 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
               </SelectContent>
             </Select>
             <input type="hidden" {...register('kategori', { required: 'Kategori wajib dipilih' })} />
-            {errors.kategori && <p className="text-xs text-red-500">{errors.kategori.message}</p>}
+            {errors.kategori && <p className="text-xs text-red-600">{errors.kategori.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Satuan Terkecil <span className="text-red-500">*</span>
+            <Label>Satuan Terkecil <span className="text-red-600">*</span>
               <Info_ text="Satuan terkecil yang digunakan untuk menghitung stok. Contoh: tablet, kapsul, botol. Bukan dus atau strip." />
             </Label>
             <Select value={satuanValue} onValueChange={(v) => setValue('satuan', v)}>
@@ -183,27 +183,27 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
               </SelectContent>
             </Select>
             <input type="hidden" {...register('satuan', { required: 'Satuan wajib dipilih' })} />
-            {errors.satuan && <p className="text-xs text-red-500">{errors.satuan.message}</p>}
+            {errors.satuan && <p className="text-xs text-red-600">{errors.satuan.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="satuan_per_dus">
-              Isi per Dus <span className="text-red-500">*</span>
+              Isi per Dus <span className="text-red-600">*</span>
               <Info_ text={`Berapa ${satuanValue || 'satuan'} dalam 1 dus/box kemasan besar. Contoh: 1 dus Paracetamol = 100 tablet, isi "100".`} />
             </Label>
             <Input id="satuan_per_dus" type="number" min={1}
               {...register('satuan_per_dus', { valueAsNumber: true, min: { value: 1, message: 'Isi per dus minimal 1' }, required: 'Isi per dus wajib diisi' })} />
-            {errors.satuan_per_dus && <p className="text-xs text-red-500">{errors.satuan_per_dus.message}</p>}
+            {errors.satuan_per_dus && <p className="text-xs text-red-600">{errors.satuan_per_dus.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="stok">
-              Stok Awal <span className="text-red-500">*</span>
+              Stok Awal <span className="text-red-600">*</span>
               <Info_ text={`Jumlah stok saat ini dalam satuan terkecil (${satuanValue || 'satuan'}), bukan dus. Isi 0 jika obat belum tersedia.`} />
             </Label>
             <Input id="stok" type="number" min={0}
               {...register('stok', { valueAsNumber: true, min: { value: 0, message: 'Stok tidak boleh negatif' } })} />
-            {errors.stok && <p className="text-xs text-red-500">{errors.stok.message}</p>}
+            {errors.stok && <p className="text-xs text-red-600">{errors.stok.message}</p>}
           </div>
 
 
@@ -231,7 +231,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 value={demandHarian ?? 0}
                 onChange={(e) => handleDemandHarianChange(parseFloat(e.target.value) || 0)}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
                 {satuanValue || 'unit'}/hari
               </span>
             </div>
@@ -253,7 +253,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 value={Math.round(demandTahunan ?? 0)}
                 onChange={(e) => handleDemandTahunanChange(parseFloat(e.target.value) || 0)}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
                 {satuanValue || 'unit'}/tahun
               </span>
             </div>
@@ -287,7 +287,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
               step="any"
               {...register('std_dev_demand', { valueAsNumber: true, min: 0 })}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
               {satuanValue || 'unit'}/hari
             </span>
           </div>
@@ -376,15 +376,15 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
           {/* Biaya Pesan */}
           <div className="space-y-1.5">
             <Label htmlFor="biaya_pesan">
-              Biaya Pesan / Order (S) <span className="text-red-500">*</span>
+              Biaya Pesan / Order (S) <span className="text-red-600">*</span>
               <Info_ text="Biaya yang dikeluarkan setiap kali memesan obat ini, misalnya alokasi ongkos kirim atau biaya admin. Isi 0 jika tidak ada biaya pemesanan." />
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">Rp</span>
               <Input id="biaya_pesan" type="number" min={0} step={100} className="pl-9"
                 {...register('biaya_pesan', { valueAsNumber: true, min: 0 })} />
             </div>
-            <p className="text-xs text-gray-400">Isi 0 jika tidak ada biaya pemesanan</p>
+            <p className="text-xs text-gray-500">Isi 0 jika tidak ada biaya pemesanan</p>
           </div>
 
           {/* Service Level */}

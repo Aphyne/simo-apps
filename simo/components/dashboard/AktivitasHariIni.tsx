@@ -37,7 +37,7 @@ export default function AktivitasHariIni() {
       <div className="flex items-center gap-2 mb-4">
         <p className="text-sm font-semibold text-gray-700">Keluar Hari Ini</p>
         {todayList.length > 0 && (
-          <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">
+          <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
             {todayList.length} obat
           </span>
         )}
@@ -50,7 +50,7 @@ export default function AktivitasHariIni() {
           ))}
         </div>
       ) : todayList.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-8 text-gray-400">
+        <div className="flex-1 flex flex-col items-center justify-center py-8 text-gray-500">
           <PackageMinus className="w-8 h-8 mb-2 text-gray-300" />
           <p className="text-sm">Belum ada barang keluar hari ini</p>
         </div>
@@ -62,7 +62,7 @@ export default function AktivitasHariIni() {
                 {idx + 1}
               </span>
               <p className="flex-1 text-xs font-medium text-gray-800 truncate">{item.nama}</p>
-              <span className="text-xs font-semibold text-orange-600 flex-shrink-0">
+              <span className="text-xs font-semibold text-orange-700 flex-shrink-0">
                 -{item.total} {item.satuan}
               </span>
             </li>

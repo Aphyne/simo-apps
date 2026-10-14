@@ -16,15 +16,15 @@ const STATUS_CONFIG = {
 
 function EstHabis({ hari }: { hari: number }) {
   if (hari <= 7)  return <span className="font-bold text-red-600">{hari} hari ⚠️</span>
-  if (hari <= 14) return <span className="font-semibold text-orange-500">{hari} hari</span>
-  if (hari <= 30) return <span className="text-yellow-600">{hari} hari</span>
+  if (hari <= 14) return <span className="font-semibold text-orange-700">{hari} hari</span>
+  if (hari <= 30) return <span className="text-yellow-700">{hari} hari</span>
   return <span className="text-gray-600">{hari} hari</span>
 }
 
 export default function MonitoringTable({ data }: Props) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
+      <div className="flex items-center justify-center h-40 text-gray-500 text-sm">
         Belum ada obat dengan riwayat penjualan. Catat barang keluar (Penjualan) terlebih dahulu.
       </div>
     )
@@ -50,7 +50,7 @@ export default function MonitoringTable({ data }: Props) {
             const cfg = STATUS_CONFIG[item.status_stok]
             return (
               <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-gray-400 text-xs">{idx + 1}</td>
+                <td className="px-4 py-3 text-gray-500 text-xs">{idx + 1}</td>
 
                 <td className="px-4 py-3">
                   <Link
@@ -59,19 +59,19 @@ export default function MonitoringTable({ data }: Props) {
                   >
                     {item.nama}
                   </Link>
-                  <div className="text-xs text-gray-400">{item.kode}</div>
+                  <div className="text-xs text-gray-500">{item.kode}</div>
                 </td>
 
                 <td className="px-4 py-3 text-gray-500">{item.kategori}</td>
 
                 <td className="px-4 py-3 text-right font-medium text-gray-900">
                   {item.stok.toLocaleString('id-ID')}
-                  <span className="text-xs text-gray-400 ml-1">{item.satuan}</span>
+                  <span className="text-xs text-gray-500 ml-1">{item.satuan}</span>
                 </td>
 
                 <td className="px-4 py-3 text-right text-gray-600">
                   {item.demand_harian}
-                  <span className="text-xs text-gray-400 ml-1">{item.satuan}/hari</span>
+                  <span className="text-xs text-gray-500 ml-1">{item.satuan}/hari</span>
                 </td>
 
                 <td className="px-4 py-3 text-right">

@@ -36,11 +36,11 @@ function calcTC(D: number, S: number, eoq: number | null, H: number): number | n
 // ── Helper UI ─────────────────────────────────────────────────────────────────
 function Selisih({ val, isRupiah = false }: { val: number | null; isRupiah?: boolean }) {
   if (val === null) return <span className="text-gray-300">—</span>
-  if (Math.abs(val) < 0.01) return <span className="text-xs text-gray-400">tidak berubah</span>
+  if (Math.abs(val) < 0.01) return <span className="text-xs text-gray-500">tidak berubah</span>
   const plus = val > 0
   const label = isRupiah ? formatRupiah(Math.abs(val)) : Math.abs(val).toLocaleString('id-ID')
   return (
-    <span className={`text-xs font-semibold ${plus ? 'text-red-600' : 'text-emerald-600'}`}>
+    <span className={`text-xs font-semibold ${plus ? 'text-red-600' : 'text-emerald-700'}`}>
       {plus ? '+' : '-'}{label}
     </span>
   )
@@ -62,7 +62,7 @@ function BarisBanding({
     <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors last:border-0">
       <td className="px-4 py-2.5 text-sm">
         <div className="font-medium text-gray-700">{label}</div>
-        {desc && <div className="text-xs text-gray-400">{desc}</div>}
+        {desc && <div className="text-xs text-gray-500">{desc}</div>}
       </td>
       <td className="px-4 py-2.5 text-sm text-right text-gray-700">{fmt(sekarang)}</td>
       <td className="px-4 py-2.5 text-sm text-right font-semibold text-blue-600">{fmt(simulasi)}</td>
@@ -79,7 +79,7 @@ function RiwayatSimulasi() {
 
   if (isLoading) return <div className="h-16 animate-pulse bg-gray-100 rounded-xl mx-5 mb-4" />
   if (list.length === 0) return (
-    <p className="text-center py-10 text-gray-400 text-sm">Belum ada simulasi yang disimpan.</p>
+    <p className="text-center py-10 text-gray-500 text-sm">Belum ada simulasi yang disimpan.</p>
   )
 
   return (
@@ -96,13 +96,13 @@ function RiwayatSimulasi() {
             >
               <div>
                 <p className="text-sm font-medium text-gray-900">{s.nama_skenario}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-500">
                   {s.nama_obat} · {formatTanggal(s.created_at)}
                   {s.nama_user && ` · oleh ${s.nama_user}`}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 hidden sm:block">
+                <span className="text-xs text-gray-500 hidden sm:block">
                   {p.demand_perubahan_pct > 0 ? '+' : ''}{p.demand_perubahan_pct}% permintaan
                 </span>
                 <button
@@ -278,7 +278,7 @@ export default function SimulasiPage() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-sm font-semibold text-gray-700">Obat yang Disimulasikan</p>
-            <p className="text-xs text-gray-400 mt-0.5">Coba-coba skenario, data asli tidak akan berubah.</p>
+            <p className="text-xs text-gray-500 mt-0.5">Coba-coba skenario, data asli tidak akan berubah.</p>
           </div>
           <button
             onClick={() => setShowInfo1((v) => !v)}
@@ -310,30 +310,30 @@ export default function SimulasiPage() {
         {/* Nilai saat ini — muncul setelah pilih */}
         {o && (
           <div className="mt-3 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Nilai Saat Ini</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nilai Saat Ini</p>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-x-4 gap-y-1 text-xs">
               <div>
-                <p className="text-gray-400">D/tahun</p>
+                <p className="text-gray-500">D/tahun</p>
                 <p className="font-medium text-gray-700">{Math.round(o.demand_tahunan ?? 0).toLocaleString('id-ID')} {o.satuan}</p>
               </div>
               <div>
-                <p className="text-gray-400">D/hari</p>
+                <p className="text-gray-500">D/hari</p>
                 <p className="font-medium text-gray-700">{o.demand_harian ?? 0} {o.satuan}</p>
               </div>
               <div>
-                <p className="text-gray-400">Biaya pesan (S)</p>
+                <p className="text-gray-500">Biaya pesan (S)</p>
                 <p className="font-medium text-gray-700">{formatRupiah(o.biaya_pesan ?? 0)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Biaya simpan (H)</p>
+                <p className="text-gray-500">Biaya simpan (H)</p>
                 <p className="font-medium text-gray-700">{formatRupiah(o.biaya_simpan ?? 0)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Lead time</p>
+                <p className="text-gray-500">Lead time</p>
                 <p className="font-medium text-gray-700">{o.lead_time ?? 1} hari</p>
               </div>
               <div>
-                <p className="text-gray-400">σ (std dev)</p>
+                <p className="text-gray-500">σ (std dev)</p>
                 <p className="font-medium text-gray-700">{o.std_dev_demand ?? 0}</p>
               </div>
             </div>
@@ -370,7 +370,7 @@ export default function SimulasiPage() {
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Perubahan Permintaan (%)
-                  <span className="ml-2 text-xs text-gray-400 font-normal">
+                  <span className="ml-2 text-xs text-gray-500 font-normal">
                     → {Math.round((o.demand_tahunan ?? 0) * (1 + (parseFloat(pct) || 0) / 100)).toLocaleString('id-ID')} {o.satuan}/thn
                   </span>
                 </label>
@@ -382,7 +382,7 @@ export default function SimulasiPage() {
                     step="5"
                     className={`w-24 ${inputCls}`}
                   />
-                  <span className="text-sm text-gray-400">%</span>
+                  <span className="text-sm text-gray-500">%</span>
                   <div className="flex gap-1 flex-wrap">
                     {[-20, -10, 0, 10, 20, 30].map((v) => (
                       <button
@@ -403,7 +403,7 @@ export default function SimulasiPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Lead Time baru <span className="text-gray-400 font-normal">(hari)</span>
+                  Lead Time baru <span className="text-gray-500 font-normal">(hari)</span>
                 </label>
                 <input
                   type="number"
@@ -416,7 +416,7 @@ export default function SimulasiPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Biaya sekali pesan baru <span className="text-gray-400 font-normal">(Rp)</span>
+                  Biaya sekali pesan baru <span className="text-gray-500 font-normal">(Rp)</span>
                 </label>
                 <input
                   type="number"
@@ -429,7 +429,7 @@ export default function SimulasiPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Biaya simpan baru <span className="text-gray-400 font-normal">(Rp / unit / tahun)</span>
+                  Biaya simpan baru <span className="text-gray-500 font-normal">(Rp / unit / tahun)</span>
                 </label>
                 <input
                   type="number"
@@ -553,11 +553,11 @@ export default function SimulasiPage() {
               <div className="flex items-center justify-between mb-4">
                 <p className="text-xs font-semibold text-gray-500">Perbandingan Sekarang vs Skenario</p>
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
                     <span className="w-2 h-2 rounded-full bg-[#94a3b8] inline-block flex-shrink-0" />
                     Sekarang
                   </span>
-                  <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
                     <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block flex-shrink-0" />
                     Simulasi
                   </span>
@@ -587,7 +587,7 @@ export default function SimulasiPage() {
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-200">
           <h2 className="text-sm font-semibold text-gray-700">Riwayat Skenario Tersimpan</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Klik baris untuk lihat detail</p>
+          <p className="text-xs text-gray-500 mt-0.5">Klik baris untuk lihat detail</p>
         </div>
         <RiwayatSimulasi />
       </div>

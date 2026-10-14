@@ -98,7 +98,7 @@ export default function ObatCombobox({
       {open && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="px-4 py-3 text-xs text-gray-400 text-center">Tidak ada obat yang cocok</p>
+            <p className="px-4 py-3 text-xs text-gray-500 text-center">Tidak ada obat yang cocok</p>
           ) : (
             filtered.map((o) => (
               <button
@@ -114,16 +114,16 @@ export default function ObatCombobox({
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{o.nama}</p>
-                  <p className="text-xs text-gray-400">
-                    Stok: <span className={o.stok <= 0 ? 'text-red-500 font-medium' : 'text-gray-600'}>{o.stok} {o.satuan}</span>
+                  <p className="text-xs text-gray-500">
+                    Stok: <span className={o.stok <= 0 ? 'text-red-600 font-medium' : 'text-gray-600'}>{o.stok} {o.satuan}</span>
                   </p>
                 </div>
-                <span className="text-xs text-gray-400 font-mono flex-shrink-0">{o.kode}</span>
+                <span className="text-xs text-gray-500 font-mono flex-shrink-0">{o.kode}</span>
               </button>
             ))
           )}
           {!query && obatList.length > 15 && (
-            <p className="px-4 py-2 text-xs text-gray-400 text-center border-t border-gray-100">
+            <p className="px-4 py-2 text-xs text-gray-500 text-center border-t border-gray-100">
               Ketik untuk mencari dari {obatList.length} obat
             </p>
           )}

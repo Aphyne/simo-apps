@@ -39,7 +39,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
       {/* Nama Supplier */}
       <div>
         <label htmlFor="nama" className="text-sm font-medium text-gray-700 mb-1 block">
-          Nama Supplier <span className="text-red-500">*</span>
+          Nama Supplier <span className="text-red-600">*</span>
         </label>
         <input
           id="nama"
@@ -47,7 +47,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           {...register('nama', { required: 'Nama supplier wajib diisi' })}
         />
-        {errors.nama && <p className="text-xs text-red-500 mt-1">{errors.nama.message}</p>}
+        {errors.nama && <p className="text-xs text-red-600 mt-1">{errors.nama.message}</p>}
       </div>
 
       {/* Alamat */}
@@ -66,8 +66,8 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
       {/* Telepon + WhatsApp */}
       <div>
         <p className="text-sm font-medium text-gray-700 mb-2">
-          Kontak <span className="text-red-500">*</span>
-          <span className="text-xs font-normal text-gray-400 ml-1">(isi minimal salah satu)</span>
+          Kontak <span className="text-red-600">*</span>
+          <span className="text-xs font-normal text-gray-500 ml-1">(isi minimal salah satu)</span>
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -95,7 +95,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
                 onChange: () => trigger('telepon'),
               })}
             />
-            <p className="text-xs text-gray-400 mt-1">Format angka tanpa tanda hubung</p>
+            <p className="text-xs text-gray-500 mt-1">Format angka tanpa tanda hubung</p>
           </div>
         </div>
       </div>
@@ -111,14 +111,14 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           {...register('jenis_obat')}
         />
-        <p className="text-xs text-gray-400 mt-1">Pisahkan dengan koma jika lebih dari satu jenis</p>
+        <p className="text-xs text-gray-500 mt-1">Pisahkan dengan koma jika lebih dari satu jenis</p>
       </div>
 
       {/* Lead Time + Biaya Pesan */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="lead_time_avg" className="text-sm font-medium text-gray-700 mb-1 block">
-            Lead Time (hari) <span className="text-red-500">*</span>
+            Lead Time (hari) <span className="text-red-600">*</span>
           </label>
           <input
             id="lead_time_avg"
@@ -127,14 +127,14 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             {...register('lead_time_avg', { valueAsNumber: true, min: 1, required: true })}
           />
-          <p className="text-xs text-gray-400 mt-1">Hari dari pesan hingga barang datang</p>
+          <p className="text-xs text-gray-500 mt-1">Hari dari pesan hingga barang datang</p>
         </div>
         <div>
           <label htmlFor="biaya_pesan" className="text-sm font-medium text-gray-700 mb-1 block">
-            Biaya Pesan per Order (S) <span className="text-red-500">*</span>
+            Biaya Pesan per Order (S) <span className="text-red-600">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">Rp</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">Rp</span>
             <input
               id="biaya_pesan"
               type="number"
@@ -144,7 +144,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
               {...register('biaya_pesan', { valueAsNumber: true, min: 0 })}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-1">Biaya admin/ongkir per sekali pesan</p>
+          <p className="text-xs text-gray-500 mt-1">Biaya admin/ongkir per sekali pesan</p>
         </div>
       </div>
 

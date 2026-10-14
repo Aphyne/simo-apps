@@ -30,7 +30,7 @@ export default function EditSupplierPage({ params }: { params: Promise<{ id: str
           </Link>
           <div>
             <h1 className="text-sm font-semibold text-gray-900">Edit Supplier</h1>
-            <p className="text-xs text-gray-400 mt-0.5">{supplier?.nama ?? 'Memuat data...'}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{supplier?.nama ?? 'Memuat data...'}</p>
           </div>
         </div>
 
@@ -43,7 +43,7 @@ export default function EditSupplierPage({ params }: { params: Promise<{ id: str
               ))}
             </div>
           ) : !supplier ? (
-            <p className="text-center py-10 text-gray-400 text-sm">Supplier tidak ditemukan</p>
+            <p className="text-center py-10 text-gray-500 text-sm">Supplier tidak ditemukan</p>
           ) : (
             <SupplierForm
               defaultValues={supplier}

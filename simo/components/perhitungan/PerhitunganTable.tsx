@@ -64,11 +64,11 @@ function DetailPanel({ obat }: { obat: Obat }) {
           </div>
         </div>
         {isLoading ? (
-          <div className="text-center py-10 text-gray-400 text-sm">Memuat perhitungan...</div>
+          <div className="text-center py-10 text-gray-500 text-sm">Memuat perhitungan...</div>
         ) : perhitungan ? (
           <RumusDisplay data={perhitungan} />
         ) : (
-          <div className="text-center py-10 text-gray-400 text-sm">Data tidak tersedia</div>
+          <div className="text-center py-10 text-gray-500 text-sm">Data tidak tersedia</div>
         )}
       </div>
     </div>
@@ -167,19 +167,19 @@ export default function PerhitunganTable() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Kode</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Nama Obat</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  D<span className="block normal-case font-normal tracking-normal text-gray-400">demand/tahun</span>
+                  D<span className="block normal-case font-normal tracking-normal text-gray-500">demand/tahun</span>
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  EOQ<span className="block normal-case font-normal tracking-normal text-gray-400">qty order optimal</span>
+                  EOQ<span className="block normal-case font-normal tracking-normal text-gray-500">qty order optimal</span>
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  SS<span className="block normal-case font-normal tracking-normal text-gray-400">safety stock</span>
+                  SS<span className="block normal-case font-normal tracking-normal text-gray-500">safety stock</span>
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  ROP<span className="block normal-case font-normal tracking-normal text-gray-400">reorder point</span>
+                  ROP<span className="block normal-case font-normal tracking-normal text-gray-500">reorder point</span>
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  Total Cost<span className="block normal-case font-normal tracking-normal text-gray-400">biaya/tahun</span>
+                  Total Cost<span className="block normal-case font-normal tracking-normal text-gray-500">biaya/tahun</span>
                 </th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Status</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Detail</th>
@@ -190,7 +190,7 @@ export default function PerhitunganTable() {
                 <SkeletonRows />
               ) : obatList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-10 text-gray-400 text-sm">Tidak ada data</td>
+                  <td colSpan={9} className="text-center py-10 text-gray-500 text-sm">Tidak ada data</td>
                 </tr>
               ) : (
                 obatList.map((obat) => (
@@ -201,7 +201,7 @@ export default function PerhitunganTable() {
                       }`}
                       onClick={() => toggleDetail(obat.id)}
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-gray-400 whitespace-nowrap">{obat.kode}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{obat.kode}</td>
                       <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{obat.nama}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-gray-700">
                         {obat.demand_tahunan ? formatAngka(obat.demand_tahunan, 0) : <span className="text-gray-300">—</span>}
@@ -213,12 +213,12 @@ export default function PerhitunganTable() {
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.safety_stock != null
-                          ? <span className="font-semibold text-emerald-600">{formatAngka(obat.safety_stock, 2)}</span>
+                          ? <span className="font-semibold text-emerald-700">{formatAngka(obat.safety_stock, 2)}</span>
                           : <span className="text-xs text-gray-300 italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.rop != null
-                          ? <span className="font-semibold text-orange-600">{formatAngka(obat.rop, 2)}</span>
+                          ? <span className="font-semibold text-orange-700">{formatAngka(obat.rop, 2)}</span>
                           : <span className="text-xs text-gray-300 italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
@@ -230,7 +230,7 @@ export default function PerhitunganTable() {
                         <StatusBadge status={obat.status} />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-xs font-medium ${selectedId === obat.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                        <span className={`text-xs font-medium ${selectedId === obat.id ? 'text-blue-600' : 'text-gray-500'}`}>
                           {selectedId === obat.id ? '▲ Tutup' : '▼ Lihat'}
                         </span>
                       </td>
@@ -291,7 +291,7 @@ export default function PerhitunganTable() {
         )}
       </div>
 
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-500">
         Klik baris untuk expand detail kalkulasi • Klik "Halaman Penuh" untuk tampilan lebih lengkap
       </p>
     </div>
