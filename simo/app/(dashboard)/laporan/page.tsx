@@ -136,8 +136,8 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
         </div>
 
         <div className="flex-1 overflow-auto bg-gray-100 p-6">
-          <div className="relative mx-auto min-w-max rounded-sm bg-white px-10 py-8 shadow-md"
-               style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
+          {/* Lebar ~210mm (A4 portrait) supaya preview sama proporsinya dengan PDF yang diunduh */}
+          <div className="relative mx-auto rounded-sm bg-white px-10 py-8 shadow-md" style={{ fontFamily: 'Helvetica, Arial, sans-serif', width: '210mm' }}>
             <div className="absolute left-10 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600">
               <span className="text-xs font-bold text-white leading-none">+</span>
             </div>
@@ -153,11 +153,11 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
               {keterangan && <div>{keterangan}</div>}
               <div>Dicetak: {tgl}</div>
             </div>
-            <table className="mt-4 w-full border-collapse text-xs">
+            <table className="mt-4 w-full table-fixed border-collapse text-[9px]">
               <thead>
                 <tr>
                   {kolom.map((h, i) => (
-                    <th key={i} className="border border-gray-300 px-2 py-1.5 text-left font-semibold text-white whitespace-nowrap"
+                    <th key={i} className="border border-gray-300 px-1.5 py-1 text-left font-semibold text-white break-words"
                         style={{ backgroundColor: '#2563eb' }}>
                       {h}
                     </th>
@@ -174,7 +174,7 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
                 ) : baris.map((row, ri) => (
                   <tr key={ri} style={{ backgroundColor: ri % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="border border-gray-200 px-2 py-1 whitespace-nowrap text-gray-700">{cell}</td>
+                      <td key={ci} className="border border-gray-200 px-1.5 py-1 break-words text-gray-700">{cell}</td>
                     ))}
                   </tr>
                 ))}
@@ -184,7 +184,7 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
                   {footerBaris.map((row, ri) => (
                     <tr key={ri} style={{ backgroundColor: '#2563eb' }}>
                       {row.map((cell, ci) => (
-                        <td key={ci} className="border border-blue-400 px-2 py-1 whitespace-nowrap font-semibold text-white">{cell}</td>
+                        <td key={ci} className="border border-blue-400 px-1.5 py-1 break-words font-semibold text-white">{cell}</td>
                       ))}
                     </tr>
                   ))}
@@ -248,9 +248,9 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
         </div>
 
         <div className="flex-1 overflow-auto bg-gray-100 p-6">
-          <div className="relative mx-auto min-w-max rounded-sm bg-white px-10 py-8 shadow-md"
-               style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
-            {/* Logo kecil, pojok kiri-atas, lepas dari teks */}
+          {/* Lebar ~210mm (A4 portrait) supaya preview sama proporsinya dengan PDF yang diunduh */}
+          <div className="relative mx-auto rounded-sm bg-white px-10 py-8 shadow-md" style={{ fontFamily: 'Helvetica, Arial, sans-serif', width: '210mm' }}>
+            {/* Logo kecil, pojok kiri-atas, lepas dari teks — sejajar baris nama apotek, bukan garis */}
             <div className="absolute left-10 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600">
               <span className="text-xs font-bold text-white leading-none">+</span>
             </div>
@@ -270,11 +270,23 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
               <div className="flex"><span className="w-28 text-gray-700">Tanggal</span><span className="text-gray-700">: {info.tanggalFilter}</span></div>
             </div>
 
-            <table className="mt-4 w-full border-collapse text-xs">
+            {/* Lebar kolom proporsional: Tanggal/Masuk/Keluar/Sisa/Expired sempit
+                (isinya pendek), Keterangan & Dicatat Oleh lebih lebar tapi tetap
+                boleh wrap ke bawah kalau isinya kepanjangan (break-words) */}
+            <table className="mt-4 w-full table-fixed border-collapse text-xs">
+              <colgroup>
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '30%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   {kolom.map((h, i) => (
-                    <th key={i} className="border border-gray-300 px-2 py-1.5 text-left font-semibold text-white whitespace-nowrap"
+                    <th key={i} className="border border-gray-300 px-2 py-1.5 text-left font-semibold text-white break-words"
                         style={{ backgroundColor: '#2563eb' }}>
                       {h}
                     </th>
@@ -291,7 +303,7 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
                 ) : baris.map((row, ri) => (
                   <tr key={ri} style={{ backgroundColor: ri % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="border border-gray-200 px-2 py-1 whitespace-nowrap text-gray-700">{cell}</td>
+                      <td key={ci} className="border border-gray-200 px-2 py-1.5 break-words text-gray-700">{cell}</td>
                     ))}
                   </tr>
                 ))}

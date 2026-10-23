@@ -26,21 +26,23 @@ export function exportKartuStokPDF(
   kolom: string[],
   baris: (string | number)[][],
 ) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const center = pageWidth / 2
   const marginX = 14
 
   // ── Logo generik (lingkaran + simbol plus) di pojok kiri-atas, lepas ───────
-  const iconR = 5
+  // Pusat lingkaran sejajar baseline teks nama apotek (y=16), radius 4mm supaya
+  // tepi bawah logo (y=16+4=20) tidak menyentuh garis horizontal di y=22.
+  const iconR = 4
   const iconCx = marginX + iconR
-  const iconCy = 12 + iconR
+  const iconCy = 15
   doc.setFillColor(37, 99, 235)
   doc.circle(iconCx, iconCy, iconR, 'F')
   doc.setDrawColor(255, 255, 255)
-  doc.setLineWidth(0.8)
-  doc.line(iconCx - 2.5, iconCy, iconCx + 2.5, iconCy)
-  doc.line(iconCx, iconCy - 2.5, iconCx, iconCy + 2.5)
+  doc.setLineWidth(0.7)
+  doc.line(iconCx - 2, iconCy, iconCx + 2, iconCy)
+  doc.line(iconCx, iconCy - 2, iconCx, iconCy + 2)
   doc.setDrawColor(0, 0, 0)
 
   // ── Nama apotek (center) ────────────────────────────────────────────────────
@@ -50,7 +52,7 @@ export function exportKartuStokPDF(
   doc.text(info.namaApotek.toUpperCase(), center, y, { align: 'center' })
 
   // ── Garis lurus penuh ────────────────────────────────────────────────────────
-  y += 4
+  y += 6
   doc.setLineWidth(0.3)
   doc.line(marginX, y, pageWidth - marginX, y)
 
@@ -86,13 +88,27 @@ export function exportKartuStokPDF(
     y += 5
   }
 
+  // Lebar kolom proporsional: Tanggal/Masuk/Keluar/Sisa/Expired sempit (isi
+  // pendek), Keterangan & Dicatat Oleh lebih lebar tapi tetap boleh wrap ke
+  // bawah (overflow linebreak) kalau isinya kepanjangan, bukan makan tempat.
+  const tableAreaWidth = pageWidth - marginX * 2
   autoTable(doc, {
     head: [kolom],
     body: baris,
     startY: y + 4,
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
+    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold', fontSize: 9 },
     alternateRowStyles: { fillColor: [248, 250, 252] },
+    tableWidth: tableAreaWidth,
+    columnStyles: {
+      0: { cellWidth: tableAreaWidth * 0.11 }, // Tanggal
+      1: { cellWidth: tableAreaWidth * 0.24 }, // Keterangan
+      2: { cellWidth: tableAreaWidth * 0.08 }, // Masuk
+      3: { cellWidth: tableAreaWidth * 0.08 }, // Keluar
+      4: { cellWidth: tableAreaWidth * 0.08 }, // Sisa
+      5: { cellWidth: tableAreaWidth * 0.11 }, // Expired
+      6: { cellWidth: tableAreaWidth * 0.30 }, // Dicatat Oleh
+    },
     margin: { left: marginX, right: marginX },
   })
 
@@ -113,7 +129,7 @@ export function exportPDF(
   namaApotek: string = APOTEK,
   alamatApotek: string = '',
 ) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const center = pageWidth / 2
   const marginX = 14
@@ -123,15 +139,17 @@ export function exportPDF(
   })
 
   // ── Logo generik (lingkaran + simbol plus) di pojok kiri-atas, lepas ───────
-  const iconR = 5
+  // Pusat lingkaran sejajar baseline teks nama apotek (y=16), radius 4mm supaya
+  // tepi bawah logo (y=16+4=20) tidak menyentuh garis horizontal di y=22.
+  const iconR = 4
   const iconCx = marginX + iconR
-  const iconCy = 12 + iconR
+  const iconCy = 15
   doc.setFillColor(37, 99, 235)
   doc.circle(iconCx, iconCy, iconR, 'F')
   doc.setDrawColor(255, 255, 255)
-  doc.setLineWidth(0.8)
-  doc.line(iconCx - 2.5, iconCy, iconCx + 2.5, iconCy)
-  doc.line(iconCx, iconCy - 2.5, iconCx, iconCy + 2.5)
+  doc.setLineWidth(0.7)
+  doc.line(iconCx - 2, iconCy, iconCx + 2, iconCy)
+  doc.line(iconCx, iconCy - 2, iconCx, iconCy + 2)
   doc.setDrawColor(0, 0, 0)
 
   // ── Nama apotek (center) ────────────────────────────────────────────────────
@@ -141,7 +159,7 @@ export function exportPDF(
   doc.text(namaApotek.toUpperCase(), center, y, { align: 'center' })
 
   // ── Garis lurus penuh ────────────────────────────────────────────────────────
-  y += 4
+  y += 6
   doc.setLineWidth(0.3)
   doc.line(marginX, y, pageWidth - marginX, y)
 
@@ -180,9 +198,13 @@ export function exportPDF(
       showFoot: 'lastPage',
     } : {}),
     startY: y + 4,
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+    // Portrait jauh lebih sempit dari landscape (lebar tabel ~182mm) — font
+    // dikecilkan dan overflow dibuat 'linebreak' (word-wrap dalam sel) supaya
+    // kolom banyak (sampai 10+) tetap muat tanpa terpotong, bukan dipotong diam-diam.
+    styles: { fontSize: 6.5, cellPadding: 1.5, overflow: 'linebreak' },
+    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold', fontSize: 6.5 },
     alternateRowStyles: { fillColor: [248, 250, 252] },
+    tableWidth: 'auto',
     margin: { left: marginX, right: marginX },
   })
 
