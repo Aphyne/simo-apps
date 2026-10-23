@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '@/hooks/useAuth'
@@ -49,8 +50,8 @@ export default function LoginPage() {
 
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 mb-4">
-            <span className="text-white text-2xl font-bold">S</span>
+          <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+            <Image src="/logo.png" alt="SIMO" width={96} height={96} priority />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">SIMO</h1>
           <p className="text-sm text-gray-500 mt-1">Apotek Rezky Medika · Manokwari</p>

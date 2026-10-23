@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PUBLIC_PATHS = ['/login']
+// Halaman mandiri (style guide komponen) — tidak perlu login, dan tetap
+// bisa dibuka meski sudah login (beda dari /login yang redirect ke dashboard).
+const STANDALONE_PATHS = ['/design']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -12,6 +15,10 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.includes('.')
   ) {
+    return NextResponse.next()
+  }
+
+  if (STANDALONE_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next()
   }
 
