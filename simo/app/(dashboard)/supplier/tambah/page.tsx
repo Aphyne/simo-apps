@@ -1,17 +1,33 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import SupplierForm from '@/components/supplier/SupplierForm'
 import { useCreateSupplier } from '@/hooks/useSupplier'
+import { useAuthStore } from '@/store/auth.store'
 import type { SupplierFormData } from '@/types/supplier'
 
 export default function TambahSupplierPage() {
+  const router = useRouter()
+  const isHydrated = useAuthStore((s) => s.isHydrated)
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const createMutation = useCreateSupplier()
+
+  useEffect(() => {
+    if (isHydrated && !isAdmin) {
+      router.replace('/dashboard')
+    }
+  }, [isHydrated, isAdmin, router])
 
   async function handleSubmit(data: SupplierFormData) {
     await createMutation.mutateAsync(data)
     window.location.href = '/supplier'
+  }
+
+  if (!isHydrated || !isAdmin) {
+    return null
   }
 
   return (

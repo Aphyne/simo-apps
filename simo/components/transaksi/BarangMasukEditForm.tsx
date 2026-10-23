@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useUpdateBarangMasuk } from '@/hooks/useBarangMasuk'
-import { useSupplierList } from '@/hooks/useSupplier'
+import { useSupplierDropdown } from '@/hooks/useSupplier'
 import type { BarangMasuk, BarangMasukUpdateFormData } from '@/types/obat'
 
 interface Props {
@@ -33,7 +33,7 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 export default function BarangMasukEditForm({ item, onSuccess }: Props) {
-  const { data: supplierList } = useSupplierList()
+  const { data: supplierList } = useSupplierDropdown()
   const updateMutation = useUpdateBarangMasuk(item.id)
 
   // harga tersimpan per satuan — tampilkan lagi sebagai per-dus di form biar konsisten dengan cara isi

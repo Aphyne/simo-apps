@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth.store'
@@ -38,7 +39,7 @@ const navItems: NavItem[] = [
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/perhitungan/page.tsx
   // { label: 'Perhitungan EOQ/ROP', href: '/perhitungan', icon: Calculator, adminOnly: true },
   { label: 'Laporan', href: '/laporan', icon: FileText },
-  { label: 'Supplier', href: '/supplier', icon: Truck },
+  { label: 'Supplier', href: '/supplier', icon: Truck, adminOnly: true },
   { label: 'Manajemen User', href: '/users', icon: Users, adminOnly: true },
   { label: 'Pengaturan', href: '/pengaturan', icon: Settings, adminOnly: true },
 ]
@@ -55,7 +56,8 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
       {/* Brand */}
-      <div className="px-6 h-14 flex items-center border-b border-gray-200">
+      <div className="px-6 h-14 flex items-center gap-2 border-b border-gray-200">
+        <Image src="/logo.png" alt="" width={40} height={40} className="flex-shrink-0" />
         <h1 className="text-xl font-bold text-gray-900 tracking-tight">SIMO</h1>
       </div>
 

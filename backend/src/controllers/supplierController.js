@@ -13,6 +13,21 @@ async function getAll(req, res) {
   }
 }
 
+// Daftar minimal (id + nama) untuk dropdown pilih supplier di form Stok Masuk.
+// Diakses semua role (bukan admin-only) — staf butuh ini untuk mencatat
+// barang masuk, tapi tidak boleh lihat detail kontak/alamat supplier.
+async function getDropdown(req, res) {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, nama FROM supplier ORDER BY nama ASC'
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('supplier.getDropdown:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
+
 async function getById(req, res) {
   try {
     const { rows } = await pool.query(
@@ -121,4 +136,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getDropdown, getById, create, update, remove };

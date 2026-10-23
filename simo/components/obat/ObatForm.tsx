@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { KATEGORI_OBAT, SATUAN_OBAT, SERVICE_LEVEL_OPTIONS } from '@/lib/constants'
-import { useSupplierList } from '@/hooks/useSupplier'
+import { useSupplierDropdown } from '@/hooks/useSupplier'
 import type { ObatFormData } from '@/types/obat'
 import type { Obat } from '@/types/obat'
 import { Info, ChevronDown, ChevronUp, Calculator } from 'lucide-react'
@@ -73,7 +73,7 @@ interface Props {
 }
 
 export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLabel = 'Simpan' }: Props) {
-  const { data: suppliers = [] } = useSupplierList()
+  const { data: suppliers = [] } = useSupplierDropdown()
 
   // UI state
   const [showBantuHitung, setShowBantuHitung] = useState(false)

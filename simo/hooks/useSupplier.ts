@@ -16,6 +16,18 @@ export function useSupplierList() {
   })
 }
 
+// Daftar minimal (id + nama) untuk dropdown — admin maupun staf bisa akses,
+// dipakai di form Stok Masuk. Beda dari useSupplierList yang admin-only.
+export function useSupplierDropdown() {
+  return useQuery({
+    queryKey: ['supplier-dropdown'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<Pick<Supplier, 'id' | 'nama'>[]>>('/supplier/dropdown')
+      return res.data.data
+    },
+  })
+}
+
 export function useSupplierById(id: number | string | undefined) {
   return useQuery({
     queryKey: ['supplier', id],

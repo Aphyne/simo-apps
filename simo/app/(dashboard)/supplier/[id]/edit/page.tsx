@@ -1,20 +1,35 @@
 'use client'
 
-import { use } from 'react'
+import { use, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import SupplierForm from '@/components/supplier/SupplierForm'
 import { useSupplierById, useUpdateSupplier } from '@/hooks/useSupplier'
+import { useAuthStore } from '@/store/auth.store'
 import type { SupplierFormData } from '@/types/supplier'
 
 export default function EditSupplierPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const router = useRouter()
+  const isHydrated = useAuthStore((s) => s.isHydrated)
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const { data: supplier, isLoading } = useSupplierById(id)
   const updateMutation = useUpdateSupplier(id)
+
+  useEffect(() => {
+    if (isHydrated && !isAdmin) {
+      router.replace('/dashboard')
+    }
+  }, [isHydrated, isAdmin, router])
 
   async function handleSubmit(data: SupplierFormData) {
     await updateMutation.mutateAsync(data)
     window.location.href = '/supplier'
+  }
+
+  if (!isHydrated || !isAdmin) {
+    return null
   }
 
   return (
