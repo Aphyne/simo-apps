@@ -20,8 +20,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   setAuth: (user, token) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(TOKEN_KEY, token)
-      localStorage.setItem(USER_KEY, JSON.stringify(user))
+      // sessionStorage (bukan localStorage) — supaya tiap tab punya sesi sendiri,
+      // tidak saling menimpa kalau tab berbeda login dengan akun berbeda.
+      sessionStorage.setItem(TOKEN_KEY, token)
+      sessionStorage.setItem(USER_KEY, JSON.stringify(user))
       // Cookie diperlukan agar Next.js middleware bisa deteksi auth status
       document.cookie = `simo_token=${token}; path=/; SameSite=Lax`
     }
@@ -30,18 +32,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   logout: () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem(USER_KEY)
+      sessionStorage.removeItem(TOKEN_KEY)
+      sessionStorage.removeItem(USER_KEY)
       document.cookie = 'simo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     }
     set({ user: null, token: null })
   },
 
-  // Dipanggil sekali saat app load untuk restore session dari localStorage
+  // Dipanggil sekali saat app load untuk restore session dari sessionStorage
   hydrate: () => {
     if (typeof window === 'undefined') return
-    const token = localStorage.getItem(TOKEN_KEY)
-    const userStr = localStorage.getItem(USER_KEY)
+    const token = sessionStorage.getItem(TOKEN_KEY)
+    const userStr = sessionStorage.getItem(USER_KEY)
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr) as AuthUser
