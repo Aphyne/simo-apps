@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
   { label: 'Data Obat', href: '/obat', icon: Pill },
   { label: 'Stok Masuk', href: '/barang-masuk', icon: PackagePlus },
   { label: 'Stok Keluar', href: '/barang-keluar', icon: PackageMinus },
+  // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/simulasi/page.tsx
   // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/analisis/page.tsx
   // { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, adminOnly: true },
