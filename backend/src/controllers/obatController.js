@@ -2,9 +2,25 @@ const pool = require('../db/pool');
 const { kalkulasiLengkap, kalkulasiStepByStep } = require('../services/eoqService');
 const { hitungUlangObat } = require('../services/stokService');
 
+// Ekspresi SQL yang HARUS persis sama logikanya dengan hitungStatus() di bawah —
+// dipakai di WHERE clause getAll() supaya filter status difilter di database
+// (sebelum LIMIT/OFFSET), bukan di memori setelah data sudah dipotong per halaman.
+const STATUS_SQL = `(
+  CASE
+    WHEN o.rop IS NULL OR o.rop <= 0 THEN 'AMAN'
+    WHEN o.stok <= o.rop THEN 'HARUS_REORDER'
+    WHEN o.stok <= o.rop * 1.5 THEN 'MENDEKATI_ROP'
+    ELSE 'AMAN'
+  END
+)`;
+
 function hitungStatus(stok, rop) {
+  // ROP <= 0 berarti belum bisa dihitung (demand_tahunan belum ada histori
+  // penjualan), bukan ambang reorder di titik 0 unit — perlakukan sama seperti
+  // ROP null, jangan tandai HARUS_REORDER/MENDEKATI_ROP untuk semua obat berstok rendah.
   if (rop === null || rop === undefined) return 'AMAN';
   const ropNum = parseFloat(rop);
+  if (ropNum <= 0) return 'AMAN';
   if (stok <= ropNum) return 'HARUS_REORDER';
   if (stok <= ropNum * 1.5) return 'MENDEKATI_ROP';
   return 'AMAN';
@@ -44,6 +60,10 @@ async function getAll(req, res) {
       params.push(kategori);
       conditions.push(`o.kategori = $${params.length}`);
     }
+    if (status) {
+      params.push(status);
+      conditions.push(`${STATUS_SQL} = $${params.length}`);
+    }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -59,12 +79,7 @@ async function getAll(req, res) {
       params
     );
 
-    let data = rows.map(formatObat);
-
-    // Filter status dilakukan setelah kalkulasi (status tidak tersimpan di DB)
-    if (status) {
-      data = data.filter((o) => o.status === status);
-    }
+    const data = rows.map(formatObat);
 
     res.json({
       success: true,
@@ -72,8 +87,8 @@ async function getAll(req, res) {
       meta: {
         current_page: page,
         per_page: limit,
-        total: status ? data.length : total,
-        last_page: Math.ceil((status ? data.length : total) / limit),
+        total,
+        last_page: Math.ceil(total / limit) || 1,
       },
     });
   } catch (err) {
@@ -235,7 +250,7 @@ async function getReorderAlert(req, res) {
               o.nama_supplier, s.whatsapp AS supplier_whatsapp
        FROM obat o
        LEFT JOIN supplier s ON s.id = o.supplier_id
-       WHERE o.rop IS NOT NULL AND o.stok <= o.rop
+       WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= o.rop
        ORDER BY (o.stok - o.rop) ASC`
     );
     res.json({ success: true, data: rows });

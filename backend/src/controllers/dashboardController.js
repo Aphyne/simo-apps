@@ -13,7 +13,9 @@ async function getSummary(req, res) {
       stokMenipis,
     ] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM obat'),
-      pool.query('SELECT COUNT(*) FROM obat WHERE rop IS NOT NULL AND stok <= rop'),
+      // rop > 0: ROP=0 berarti belum ada histori demand (belum valid dihitung),
+      // bukan ambang reorder di titik 0 unit — jangan ikut dihitung "perlu reorder".
+      pool.query('SELECT COUNT(*) FROM obat WHERE rop IS NOT NULL AND rop > 0 AND stok <= rop'),
       pool.query(`SELECT COALESCE(SUM(jumlah), 0) AS total FROM barang_keluar WHERE keterangan = 'Penjualan' AND tanggal = CURRENT_DATE`),
       pool.query(`
         SELECT
@@ -30,7 +32,7 @@ async function getSummary(req, res) {
         SELECT id, kode, nama, satuan, stok, rop, eoq, safety_stock,
                (stok - rop) AS selisih
         FROM obat
-        WHERE rop IS NOT NULL AND stok <= rop
+        WHERE rop IS NOT NULL AND rop > 0 AND stok <= rop
         ORDER BY (stok - rop) ASC
         LIMIT 5
       `),
@@ -89,7 +91,7 @@ async function getSummary(req, res) {
         SELECT o.id, o.kode, o.nama, o.satuan, o.stok, o.rop, o.eoq,
                (o.stok - o.rop) AS selisih
         FROM obat o
-        WHERE o.rop IS NOT NULL AND o.stok <= o.rop * 1.5
+        WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= o.rop * 1.5
         ORDER BY (o.stok::float / NULLIF(o.rop, 0)) ASC
         LIMIT 5
       `),
