@@ -71,7 +71,8 @@ export default function BarangMasukEditForm({ item, onSuccess }: Props) {
       jumlah_dus: Number(values.jumlah_dus),
       harga_beli_dus: values.harga_beli_dus || undefined,
       harga_jual: values.harga_jual || undefined,
-      biaya_simpan_pct: values.biaya_simpan_pct || undefined,
+      // 0 adalah nilai valid (bukan "kosong") — jangan pakai `||` karena 0 ikut falsy
+      biaya_simpan_pct: values.biaya_simpan_pct === undefined || isNaN(values.biaya_simpan_pct) ? undefined : values.biaya_simpan_pct,
       ppn_pct: values.ppn_pct || undefined,
       catatan: values.catatan || undefined,
     })
@@ -160,6 +161,7 @@ export default function BarangMasukEditForm({ item, onSuccess }: Props) {
               {...register('biaya_simpan_pct', { valueAsNumber: true, min: 0, max: 100 })} />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">%</span>
           </div>
+          {errors.biaya_simpan_pct && <p className="text-xs text-red-600 mt-1">Biaya simpan harus antara 0 sampai 100</p>}
         </div>
       </div>
 

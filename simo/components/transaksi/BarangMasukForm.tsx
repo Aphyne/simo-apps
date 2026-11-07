@@ -122,7 +122,8 @@ export default function BarangMasukForm({ onSuccess }: Props) {
       jumlah_dus: Number(it.jumlah_dus),
       harga_beli_dus: it.harga_beli_dus || undefined,
       harga_jual: it.harga_jual || undefined,
-      biaya_simpan_pct: it.biaya_simpan_pct || undefined,
+      // 0 adalah nilai valid (bukan "kosong") — jangan pakai `||` karena 0 ikut falsy
+      biaya_simpan_pct: it.biaya_simpan_pct === undefined || isNaN(it.biaya_simpan_pct) ? undefined : it.biaya_simpan_pct,
     }))
 
     await bulkMutation.mutateAsync({
@@ -266,6 +267,7 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                       {...register(`items.${index}.biaya_simpan_pct`, { valueAsNumber: true, min: 0, max: 100 })} />
                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">%</span>
                   </div>
+                  {itemErrors?.biaya_simpan_pct && <p className="text-xs text-red-600 mt-1">Biaya simpan harus antara 0 sampai 100</p>}
                 </div>
               </div>
 
