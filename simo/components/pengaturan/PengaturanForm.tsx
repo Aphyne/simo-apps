@@ -12,6 +12,7 @@ interface PengaturanData {
   default_service_level?: { value: string }
   default_lead_time?: { value: string }
   default_biaya_pesan?: { value: string }
+  biaya_pesan_per_faktur?: { value: string }
   threshold_expired_hari?: { value: string }
   asumsi_dus_tradisional?: { value: string }
 }
@@ -28,8 +29,9 @@ export default function PengaturanForm({ data }: Props) {
     alamat_apotek: '',
     nama_apj: '',
     default_service_level: '95',
-    default_lead_time: '3',
+    default_lead_time: '1',
     default_biaya_pesan: '0',
+    biaya_pesan_per_faktur: '5000',
     threshold_expired_hari: '90',
     asumsi_dus_tradisional: '2',
   })
@@ -40,8 +42,9 @@ export default function PengaturanForm({ data }: Props) {
       alamat_apotek:          data.alamat_apotek?.value          ?? '',
       nama_apj:               data.nama_apj?.value               ?? '',
       default_service_level:  data.default_service_level?.value  ?? '95',
-      default_lead_time:      data.default_lead_time?.value      ?? '3',
+      default_lead_time:      data.default_lead_time?.value      ?? '1',
       default_biaya_pesan:    data.default_biaya_pesan?.value    ?? '0',
+      biaya_pesan_per_faktur: data.biaya_pesan_per_faktur?.value  ?? '5000',
       threshold_expired_hari: data.threshold_expired_hari?.value ?? '90',
       asumsi_dus_tradisional: data.asumsi_dus_tradisional?.value ?? '2',
     })
@@ -110,7 +113,15 @@ export default function PengaturanForm({ data }: Props) {
             <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Pesan Default (Rp)</label>
             <input type="number" min="0" value={form.default_biaya_pesan} onChange={e => set('default_biaya_pesan', e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-500">Apotek Rezky Medika: Rp 0 (tidak ada biaya pengiriman)</p>
+            <p className="mt-1 text-xs text-gray-500">Nilai awal saat obat baru ditambahkan manual lewat Tambah Obat</p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Pesan per Faktur (Rp)</label>
+            <input type="number" min="0" value={form.biaya_pesan_per_faktur} onChange={e => set('biaya_pesan_per_faktur', e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            <p className="mt-1 text-xs text-gray-500">
+              Ongkos kirim/admin per sekali pesan (1 faktur) — dibagi rata ke tiap obat berbeda dalam faktur yang sama saat Stok Masuk dicatat, supaya biaya pesan tidak dihitung dobel per obat.
+            </p>
           </div>
         </div>
       </div>

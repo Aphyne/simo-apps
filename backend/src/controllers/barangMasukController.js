@@ -5,6 +5,34 @@ const { updateExpiredTerdekat, hitungUlangObat } = require('../services/stokServ
 // error tak terduga supaya bisa direspon sebagai 400 (kesalahan input), bukan 500.
 class BulkValidationError extends Error {}
 
+// true kalau biaya_simpan_pct di luar 0–100 atau bukan angka — dipakai di create,
+// update, dan createBulk supaya H (biaya simpan) tidak pernah negatif/tidak masuk akal.
+function biayaSimpanPctInvalid(pct) {
+  if (pct === undefined || pct === null || pct === '') return false;
+  const n = parseFloat(pct);
+  return isNaN(n) || n < 0 || n > 100;
+}
+
+// Default ke 20 hanya kalau benar-benar kosong (undefined/null/''). 0 adalah nilai
+// valid dan harus dipakai apa adanya — jangan dicek dengan falsy (`pct ? ... : 20`),
+// karena 0 ikut falsy dan akan salah jatuh ke 20.
+function resolveBiayaSimpanPct(pct) {
+  return (pct === undefined || pct === null || pct === '') ? 20 : parseFloat(pct);
+}
+
+// Biaya pesan (S) dihitung PER FAKTUR, bukan per obat — satu kali ongkir/admin
+// dibagi rata ke tiap obat BERBEDA yang ada dalam faktur yang sama (jumlahObatUnik),
+// supaya total biaya pesan tidak melebih-hitung saat EOQ dihitung per obat.
+// 2 baris batch untuk obat yang sama dihitung sebagai 1 obat, bukan 2.
+async function hitungBiayaPesanPerObat(client, jumlahObatUnik) {
+  const { rows } = await client.query(
+    "SELECT value FROM pengaturan WHERE key = 'biaya_pesan_per_faktur'"
+  );
+  const biayaPerFaktur = rows.length ? parseFloat(rows[0].value) : 5000;
+  const n = jumlahObatUnik > 0 ? jumlahObatUnik : 1;
+  return parseFloat((biayaPerFaktur / n).toFixed(4));
+}
+
 async function getAll(req, res) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -96,6 +124,9 @@ async function create(req, res) {
   if (parseFloat(jumlah_dus) <= 0) {
     return res.status(400).json({ success: false, message: 'Jumlah harus lebih dari 0' });
   }
+  if (biayaSimpanPctInvalid(biaya_simpan_pct)) {
+    return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
+  }
 
   try {
     const { rows: obatRows } = await pool.query('SELECT * FROM obat WHERE id = $1', [obat_id]);
@@ -112,7 +143,7 @@ async function create(req, res) {
     const spd = obat.satuan_per_dus || 1;
     const harga_beli_per_satuan = harga_beli_dus ? parseFloat((parseFloat(harga_beli_dus) / spd).toFixed(4)) : null;
     const harga_jual_per_satuan = harga_jual ? parseFloat(harga_jual) : null;
-    const pct = biaya_simpan_pct ? parseFloat(biaya_simpan_pct) : 20;
+    const pct = resolveBiayaSimpanPct(biaya_simpan_pct);
     const biaya_simpan = harga_beli_per_satuan !== null ? parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4)) : null;
 
     const { rows } = await pool.query(
@@ -156,6 +187,11 @@ async function create(req, res) {
       updateParams.push(biaya_simpan);
       updateFields.push(`biaya_simpan = $${updateParams.length}`);
     }
+    // 1 obat dalam transaksi ini → S = biaya_pesan_per_faktur penuh (tidak dibagi)
+    const biayaPesanTunggal = await hitungBiayaPesanPerObat(pool, 1);
+    updateParams.push(biayaPesanTunggal);
+    updateFields.push(`biaya_pesan = $${updateParams.length}`);
+
     if (updateFields.length > 0) {
       updateParams.push(obat_id);
       await pool.query(
@@ -188,6 +224,9 @@ async function update(req, res) {
   }
   if (!supplier_id || !no_faktur || !no_batch || !expired_batch) {
     return res.status(400).json({ success: false, message: 'Supplier, No. Faktur, No. Batch, dan Expired Batch wajib diisi' });
+  }
+  if (biayaSimpanPctInvalid(biaya_simpan_pct)) {
+    return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
   }
 
   const client = await pool.connect();
@@ -232,7 +271,7 @@ async function update(req, res) {
       harga_beli_per_satuan = parseFloat(obat.harga_beli);
     }
     const harga_jual_per_satuan = harga_jual ? parseFloat(harga_jual) : parseFloat(obat.harga_jual);
-    const pct = biaya_simpan_pct ? parseFloat(biaya_simpan_pct) : 20;
+    const pct = resolveBiayaSimpanPct(biaya_simpan_pct);
     const biaya_simpan = parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4));
 
     const { rows: updated } = await client.query(
@@ -344,14 +383,21 @@ async function createBulk(req, res) {
     if (!item.no_batch || !item.expired_batch) {
       return res.status(400).json({ success: false, message: 'Setiap baris wajib diisi No. Batch dan Expired Batch' });
     }
+    if (biayaSimpanPctInvalid(item.biaya_simpan_pct)) {
+      return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
+    }
   }
 
   const ppn = ppn_pct ? parseFloat(ppn_pct) : 0;
+  // Jumlah OBAT BERBEDA dalam faktur ini — 2 baris batch untuk obat yang sama
+  // dihitung 1, bukan 2 (lihat hitungBiayaPesanPerObat).
+  const jumlahObatUnikDiFaktur = new Set(items.map((it) => it.obat_id)).size;
 
   const client = await pool.connect();
   let hasil = [];
   try {
     await client.query('BEGIN');
+    const biayaPesanPerObat = await hitungBiayaPesanPerObat(client, jumlahObatUnikDiFaktur);
 
     for (const item of items) {
       // FOR UPDATE mengunci baris obat ini sampai transaksi selesai — mencegah
@@ -383,7 +429,7 @@ async function createBulk(req, res) {
         ? parseFloat(item.harga_jual)
         : parseFloat(obat.harga_jual);
 
-      const pct = item.biaya_simpan_pct ? parseFloat(item.biaya_simpan_pct) : 20;
+      const pct = resolveBiayaSimpanPct(item.biaya_simpan_pct);
       const biaya_simpan = parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4));
 
       const { rows } = await client.query(
@@ -411,6 +457,7 @@ async function createBulk(req, res) {
         harga_beli_per_satuan,
         harga_jual_per_satuan,
         biaya_simpan,
+        biaya_pesan: biayaPesanPerObat,
       });
     }
 
@@ -432,9 +479,9 @@ async function createBulk(req, res) {
   for (const h of hasil) {
     try {
       await pool.query(
-        `UPDATE obat SET supplier_id = $1, harga_beli = $2, harga_jual = $3, biaya_simpan = $4, updated_at = NOW()
-         WHERE id = $5`,
-        [supplier_id, h.harga_beli_per_satuan, h.harga_jual_per_satuan, h.biaya_simpan, h.obat_id]
+        `UPDATE obat SET supplier_id = $1, harga_beli = $2, harga_jual = $3, biaya_simpan = $4, biaya_pesan = $5, updated_at = NOW()
+         WHERE id = $6`,
+        [supplier_id, h.harga_beli_per_satuan, h.harga_jual_per_satuan, h.biaya_simpan, h.biaya_pesan, h.obat_id]
       );
       await updateExpiredTerdekat(h.obat_id);
       await hitungUlangObat(h.obat_id);
