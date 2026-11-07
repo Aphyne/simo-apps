@@ -1,3 +1,6 @@
+// Diperluas berdasarkan data nyata Apotek Rezky Medika (impor data_obat_aptl_Rezky.xlsx) —
+// kategori yang banyak dipakai apotek (Flu & Batuk, Alat Kesehatan, dst) dijadikan baku
+// supaya tidak menumpuk di "Lainnya".
 export const KATEGORI_OBAT = [
   'Analgesik',
   'Antibiotik',
@@ -8,6 +11,13 @@ export const KATEGORI_OBAT = [
   'Antidiabetik',
   'Antihipertensi',
   'Antijamur',
+  'Antidiare',
+  'Antiinflamasi',
+  'Flu & Batuk',
+  'Alat Kesehatan',
+  'Salep',
+  'Jamu',
+  'Tetes Mata & Telinga',
   'Lainnya',
 ] as const
 
