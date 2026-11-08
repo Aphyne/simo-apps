@@ -111,11 +111,22 @@ async function getById(req, res) {
 }
 
 // Nama obat selalu dirapikan: spasi di awal/akhir dibuang, spasi ganda jadi satu, dan huruf
-// pertama kapital. Hanya huruf pertama yang diubah (bukan Title Case), supaya penulisan
-// seperti "Actifed syr hijau 60ml" atau "decolgen PE" tidak rusak.
+// pertama SETIAP kata dikapitalkan ("betadin sol 15ml" -> "Betadin Sol 15ml").
+// Hanya huruf pertama kata yang dinaikkan; sisa huruf tidak disentuh, jadi singkatan seperti
+// "PE" atau "DCL" tetap. Satuan yang berdiri sendiri (ml, mg, gr, ...) tetap huruf kecil.
+const SATUAN_KECIL = new Set(['mg', 'mcg', 'g', 'gr', 'kg', 'ml', 'l', 'iu', 'cm', 'mm']);
+
 function rapikanNama(nama) {
-  const bersih = String(nama ?? '').trim().replace(/\s+/g, ' ');
-  return bersih.charAt(0).toUpperCase() + bersih.slice(1);
+  return String(nama ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map((kata) =>
+      SATUAN_KECIL.has(kata.toLowerCase())
+        ? kata.toLowerCase()
+        : kata.replace(/(^|[-/(])([a-z])/g, (_, pemisah, huruf) => pemisah + huruf.toUpperCase())
+    )
+    .join(' ');
 }
 
 async function create(req, res) {
