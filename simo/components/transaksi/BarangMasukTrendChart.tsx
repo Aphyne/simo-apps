@@ -11,18 +11,15 @@ interface Props {
   isLoading: boolean
 }
 
-function formatRp(value: number) {
-  if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}jt`
-  if (value >= 1_000) return `Rp ${(value / 1_000).toFixed(0)}rb`
-  return `Rp ${value}`
-}
+const formatAngka = (n: number) => new Intl.NumberFormat('id-ID').format(n)
+const formatRupiah = (n: number) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
 
 export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
   const now = new Date()
   const currentYear = now.getFullYear()
 
   const [mode, setMode] = useState<'mingguan' | 'bulanan'>('bulanan')
-  const [metric, setMetric] = useState<'unit' | 'nilai'>('nilai')
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
   const availableYears = useMemo(() => {
@@ -34,11 +31,12 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
     return Array.from(years).sort((a, b) => a - b)
   }, [allList, currentYear])
 
+  // Unit dan nilai Rp dihitung sekaligus; keduanya tampil di tooltip saat hover
   function sumItems(items: BarangMasuk[]) {
-    if (metric === 'unit') {
-      return items.reduce((sum, item) => sum + (item.jumlah_satuan ?? 0), 0)
+    return {
+      unit: items.reduce((sum, item) => sum + (item.jumlah_satuan ?? 0), 0),
+      nilai: items.reduce((sum, item) => sum + ((item.jumlah_satuan ?? 0) * (item.harga_beli ?? 0)), 0),
     }
-    return items.reduce((sum, item) => sum + ((item.jumlah_satuan ?? 0) * (item.harga_beli ?? 0)), 0)
   }
 
   const trendData = useMemo(() => {
@@ -52,7 +50,7 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
           const td = new Date(item.tanggal)
           return `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-${String(td.getDate()).padStart(2, '0')}` === key
         })
-        return { label: `${d.getDate()}/${d.getMonth() + 1}`, total: sumItems(items) }
+        return { label: `${d.getDate()}/${d.getMonth() + 1}`, ...sumItems(items) }
       })
     }
 
@@ -62,9 +60,9 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
         const td = new Date(item.tanggal)
         return td.getFullYear() === selectedYear && td.getMonth() === i
       })
-      return { label: MONTHS[i], total: sumItems(items) }
+      return { label: MONTHS[i], ...sumItems(items) }
     })
-  }, [allList, mode, metric, selectedYear])
+  }, [allList, mode, selectedYear])
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -72,21 +70,6 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
         <p className="text-sm font-semibold text-gray-700">Tren Stok Masuk</p>
 
         <div className="flex items-center gap-2">
-          {/* Toggle Unit / Nilai Rp */}
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-            {(['unit', 'nilai'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMetric(m)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  metric === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {m === 'unit' ? 'Unit' : 'Nilai Rp'}
-              </button>
-            ))}
-          </div>
-
           {/* Toggle periode */}
           <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
             {(['mingguan', 'bulanan'] as const).map((m) => (
@@ -125,22 +108,22 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
           <BarChart data={trendData} barSize={mode === 'bulanan' ? 24 : 28}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-            <YAxis
-              tick={{ fontSize: 11, fill: '#9CA3AF' }}
-              axisLine={false}
-              tickLine={false}
-              width={metric === 'nilai' ? 48 : 30}
-              tickFormatter={metric === 'nilai' ? (v) => formatRp(v) : undefined}
-            />
+            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={36} />
             <Tooltip
-              contentStyle={{ borderRadius: 8, fontSize: 12, border: '1px solid #E5E7EB' }}
-              formatter={(v: number) =>
-                metric === 'unit'
-                  ? [`${v} unit`, 'Masuk']
-                  : [new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v), 'Pengeluaran']
-              }
+              cursor={{ fill: '#F3F4F6' }}
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null
+                const d = payload[0].payload as { unit: number; nilai: number }
+                return (
+                  <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm">
+                    <p className="font-semibold text-gray-900 mb-1">{label}</p>
+                    <p className="text-emerald-700">Masuk: <span className="font-semibold tabular-nums">{formatAngka(d.unit)}</span> unit</p>
+                    <p className="text-gray-700">Total pengeluaran: <span className="font-semibold tabular-nums">{formatRupiah(d.nilai)}</span></p>
+                  </div>
+                )
+              }}
             />
-            <Bar dataKey="total" fill="#10B981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="unit" fill="#10B981" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
