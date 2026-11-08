@@ -68,7 +68,12 @@ export default function ObatKategoriChart({ allObat, isLoading, kategoriAktif = 
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-gray-700 mb-3">Distribusi per Kategori</p>
+      <p className="text-sm font-semibold text-gray-700 mb-3">
+        Distribusi per Kategori
+        {!isLoading && irisan.length > 0 && (
+          <span className="ml-2 text-xs font-normal text-gray-500">{irisan.length} kategori</span>
+        )}
+      </p>
 
       {isLoading ? (
         <div className="h-[140px] animate-pulse bg-gray-100 rounded-xl" />
@@ -121,17 +126,17 @@ export default function ObatKategoriChart({ allObat, isLoading, kategoriAktif = 
             </svg>
 
             {/* Pusat donut: ringkasan, berubah jadi detail saat hover/fokus/dipilih */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-none" aria-live="polite">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 pointer-events-none" aria-live="polite">
               {detail ? (
                 <>
                   <span className="text-[11px] leading-tight font-medium text-gray-700 line-clamp-2">{detail.name}</span>
                   <span className="text-xl font-bold leading-tight text-gray-900 tabular-nums mt-0.5">{detail.value}</span>
-                  <span className="text-[11px] text-gray-500 tabular-nums">{detail.pct}% dari total</span>
+                  <span className="text-[11px] text-gray-500 tabular-nums">{detail.pct}%</span>
                 </>
               ) : (
                 <>
                   <span className="text-2xl font-bold leading-tight text-gray-900 tabular-nums">{total}</span>
-                  <span className="text-[11px] text-gray-500">obat · {irisan.length} kategori</span>
+                  <span className="text-[11px] text-gray-500">obat</span>
                 </>
               )}
             </div>
