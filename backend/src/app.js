@@ -14,6 +14,8 @@ const laporanRoutes = require('./routes/laporan');
 const simulasiRoutes = require('./routes/simulasi');
 const userRoutes = require('./routes/users');
 const pengaturanRoutes = require('./routes/pengaturan');
+const aktivitasRoutes = require('./routes/aktivitas');
+const aktivitasMiddleware = require('./middleware/aktivitasMiddleware');
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+// Mencatat aksi yang mengubah data (untuk pemantauan peneliti) — lihat aktivitasMiddleware
+app.use(aktivitasMiddleware);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -30,6 +34,7 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/aktivitas', aktivitasRoutes);
 app.use('/api/supplier', supplierRoutes);
 app.use('/api/obat', obatRoutes);
 app.use('/api/barang-masuk', barangMasukRoutes);

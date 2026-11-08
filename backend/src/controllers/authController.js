@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const pool = require('../db/pool');
+const { catat } = require('../services/aktivitasService');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -19,6 +20,7 @@ async function login(req, res) {
     );
 
     if (rows.length === 0) {
+      await catat({ req, jenis: 'login_gagal', username, deskripsi: 'Login gagal (username tidak ditemukan/nonaktif)', status: 401 });
       return res.status(401).json({ success: false, message: 'Username atau password salah' });
     }
 
@@ -26,6 +28,7 @@ async function login(req, res) {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      await catat({ req, user, jenis: 'login_gagal', deskripsi: 'Login gagal (password salah)', status: 401 });
       return res.status(401).json({ success: false, message: 'Username atau password salah' });
     }
 
@@ -34,6 +37,8 @@ async function login(req, res) {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
+
+    await catat({ req, user, jenis: 'login', deskripsi: 'Login dengan username & password', status: 200 });
 
     return res.json({
       success: true,
@@ -50,6 +55,7 @@ async function login(req, res) {
 
 async function logout(req, res) {
   // JWT stateless — token dihapus di sisi frontend
+  await catat({ req, user: req.user, jenis: 'logout', deskripsi: 'Logout', status: 200 });
   return res.json({ success: true, message: 'Berhasil logout' });
 }
 
@@ -104,6 +110,8 @@ async function googleLogin(req, res) {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
+
+    await catat({ req, user, jenis: 'login', deskripsi: 'Login dengan akun Google', status: 200 });
 
     return res.json({
       success: true,

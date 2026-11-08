@@ -20,8 +20,8 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginPayload) => {
     try {
       setErrorMsg(null)
-      await login(data)
-      window.location.replace('/dashboard')
+      const hasil = await login(data)
+      window.location.replace(hasil.user.role === 'superadmin' ? '/pemantauan' : '/dashboard')
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setErrorMsg(e?.response?.data?.message ?? 'Login gagal. Periksa username dan password.')
@@ -35,7 +35,7 @@ export default function LoginPage() {
       const res = await api.post('/auth/login/google', { credential })
       const { token, user } = res.data.data
       setAuth(user, token)
-      window.location.replace('/dashboard')
+      window.location.replace(user.role === 'superadmin' ? '/pemantauan' : '/dashboard')
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setErrorMsg(e?.response?.data?.message ?? 'Login Google gagal.')

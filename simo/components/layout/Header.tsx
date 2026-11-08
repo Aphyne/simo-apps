@@ -53,8 +53,8 @@ export default function Header() {
               </div>
             </div>
             <div className="border-t border-gray-100 pt-2">
-              <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${user?.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                {user?.role === 'admin' ? 'Admin' : 'Staf'}
+              <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${user?.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : user?.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                {user?.role === 'superadmin' ? 'Peneliti' : user?.role === 'admin' ? 'Admin' : 'Staf'}
               </span>
             </div>
           </DropdownMenuContent>

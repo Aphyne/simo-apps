@@ -17,6 +17,7 @@ import {
   Truck,
   Users,
   Settings,
+  Activity,
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,6 +27,7 @@ interface NavItem {
   href: string
   icon: React.ElementType
   adminOnly?: boolean
+  superadminOnly?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -43,6 +45,8 @@ const navItems: NavItem[] = [
   { label: 'Supplier', href: '/supplier', icon: Truck, adminOnly: true },
   { label: 'Manajemen User', href: '/users', icon: Users, adminOnly: true },
   { label: 'Pengaturan', href: '/pengaturan', icon: Settings, adminOnly: true },
+  // Khusus akun peneliti (superadmin): pemantauan aktivitas pengguna untuk keperluan skripsi
+  { label: 'Pemantauan', href: '/pemantauan', icon: Activity, superadminOnly: true },
 ]
 
 export default function Sidebar() {
@@ -50,8 +54,11 @@ export default function Sidebar() {
   const user = useAuthStore((s) => s.user)
   const { logout } = useAuth()
 
-  const visibleItems = navItems.filter(
-    (item) => !item.adminOnly || user?.role === 'admin'
+  // Superadmin hanya melihat menu Pemantauan; admin/staf tidak pernah melihatnya
+  const visibleItems = navItems.filter((item) =>
+    user?.role === 'superadmin'
+      ? item.superadminOnly
+      : !item.superadminOnly && (!item.adminOnly || user?.role === 'admin')
   )
 
   return (

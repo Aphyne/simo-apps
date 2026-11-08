@@ -9,6 +9,7 @@ async function getUsers(req, res) {
              (SELECT COUNT(*) FROM barang_masuk WHERE user_id = u.id) +
              (SELECT COUNT(*) FROM barang_keluar WHERE user_id = u.id) AS jumlah_transaksi
       FROM users u
+      WHERE u.role <> 'superadmin'
       ORDER BY u.role ASC, u.nama ASC
     `);
     res.json({ success: true, data: rows });
@@ -62,7 +63,7 @@ async function updateUser(req, res) {
   try {
     const { rows } = await pool.query(
       `UPDATE users SET nama=$1, role=$2, is_active=$3, email=$4, updated_at=NOW()
-       WHERE id=$5 RETURNING id, username, nama, email, role, is_active, created_at`,
+       WHERE id=$5 AND role <> 'superadmin' RETURNING id, username, nama, email, role, is_active, created_at`,
       [nama, role, is_active ?? true, email || null, id]
     );
     if (rows.length === 0) {
@@ -85,7 +86,7 @@ async function resetPassword(req, res) {
   try {
     const hashed = await bcrypt.hash(password_baru, 10);
     const { rowCount } = await pool.query(
-      'UPDATE users SET password=$1, updated_at=NOW() WHERE id=$2',
+      "UPDATE users SET password=$1, updated_at=NOW() WHERE id=$2 AND role <> 'superadmin'",
       [hashed, id]
     );
     if (rowCount === 0) {
@@ -107,7 +108,7 @@ async function toggleAktif(req, res) {
   try {
     const { rows } = await pool.query(
       `UPDATE users SET is_active = NOT is_active, updated_at=NOW()
-       WHERE id=$1 RETURNING id, username, nama, role, is_active, created_at`,
+       WHERE id=$1 AND role <> 'superadmin' RETURNING id, username, nama, role, is_active, created_at`,
       [id]
     );
     if (rows.length === 0) {
@@ -128,7 +129,7 @@ async function deleteUser(req, res) {
     return res.status(400).json({ success: false, message: 'Tidak bisa menghapus akun sendiri' });
   }
   try {
-    const { rows } = await pool.query('SELECT id, nama FROM users WHERE id=$1', [id]);
+    const { rows } = await pool.query("SELECT id, nama FROM users WHERE id=$1 AND role <> 'superadmin'", [id]);
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
     }
