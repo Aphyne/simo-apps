@@ -4,17 +4,17 @@ import { useMemo, useState } from 'react'
 import { Info, PackageCheck } from 'lucide-react'
 import { useReorderAlerts, type ReorderAlertItem } from '@/hooks/useObat'
 import { usePengaturan } from '@/hooks/usePengaturan'
-import ReorderSupplierCard, { type GrupSupplier } from '@/components/reorder/ReorderSupplierCard'
+import ReorderObatList, { type FilterSupplier } from '@/components/reorder/ReorderObatList'
+import ReorderKeranjang, { type ItemKeranjang } from '@/components/reorder/ReorderKeranjang'
 import type { IdentitasApotek } from '@/lib/reorder'
 
 export default function ReorderPage() {
   const { data: alerts = [], isLoading } = useReorderAlerts()
   const { data: pengaturan } = usePengaturan()
 
-  // Pilihan & jumlah disimpan sebagai pengecualian dari default (dipilih semua, jumlah = saran),
-  // supaya obat baru yang muncul saat refresh otomatis ikut terpilih.
-  const [dikecualikan, setDikecualikan] = useState<Set<number>>(new Set())
-  const [jumlahUbah, setJumlahUbah] = useState<Record<number, number>>({})
+  // Keranjang: id obat → jumlah pesan (satuan pesan). Ada di map = ada di keranjang.
+  const [jumlahKeranjang, setJumlahKeranjang] = useState<Record<number, number>>({})
+  const [filterAktif, setFilterAktif] = useState('semua')
 
   const apotek: IdentitasApotek | null = useMemo(() => {
     if (!pengaturan) return null
@@ -29,54 +29,69 @@ export default function ReorderPage() {
     }
   }, [pengaturan])
 
-  const grupList: GrupSupplier[] = useMemo(() => {
-    const map = new Map<string, GrupSupplier>()
+  const filters: FilterSupplier[] = useMemo(() => {
+    const per = new Map<string, FilterSupplier>()
     for (const it of alerts) {
       const key = it.supplier_id === null ? 'none' : String(it.supplier_id)
-      if (!map.has(key)) {
-        map.set(key, {
-          supplierId: it.supplier_id,
-          nama: it.supplier_nama ?? it.nama_supplier ?? 'Tanpa supplier',
-          whatsapp: it.supplier_whatsapp,
-          alamat: it.supplier_alamat,
-          items: [],
-        })
-      }
-      map.get(key)!.items.push(it)
+      const label = it.supplier_id === null ? 'Tanpa supplier' : (it.supplier_nama ?? it.nama_supplier ?? 'Supplier')
+      const cur = per.get(key)
+      if (cur) cur.jumlah++
+      else per.set(key, { key, label, jumlah: 1 })
     }
-    // Supplier dengan obat terbanyak di atas; "Tanpa supplier" paling bawah
-    return [...map.values()].sort((a, b) => {
-      if ((a.supplierId === null) !== (b.supplierId === null)) return a.supplierId === null ? 1 : -1
-      return b.items.length - a.items.length
+    const daftar = [...per.values()].sort((a, b) => {
+      if ((a.key === 'none') !== (b.key === 'none')) return a.key === 'none' ? 1 : -1
+      return b.jumlah - a.jumlah
     })
+    return [{ key: 'semua', label: 'Semua', jumlah: alerts.length }, ...daftar]
   }, [alerts])
 
-  const isDipilih = (id: number) => !dikecualikan.has(id)
-  const jumlahDari = (it: ReorderAlertItem) => jumlahUbah[it.id] ?? it.saran_jumlah
+  const tampil = useMemo(
+    () =>
+      filterAktif === 'semua'
+        ? alerts
+        : alerts.filter((it) => (it.supplier_id === null ? 'none' : String(it.supplier_id)) === filterAktif),
+    [alerts, filterAktif]
+  )
 
-  const toggle = (id: number) =>
-    setDikecualikan((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+  // Isi keranjang diambil dari data alert terkini, jadi obat yang sudah tidak perlu
+  // dipesan (stok naik di atas ROP) otomatis hilang dari keranjang.
+  const isiKeranjang: ItemKeranjang[] = useMemo(
+    () => alerts.filter((it) => jumlahKeranjang[it.id] !== undefined).map((it) => ({ item: it, jumlah: jumlahKeranjang[it.id] })),
+    [alerts, jumlahKeranjang]
+  )
+
+  const diKeranjang = (id: number) => jumlahKeranjang[id] !== undefined
+
+  const toggle = (it: ReorderAlertItem) =>
+    setJumlahKeranjang((prev) => {
+      const next = { ...prev }
+      if (next[it.id] !== undefined) delete next[it.id]
+      else next[it.id] = it.saran_jumlah
       return next
     })
 
-  const toggleSemua = (ids: number[], nilai: boolean) =>
-    setDikecualikan((prev) => {
-      const next = new Set(prev)
-      ids.forEach((id) => (nilai ? next.delete(id) : next.add(id)))
+  const tambahSemua = (items: ReorderAlertItem[]) =>
+    setJumlahKeranjang((prev) => {
+      const next = { ...prev }
+      items.forEach((it) => {
+        if (next[it.id] === undefined) next[it.id] = it.saran_jumlah
+      })
       return next
     })
 
-  const totalPerluPesan = alerts.length
+  const hapus = (id: number) =>
+    setJumlahKeranjang((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Keranjang Reorder</h1>
+        <h1 className="text-xl font-bold text-gray-900">Reorder</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Obat yang stoknya sudah di bawah ROP, dikelompokkan per supplier. Pilih obat dan jumlahnya, lalu kirim Surat Pesanan lewat WhatsApp.
+          Pilih obat yang mau dipesan, lalu kirim Surat Pesanan (PDF) ke supplier lewat WhatsApp.
         </p>
       </div>
 
@@ -86,18 +101,17 @@ export default function ReorderPage() {
         </div>
         <div className="text-xs text-gray-600 leading-relaxed">
           <p>
-            Jumlah awal adalah <span className="font-medium">saran sistem</span> (dari EOQ bila tersedia, kalau belum dari ROP ditambah kebutuhan 7 hari) dan bisa Anda ubah.
-            Pesan berformat Surat Pesanan: kop apotek, daftar obat, ketentuan retur, dan tanda tangan APJ.
+            Jumlah awal adalah <span className="font-medium">saran sistem</span> (dari EOQ bila tersedia, kalau belum dari ROP ditambah kebutuhan 7 hari) dan bisa diubah di keranjang.
+            Surat Pesanan dibuat dalam format surat apotek, satu surat per supplier.
           </p>
           <p className="mt-1 text-gray-500">
-            Catatan: obat prekursor/OOT memakai Surat Pesanan khusus yang berbeda. Jangan dipesan dari pesan ini.
+            WhatsApp tidak bisa melampirkan file otomatis: di HP file langsung ikut terkirim lewat menu bagikan, di komputer PDF diunduh lalu Anda lampirkan ke chat yang terbuka.
+            Obat prekursor/OOT memakai Surat Pesanan khusus yang berbeda, jangan dipesan dari sini.
           </p>
         </div>
       </div>
 
-      {isLoading && <div className="animate-pulse bg-gray-100 rounded-xl h-40" />}
-
-      {!isLoading && totalPerluPesan === 0 && (
+      {!isLoading && alerts.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-10 shadow-sm text-center">
           <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center mx-auto mb-3">
             <PackageCheck className="w-5 h-5 text-emerald-600" />
@@ -105,20 +119,29 @@ export default function ReorderPage() {
           <p className="text-sm font-medium text-gray-900">Tidak ada obat yang perlu dipesan</p>
           <p className="text-xs text-gray-500 mt-1">Semua stok masih di atas ROP.</p>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2">
+            <ReorderObatList
+              items={tampil}
+              filters={filters}
+              filterAktif={filterAktif}
+              onFilter={setFilterAktif}
+              diKeranjang={diKeranjang}
+              onToggle={toggle}
+              onTambahSemua={tambahSemua}
+              isLoading={isLoading}
+            />
+          </div>
+          <ReorderKeranjang
+            isi={isiKeranjang}
+            apotek={apotek}
+            onUbahJumlah={(id, jumlah) => setJumlahKeranjang((p) => ({ ...p, [id]: jumlah }))}
+            onHapus={hapus}
+            onKosongkan={() => setJumlahKeranjang({})}
+          />
+        </div>
       )}
-
-      {grupList.map((g) => (
-        <ReorderSupplierCard
-          key={g.supplierId ?? 'none'}
-          grup={g}
-          apotek={apotek}
-          isDipilih={isDipilih}
-          jumlahDari={jumlahDari}
-          onToggle={toggle}
-          onToggleSemua={toggleSemua}
-          onUbahJumlah={(id, jumlah) => setJumlahUbah((p) => ({ ...p, [id]: jumlah }))}
-        />
-      ))}
     </div>
   )
 }

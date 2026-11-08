@@ -1,6 +1,5 @@
-// Pembuat pesan WhatsApp Reorder dengan format Surat Pesanan apotek
-// (meniru docs/data-apotek/surat-pesanan.jpeg: kop apotek, Kepada Yth., SURAT PESANAN No.,
-// daftar NO / NAMA OBAT / SATUAN / JUMLAH, catatan Perhatian, tanggal & tanda tangan APJ).
+// Helper Reorder: nomor WhatsApp, nomor surat, pesan pengantar, dan pengiriman PDF Surat Pesanan.
+// Isi surat sendiri dibuat sebagai PDF di lib/reorderPdf.ts (meniru surat-pesanan.jpeg).
 
 export interface IdentitasApotek {
   nama: string
@@ -34,10 +33,6 @@ export function normalisasiWa(nomor: string | null | undefined): string | null {
   return d
 }
 
-function tanggalPanjang(d: Date): string {
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })
-}
-
 // Nomor surat otomatis dari tanggal + id supplier (belum ada penomoran berurutan di sistem)
 export function nomorSurat(supplierId: number, tanggal: Date): string {
   const y = tanggal.getFullYear()
@@ -46,50 +41,66 @@ export function nomorSurat(supplierId: number, tanggal: Date): string {
   return `SP/${y}${m}${dd}/${String(supplierId).padStart(2, '0')}`
 }
 
-export function buatSuratPesanan(params: {
+// Pesan singkat pengantar yang menyertai PDF Surat Pesanan di chat WhatsApp
+export function buatPesanPengantar(params: {
   apotek: IdentitasApotek
   supplier: TujuanSupplier
-  items: ItemPesanan[]
-  tanggal?: Date
+  jumlahItem: number
+  nomor: string
 }): string {
-  const { apotek, supplier, items } = params
-  const tanggal = params.tanggal ?? new Date()
-
-  const baris = items.map((it, i) => `${i + 1}. ${it.nama} — ${it.jumlah} ${it.satuan}`)
-
+  const { apotek, supplier, jumlahItem, nomor } = params
   return [
-    `*${apotek.nama.toUpperCase()}*`,
-    apotek.sia ? `SIA : ${apotek.sia}` : null,
-    apotek.alamat || null,
-    '──────────────',
-    'Kepada Yth.',
-    `*${supplier.nama}*`,
-    supplier.alamat ? `Di ${supplier.alamat}` : null,
+    `Yth. ${supplier.nama},`,
     '',
-    '*SURAT PESANAN*',
-    `No. ${nomorSurat(supplier.id, tanggal)}`,
-    '',
-    'NO. NAMA OBAT — JUMLAH',
-    ...baris,
-    '',
-    '*Perhatian*',
-    'Barang akan kami return/kembalikan apabila:',
-    '1. Tidak sesuai dengan permintaan, kecuali ada pemberitahuan sebelumnya kepada kami.',
-    '2. Expired date (ED) kurang dari 1 tahun (minimal 1 tahun).',
-    '3. Barang kondisi rusak/kotor.',
-    '',
-    `${apotek.kota}, ${tanggalPanjang(tanggal)}`,
-    'Apoteker Pengelola Apotek',
-    '',
-    apotek.namaApj ? `*${apotek.namaApj}*` : null,
-    apotek.sipaApj ? `SIPA : ${apotek.sipaApj}` : null,
-  ]
-    .filter((x): x is string => x !== null)
-    .join('\n')
+    `Terlampir Surat Pesanan No. ${nomor} dari ${apotek.nama} (${jumlahItem} item).`,
+    'Mohon konfirmasi ketersediaan dan harganya. Terima kasih.',
+  ].join('\n')
 }
 
 // Tautan WhatsApp: ke nomor supplier kalau ada, kalau tidak buka WhatsApp dan user memilih kontak sendiri
 export function buatLinkWa(nomorSupplier: string | null | undefined, pesan: string): string {
   const no = normalisasiWa(nomorSupplier)
   return `https://wa.me/${no ?? ''}?text=${encodeURIComponent(pesan)}`
+}
+
+export function unduhBlob(blob: Blob, namaFile: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = namaFile
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
+}
+
+export type HasilKirim = 'dibagikan' | 'diunduh' | 'dibatalkan'
+
+// WhatsApp (wa.me) tidak bisa melampirkan file otomatis. Jadi:
+//  - HP: buka lembar bagikan sistem dengan PDF terlampir → pilih WhatsApp → pilih kontak.
+//  - Komputer: PDF diunduh, lalu chat WhatsApp supplier dibuka dengan pesan pengantar;
+//    user tinggal melampirkan file yang baru diunduh (klip kertas / tarik file ke chat).
+export async function kirimPdfViaWa(params: {
+  blob: Blob
+  namaFile: string
+  nomorSupplier: string | null | undefined
+  pesan: string
+}): Promise<HasilKirim> {
+  const { blob, namaFile, nomorSupplier, pesan } = params
+  const file = new File([blob], namaFile, { type: 'application/pdf' })
+  const isHp = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+  if (isHp && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text: pesan })
+      return 'dibagikan'
+    } catch (err) {
+      if ((err as DOMException)?.name === 'AbortError') return 'dibatalkan'
+      // gagal selain dibatalkan user → lanjut ke cara unduh + buka chat
+    }
+  }
+
+  unduhBlob(blob, namaFile)
+  window.open(buatLinkWa(nomorSupplier, pesan), '_blank', 'noopener,noreferrer')
+  return 'diunduh'
 }
