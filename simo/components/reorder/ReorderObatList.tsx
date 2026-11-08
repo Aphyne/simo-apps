@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Check, ListPlus } from 'lucide-react'
+import { Plus, X, ListPlus } from 'lucide-react'
 import type { ReorderAlertItem } from '@/hooks/useObat'
 
 export interface FilterSupplier {
@@ -126,12 +126,12 @@ export default function ReorderObatList({
                         aria-pressed={ada}
                         className={
                           ada
-                            ? 'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors'
+                            ? 'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium border border-gray-300 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors'
                             : 'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors'
                         }
                       >
-                        {ada ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                        {ada ? 'Di keranjang' : 'Tambah'}
+                        {ada ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                        {ada ? 'Batalkan' : 'Tambah'}
                       </button>
                     )}
                   </td>

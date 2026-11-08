@@ -35,6 +35,32 @@ interface Props {
   onKosongkan: () => void
 }
 
+// Input jumlah yang boleh dikosongkan sementara saat mengetik (hapus lalu ketik angka baru).
+// Nilai ke keranjang hanya diperbarui kalau isinya bilangan bulat >= 1; saat selesai (blur)
+// isian yang kosong/tidak valid dikembalikan ke jumlah terakhir yang sah.
+function InputJumlah({ label, jumlah, onUbah }: { label: string; jumlah: number; onUbah: (n: number) => void }) {
+  const [teks, setTeks] = useState<string | null>(null) // null = tidak sedang mengedit
+
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      min={1}
+      aria-label={label}
+      value={teks ?? String(jumlah)}
+      onFocus={(e) => e.target.select()}
+      onChange={(e) => {
+        const v = e.target.value
+        setTeks(v)
+        const n = Math.floor(Number(v))
+        if (v !== '' && Number.isFinite(n) && n >= 1) onUbah(n)
+      }}
+      onBlur={() => setTeks(null)}
+      className="w-16 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    />
+  )
+}
+
 function kelompokkan(isi: ItemKeranjang[]): GrupKeranjang[] {
   const map = new Map<number, GrupKeranjang>()
   for (const k of isi) {
@@ -165,13 +191,10 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
                 {g.isi.map(({ item, jumlah }) => (
                   <li key={item.id} className="flex items-center gap-2">
                     <span className="flex-1 min-w-0 text-sm text-gray-900 leading-snug">{item.nama}</span>
-                    <input
-                      type="number"
-                      min={1}
-                      aria-label={`Jumlah pesan ${item.nama}`}
-                      value={jumlah}
-                      onChange={(e) => onUbahJumlah(item.id, Math.max(1, Math.floor(Number(e.target.value)) || 1))}
-                      className="w-16 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    <InputJumlah
+                      label={`Jumlah pesan ${item.nama}`}
+                      jumlah={jumlah}
+                      onUbah={(n) => onUbahJumlah(item.id, n)}
                     />
                     <span className="text-xs text-gray-500 w-10 truncate">{item.satuan_pesan}</span>
                     <button
