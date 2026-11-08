@@ -39,6 +39,7 @@ async function updateExpiredTerdekat(obat_id) {
          SELECT expired_batch, SUM(jumlah_satuan)::int AS total_masuk
          FROM barang_masuk
          WHERE obat_id = $1 AND expired_batch IS NOT NULL
+           AND (catatan IS NULL OR catatan NOT LIKE 'Riwayat faktur%')
          GROUP BY expired_batch
        ),
        tk AS (

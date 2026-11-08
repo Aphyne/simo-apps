@@ -103,6 +103,7 @@ async function getLaporanKedaluarsa(req, res) {
           SUM(jumlah_satuan)::int AS total_masuk
         FROM barang_masuk
         WHERE expired_batch IS NOT NULL
+          AND (catatan IS NULL OR catatan NOT LIKE 'Riwayat faktur%')
         GROUP BY obat_id, expired_batch
       ),
       total_keluar AS (
@@ -190,6 +191,7 @@ async function getLaporanKartuStok(req, res) {
         FROM barang_masuk bm
         LEFT JOIN users u ON u.id = bm.user_id
         WHERE bm.obat_id = $1 ${dateWhere.replace(/tanggal/g, 'bm.tanggal')}
+          AND (bm.catatan IS NULL OR bm.catatan NOT LIKE 'Riwayat faktur%')
 
         UNION ALL
 

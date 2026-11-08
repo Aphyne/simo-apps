@@ -5,6 +5,13 @@ const { updateExpiredTerdekat, hitungUlangObat } = require('../services/stokServ
 // error tak terduga supaya bisa direspon sebagai 400 (kesalahan input), bukan 500.
 class BulkValidationError extends Error {}
 
+// Baris barang_masuk hasil impor faktur lama (Agustus–Oktober) ditandai lewat catatan
+// "Riwayat faktur…". Stok sudah termasuk barang ini di snapshot, jadi baris itu hanya
+// riwayat: tidak menambah stok dan dikecualikan dari hitungan sisa batch.
+function isRiwayatFaktur(row) {
+  return typeof row.catatan === 'string' && row.catatan.startsWith('Riwayat faktur');
+}
+
 // true kalau biaya_simpan_pct di luar 0–100 atau bukan angka — dipakai di create,
 // update, dan createBulk supaya H (biaya simpan) tidak pernah negatif/tidak masuk akal.
 function biayaSimpanPctInvalid(pct) {
@@ -241,6 +248,15 @@ async function update(req, res) {
     }
     const old = bmRows[0];
 
+    if (isRiwayatFaktur(old)) {
+      await client.query('ROLLBACK');
+      client.release();
+      return res.status(400).json({
+        success: false,
+        message: 'Riwayat faktur tidak bisa diedit (stok tidak ditambah dari baris ini). Hapus lalu catat ulang kalau datanya salah.',
+      });
+    }
+
     const { rows: obatRows } = await client.query('SELECT * FROM obat WHERE id = $1 FOR UPDATE', [old.obat_id]);
     const obat = obatRows[0];
     const spd = obat.satuan_per_dus || 1;
@@ -328,6 +344,15 @@ async function remove(req, res) {
       return res.status(404).json({ success: false, message: 'Data barang masuk tidak ditemukan' });
     }
     const old = bmRows[0];
+
+    // Baris "Riwayat faktur" tidak pernah menambah stok, jadi menghapusnya juga
+    // tidak boleh mengurangi stok — cukup hapus barisnya.
+    if (isRiwayatFaktur(old)) {
+      await client.query('DELETE FROM barang_masuk WHERE id = $1', [id]);
+      await client.query('COMMIT');
+      client.release();
+      return res.json({ success: true, message: 'Riwayat faktur berhasil dihapus (stok tidak berubah)' });
+    }
 
     const { rows: obatRows } = await client.query('SELECT * FROM obat WHERE id = $1 FOR UPDATE', [old.obat_id]);
     const obat = obatRows[0];
