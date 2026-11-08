@@ -1,14 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, MessageCircle } from 'lucide-react'
+import Link from 'next/link'
+import { Bell, ShoppingCart } from 'lucide-react'
 import { useReorderAlerts } from '@/hooks/useObat'
-
-function buildWaMessage(nama: string, eoq: number, satuan: string, namaSupplier: string | null) {
-  const supplier = namaSupplier ?? 'Supplier'
-  const text = `Halo ${supplier}, saya dari Apotek Rezky Medika.\n\nKami ingin memesan:\n📦 ${nama}\nJumlah: ${eoq} ${satuan}\n\nMohon informasi ketersediaan dan harga. Terima kasih.`
-  return encodeURIComponent(text)
-}
 
 export default function AlertNotification() {
   const [open, setOpen] = useState(false)
@@ -22,6 +17,7 @@ export default function AlertNotification() {
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative p-2 rounded-lg text-gray-500 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+        aria-label={`${alerts.length} obat perlu dipesan ulang`}
       >
         <Bell className="w-5 h-5" />
         <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -46,10 +42,6 @@ export default function AlertNotification() {
             <ul className="max-h-[360px] overflow-y-auto p-2 space-y-2">
               {alerts.map((alert) => {
                 const isKritis = alert.stok === 0
-                const eoqQty = alert.eoq ? Math.ceil(alert.eoq) : null
-                const waUrl = alert.supplier_whatsapp && eoqQty
-                  ? `https://wa.me/${alert.supplier_whatsapp.replace(/\D/g, '')}?text=${buildWaMessage(alert.nama, eoqQty, alert.satuan, alert.nama_supplier)}`
-                  : null
 
                 return (
                   <li key={alert.id} className="rounded-xl border border-gray-100 bg-white p-3 space-y-2 shadow-sm">
@@ -67,26 +59,31 @@ export default function AlertNotification() {
                       <p className="text-xs text-gray-500 mt-0.5">
                         Stok sisa <span className="font-semibold text-red-600">{alert.stok}</span> {alert.satuan}
                         <span className="text-gray-300 mx-1">·</span>
-                        ROP {alert.rop} {alert.satuan}
+                        ROP {Math.ceil(alert.rop)} {alert.satuan}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Supplier:{' '}
+                        <span className="font-medium text-gray-700">
+                          {alert.supplier_nama ?? alert.nama_supplier ?? 'belum diatur'}
+                        </span>
                       </p>
                     </div>
-
-                    {/* WA Reorder button */}
-                    {waUrl && (
-                      <a
-                        href={waUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1.5 w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg py-2 transition-colors"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        Reorder {eoqQty} {alert.satuan}
-                      </a>
-                    )}
                   </li>
                 )
               })}
             </ul>
+
+            {/* Menuju keranjang reorder (pemesanan per supplier via WhatsApp) */}
+            <div className="p-2 border-t border-gray-100">
+              <Link
+                href="/reorder"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-1.5 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg py-2 transition-colors"
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                Buka Keranjang Reorder
+              </Link>
+            </div>
           </div>
         </>
       )}

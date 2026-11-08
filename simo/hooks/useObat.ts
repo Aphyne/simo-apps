@@ -96,11 +96,33 @@ export function useObatPerhitungan(id: number | string | undefined, enabled = tr
   })
 }
 
+export interface ReorderAlertItem {
+  id: number
+  kode: string
+  nama: string
+  satuan: string
+  satuan_per_dus: number
+  stok: number
+  rop: number
+  safety_stock: number
+  eoq: number | null
+  demand_harian: number
+  supplier_id: number | null
+  nama_supplier: string | null
+  supplier_nama: string | null
+  supplier_whatsapp: string | null
+  supplier_alamat: string | null
+  // Saran pesan dari server: jumlah dalam satuan pesan (dus bila isi per dus > 1)
+  saran_jumlah: number
+  basis_saran: 'EOQ' | 'ROP'
+  satuan_pesan: string
+}
+
 export function useReorderAlerts() {
   return useQuery({
     queryKey: ['reorder-alerts'],
     queryFn: async () => {
-      const res = await api.get<{ success: boolean; data: { id: number; kode: string; nama: string; satuan: string; stok: number; rop: number; eoq: number | null; nama_supplier: string | null; supplier_whatsapp: string | null }[] }>('/obat/reorder-alert')
+      const res = await api.get<{ success: boolean; data: ReorderAlertItem[] }>('/obat/reorder-alert')
       return res.data.data
     },
     refetchInterval: 60000,

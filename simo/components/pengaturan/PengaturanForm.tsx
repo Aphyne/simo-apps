@@ -9,6 +9,9 @@ interface PengaturanData {
   nama_apotek?: { value: string }
   alamat_apotek?: { value: string }
   nama_apj?: { value: string }
+  nomor_sia?: { value: string }
+  nomor_sipa_apj?: { value: string }
+  kota_apotek?: { value: string }
   default_service_level?: { value: string }
   default_lead_time?: { value: string }
   default_biaya_pesan?: { value: string }
@@ -28,6 +31,9 @@ export default function PengaturanForm({ data }: Props) {
     nama_apotek: '',
     alamat_apotek: '',
     nama_apj: '',
+    nomor_sia: '',
+    nomor_sipa_apj: '',
+    kota_apotek: '',
     default_service_level: '95',
     default_lead_time: '1',
     default_biaya_pesan: '0',
@@ -41,6 +47,9 @@ export default function PengaturanForm({ data }: Props) {
       nama_apotek:            data.nama_apotek?.value            ?? '',
       alamat_apotek:          data.alamat_apotek?.value          ?? '',
       nama_apj:               data.nama_apj?.value               ?? '',
+      nomor_sia:              data.nomor_sia?.value              ?? '',
+      nomor_sipa_apj:         data.nomor_sipa_apj?.value         ?? '',
+      kota_apotek:            data.kota_apotek?.value            ?? '',
       default_service_level:  data.default_service_level?.value  ?? '95',
       default_lead_time:      data.default_lead_time?.value      ?? '1',
       default_biaya_pesan:    data.default_biaya_pesan?.value    ?? '0',
@@ -85,6 +94,25 @@ export default function PengaturanForm({ data }: Props) {
               placeholder="apt. Nama Lengkap, S.Farm."
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Nomor SIA</label>
+              <input value={form.nomor_sia} onChange={e => set('nomor_sia', e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Nomor SIPA APJ</label>
+              <input value={form.nomor_sipa_apj} onChange={e => set('nomor_sipa_apj', e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Kota (untuk tanggal surat)</label>
+              <input value={form.kota_apotek} onChange={e => set('kota_apotek', e.target.value)}
+                placeholder="Manokwari"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">SIA, SIPA, nama APJ, dan kota dipakai di kop &amp; tanda tangan Surat Pesanan saat reorder via WhatsApp.</p>
         </div>
       </div>
 

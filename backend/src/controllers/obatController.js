@@ -243,17 +243,54 @@ async function update(req, res) {
   }
 }
 
+// Cadangan kalau EOQ belum bisa dihitung (mis. biaya pesan masih 0): pesan sebanyak
+// kekurangan terhadap ROP + kebutuhan sekian hari ke depan. Hanya SARAN — jumlahnya
+// bisa diubah user di keranjang Reorder sebelum dikirim.
+const HARI_COVER_SARAN = 7;
+
+// Saran jumlah pesan dalam satuan pesan (dus bila isi per dus > 1, selain itu satuan terkecil)
+function hitungSaranPesan(o) {
+  const spd = parseInt(o.satuan_per_dus) || 1;
+  const eoq = parseFloat(o.eoq);
+  const rop = parseFloat(o.rop) || 0;
+  const demandHarian = parseFloat(o.demand_harian) || 0;
+
+  let satuanTerkecil;
+  let basis;
+  if (eoq > 0) {
+    satuanTerkecil = Math.ceil(eoq);
+    basis = 'EOQ';
+  } else {
+    satuanTerkecil = Math.ceil(Math.max(rop - o.stok, 0) + demandHarian * HARI_COVER_SARAN);
+    basis = 'ROP';
+  }
+  return {
+    saran_jumlah: Math.max(1, Math.ceil(satuanTerkecil / spd)),
+    basis_saran: basis,
+    satuan_pesan: spd > 1 ? 'dus' : o.satuan,
+  };
+}
+
 async function getReorderAlert(req, res) {
   try {
     const { rows } = await pool.query(
-      `SELECT o.id, o.kode, o.nama, o.satuan, o.stok, o.rop, o.safety_stock, o.eoq,
-              o.nama_supplier, s.whatsapp AS supplier_whatsapp
+      `SELECT o.id, o.kode, o.nama, o.satuan, o.satuan_per_dus, o.stok, o.rop, o.safety_stock, o.eoq,
+              o.demand_harian, o.supplier_id, o.nama_supplier,
+              s.nama AS supplier_nama, s.whatsapp AS supplier_whatsapp, s.alamat AS supplier_alamat
        FROM obat o
        LEFT JOIN supplier s ON s.id = o.supplier_id
        WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= o.rop
        ORDER BY (o.stok - o.rop) ASC`
     );
-    res.json({ success: true, data: rows });
+    const data = rows.map((o) => ({
+      ...o,
+      rop: parseFloat(o.rop),
+      eoq: o.eoq !== null ? parseFloat(o.eoq) : null,
+      safety_stock: parseFloat(o.safety_stock),
+      demand_harian: parseFloat(o.demand_harian) || 0,
+      ...hitungSaranPesan(o),
+    }));
+    res.json({ success: true, data });
   } catch (err) {
     console.error('obat.getReorderAlert:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
