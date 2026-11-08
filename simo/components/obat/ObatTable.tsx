@@ -119,12 +119,7 @@ export default function ObatTable() {
       </div>
 
       {/* ── Kategori Chart ────────────────────────────────────────────────── */}
-      <ObatKategoriChart
-        allObat={allObat}
-        isLoading={!dataAll}
-        kategoriAktif={kategori}
-        onPilihKategori={(k) => { setKategori(k === kategori ? '' : k); setPage(1) }}
-      />
+      <ObatKategoriChart allObat={allObat} isLoading={!dataAll} />
 
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3">
