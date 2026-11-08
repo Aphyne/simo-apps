@@ -110,14 +110,23 @@ async function getById(req, res) {
   }
 }
 
+// Nama obat selalu dirapikan: spasi di awal/akhir dibuang, spasi ganda jadi satu, dan huruf
+// pertama kapital. Hanya huruf pertama yang diubah (bukan Title Case), supaya penulisan
+// seperti "Actifed syr hijau 60ml" atau "decolgen PE" tidak rusak.
+function rapikanNama(nama) {
+  const bersih = String(nama ?? '').trim().replace(/\s+/g, ' ');
+  return bersih.charAt(0).toUpperCase() + bersih.slice(1);
+}
+
 async function create(req, res) {
   const {
-    nama, kategori, satuan, satuan_per_dus,
+    nama: namaMentah, kategori, satuan, satuan_per_dus,
     harga_beli, harga_jual, stok,
     demand_harian, demand_tahunan, std_dev_demand,
     biaya_pesan, biaya_simpan,
     lead_time, service_level, expired_terdekat, supplier_id,
   } = req.body;
+  const nama = rapikanNama(namaMentah);
 
   if (!nama || !kategori || !satuan) {
     return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
@@ -198,11 +207,12 @@ async function create(req, res) {
 
 async function update(req, res) {
   const {
-    nama, kategori, satuan, satuan_per_dus,
+    nama: namaMentah, kategori, satuan, satuan_per_dus,
     stok,
     demand_harian, demand_tahunan, std_dev_demand,
     biaya_pesan, service_level, expired_terdekat, supplier_id,
   } = req.body;
+  const nama = rapikanNama(namaMentah);
 
   if (!nama || !kategori || !satuan) {
     return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
