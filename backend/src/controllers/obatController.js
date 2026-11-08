@@ -219,16 +219,20 @@ async function update(req, res) {
       `UPDATE obat SET
         nama=$1, kategori=$2, satuan=$3, satuan_per_dus=$4,
         stok=$5,
-        demand_harian=$6, demand_tahunan=$7, std_dev_demand=$8,
-        biaya_pesan=$9, service_level=$10, expired_terdekat=$11,
+        demand_harian=COALESCE($6, demand_harian), demand_tahunan=COALESCE($7, demand_tahunan),
+        std_dev_demand=COALESCE($8, std_dev_demand),
+        biaya_pesan=COALESCE($9, biaya_pesan), service_level=COALESCE($10, service_level),
+        expired_terdekat=$11,
         supplier_id=$12, nama_supplier=$13, updated_at=NOW()
        WHERE id=$14
        RETURNING *`,
       [
         nama, kategori, satuan,
         satuan_per_dus || 1, stok || 0,
-        demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
-        biaya_pesan || 0, service_level || 95, expired_terdekat || null,
+        // undefined/null/'' -> null -> COALESCE mempertahankan nilai lama di DB
+        // (kolom ini dihitung otomatis dari penjualan & Stok Masuk, bukan diisi di form)
+        demand_harian ?? null, demand_tahunan ?? null, std_dev_demand ?? null,
+        biaya_pesan ?? null, service_level ?? null, expired_terdekat || null,
         supplier_id || null, nama_supplier, req.params.id,
       ]
     );
