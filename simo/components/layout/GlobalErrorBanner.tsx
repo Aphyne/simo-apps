@@ -16,9 +16,19 @@ export default function GlobalErrorBanner() {
 
   useEffect(() => {
     const cache = qc.getQueryCache()
-    const hitung = () => setJumlah(cache.findAll({ predicate: gagalAktif }).length)
+    let aktif = true
+    // Notifikasi cache bisa datang sinkron saat komponen lain sedang render (useQuery membuat query baru).
+    // setState saat itu memicu peringatan React, jadi pembaruan ditunda ke microtask.
+    const hitung = () =>
+      queueMicrotask(() => {
+        if (aktif) setJumlah(cache.findAll({ predicate: gagalAktif }).length)
+      })
     hitung()
-    return cache.subscribe(hitung)
+    const berhenti = cache.subscribe(hitung)
+    return () => {
+      aktif = false
+      berhenti()
+    }
   }, [qc])
 
   if (jumlah === 0) return null
