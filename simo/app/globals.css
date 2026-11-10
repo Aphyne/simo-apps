@@ -81,6 +81,68 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Token semantik SIMO (T-D2): alias ke skala warna bawaan Tailwind, nilai identik.
+   Belum dipakai komponen; migrasi kelas dilakukan di Tahap B. Lihat docs/spec/design-system.md bagian 3. */
+@theme inline {
+  /* Brand (alias blue) */
+  --color-brand-50: var(--color-blue-50);
+  --color-brand-100: var(--color-blue-100);
+  --color-brand-200: var(--color-blue-200);
+  --color-brand-300: var(--color-blue-300);
+  --color-brand-400: var(--color-blue-400);
+  --color-brand-500: var(--color-blue-500);
+  --color-brand-600: var(--color-blue-600);
+  --color-brand-700: var(--color-blue-700);
+  --color-brand-800: var(--color-blue-800);
+  --color-brand-900: var(--color-blue-900);
+  /* Status: danger = red, success = emerald, warning = orange */
+  --color-danger-50: var(--color-red-50);
+  --color-danger-100: var(--color-red-100);
+  --color-danger-200: var(--color-red-200);
+  --color-danger-300: var(--color-red-300);
+  --color-danger-400: var(--color-red-400);
+  --color-danger-500: var(--color-red-500);
+  --color-danger-600: var(--color-red-600);
+  --color-danger-700: var(--color-red-700);
+  --color-danger-800: var(--color-red-800);
+  --color-danger-900: var(--color-red-900);
+  --color-success-50: var(--color-emerald-50);
+  --color-success-100: var(--color-emerald-100);
+  --color-success-200: var(--color-emerald-200);
+  --color-success-300: var(--color-emerald-300);
+  --color-success-400: var(--color-emerald-400);
+  --color-success-500: var(--color-emerald-500);
+  --color-success-600: var(--color-emerald-600);
+  --color-success-700: var(--color-emerald-700);
+  --color-success-800: var(--color-emerald-800);
+  --color-success-900: var(--color-emerald-900);
+  --color-warning-50: var(--color-orange-50);
+  --color-warning-100: var(--color-orange-100);
+  --color-warning-200: var(--color-orange-200);
+  --color-warning-300: var(--color-orange-300);
+  --color-warning-400: var(--color-orange-400);
+  --color-warning-500: var(--color-orange-500);
+  --color-warning-600: var(--color-orange-600);
+  --color-warning-700: var(--color-orange-700);
+  --color-warning-800: var(--color-orange-800);
+  --color-warning-900: var(--color-orange-900);
+  /* Teks */
+  --color-fg: var(--color-gray-900);
+  --color-fg-secondary: var(--color-gray-700);
+  --color-fg-tertiary: var(--color-gray-600);
+  --color-fg-muted: var(--color-gray-500);
+  --color-fg-subtle: var(--color-gray-400);
+  --color-fg-inverse: var(--color-white);
+  /* Permukaan */
+  --color-surface: var(--color-white);
+  --color-surface-subtle: var(--color-gray-50);
+  --color-surface-muted: var(--color-gray-100);
+  /* Garis */
+  --color-line: var(--color-gray-200);
+  --color-line-subtle: var(--color-gray-100);
+  --color-line-strong: var(--color-gray-300);
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
