@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./config/cekProduksi').terapkan();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -21,6 +22,14 @@ const aktivitasMiddleware = require('./middleware/aktivitasMiddleware');
 const { validasiQuery } = require('./middleware/validasiInput');
 
 const app = express();
+
+// Di belakang reverse proxy / hosting, IP klien ada di header X-Forwarded-For. Tanpa ini semua
+// pengguna terlihat berasal dari satu IP dan pembatas login mengunci semua orang sekaligus.
+// Isi TRUST_PROXY dengan jumlah proxy di depan server (biasanya 1). Kosong = tidak percaya proxy.
+if (process.env.TRUST_PROXY) {
+  const tp = process.env.TRUST_PROXY;
+  app.set('trust proxy', /^\d+$/.test(tp) ? Number(tp) : tp);
+}
 
 // Header keamanan standar (juga menyembunyikan X-Powered-By)
 app.use(helmet());
