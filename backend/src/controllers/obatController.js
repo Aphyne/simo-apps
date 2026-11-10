@@ -217,23 +217,33 @@ async function create(req, res) {
 }
 
 async function update(req, res) {
-  const {
-    nama: namaMentah, kategori, satuan, satuan_per_dus,
-    stok,
-    demand_harian, demand_tahunan, std_dev_demand,
-    biaya_pesan, service_level, expired_terdekat, supplier_id,
-  } = req.body;
-  const nama = rapikanNama(namaMentah);
-
-  if (!nama || !kategori || !satuan) {
-    return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
-  }
+  const body = req.body || {};
 
   try {
-    let nama_supplier = null;
-    if (supplier_id) {
-      const { rows: supRows } = await pool.query('SELECT nama FROM supplier WHERE id = $1', [supplier_id]);
-      if (supRows.length) nama_supplier = supRows[0].nama;
+    // Update PARSIAL: field yang tidak dikirim tetap memakai nilai lama (bukan di-nol-kan).
+    const { rows: lama } = await pool.query('SELECT * FROM obat WHERE id = $1', [req.params.id]);
+    if (!lama.length) {
+      return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
+    }
+    const o = lama[0];
+    const pilih = (nilai, lamaVal) => (nilai === undefined ? lamaVal : nilai);
+
+    const nama = body.nama === undefined ? o.nama : rapikanNama(body.nama);
+    const kategori = pilih(body.kategori, o.kategori);
+    const satuan = pilih(body.satuan, o.satuan);
+    if (!nama || !kategori || !satuan) {
+      return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
+    }
+
+    let supplier_id = o.supplier_id;
+    let nama_supplier = o.nama_supplier;
+    if (body.supplier_id !== undefined) {
+      supplier_id = body.supplier_id || null;
+      nama_supplier = null;
+      if (supplier_id) {
+        const { rows: supRows } = await pool.query('SELECT nama FROM supplier WHERE id = $1', [supplier_id]);
+        if (supRows.length) nama_supplier = supRows[0].nama;
+      }
     }
 
     const { rows } = await pool.query(
@@ -247,10 +257,15 @@ async function update(req, res) {
        RETURNING *`,
       [
         nama, kategori, satuan,
-        satuan_per_dus || 1, stok || 0,
-        demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
-        biaya_pesan || 0, service_level || 95, expired_terdekat || null,
-        supplier_id || null, nama_supplier, req.params.id,
+        pilih(body.satuan_per_dus, o.satuan_per_dus) || 1,
+        pilih(body.stok, o.stok) || 0,
+        pilih(body.demand_harian, o.demand_harian) || 0,
+        pilih(body.demand_tahunan, o.demand_tahunan) || 0,
+        pilih(body.std_dev_demand, o.std_dev_demand) || 0,
+        pilih(body.biaya_pesan, o.biaya_pesan) || 0,
+        pilih(body.service_level, o.service_level) || 95,
+        pilih(body.expired_terdekat, o.expired_terdekat) || null,
+        supplier_id, nama_supplier, req.params.id,
       ]
     );
     if (!rows.length) {
