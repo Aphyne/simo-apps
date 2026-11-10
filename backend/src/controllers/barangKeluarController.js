@@ -169,7 +169,11 @@ async function update(req, res) {
     return res.status(400).json({ success: false, message: 'Tanggal, jumlah (lebih dari 0), dan keterangan wajib diisi' });
   }
 
-  const client = await pool.connect();
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
   try {
     await client.query('BEGIN');
 
@@ -241,7 +245,11 @@ async function update(req, res) {
 async function remove(req, res) {
   const { id } = req.params;
 
-  const client = await pool.connect();
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
   try {
     await client.query('BEGIN');
 
@@ -303,7 +311,11 @@ async function createBulk(req, res) {
     }
   }
 
-  const client = await pool.connect();
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
   let hasil = [];
   try {
     await client.query('BEGIN');
@@ -350,7 +362,7 @@ async function createBulk(req, res) {
 
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     client.release();
     if (err instanceof BulkValidationError) {
       return res.status(400).json({ success: false, message: err.message });
