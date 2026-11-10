@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', require('../middleware/validasiInput').paramId);
 const { verifyToken } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleMiddleware');
 const requireAdmin = requireRole('admin');

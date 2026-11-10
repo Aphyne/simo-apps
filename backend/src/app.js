@@ -18,6 +18,7 @@ const userRoutes = require('./routes/users');
 const pengaturanRoutes = require('./routes/pengaturan');
 const aktivitasRoutes = require('./routes/aktivitas');
 const aktivitasMiddleware = require('./middleware/aktivitasMiddleware');
+const { validasiQuery } = require('./middleware/validasiInput');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(validasiQuery);
 // Mencatat aksi yang mengubah data (untuk pemantauan peneliti) — lihat aktivitasMiddleware
 app.use(aktivitasMiddleware);
 

@@ -1,4 +1,14 @@
 const pool = require('../db/pool');
+const { periksaAngka } = require('../utils/validasi');
+
+// Pengaturan yang nilainya harus angka dalam rentang tertentu.
+const SPEC_NUMERIK = {
+  default_service_level: { min: 1, max: 100, label: 'Service level default' },
+  default_lead_time: { min: 1, max: 365, int: true, label: 'Lead time default' },
+  default_biaya_pesan: { max: 1e9, label: 'Biaya pesan default' },
+  threshold_expired_hari: { min: 1, max: 3650, int: true, label: 'Ambang kedaluarsa' },
+  biaya_pesan_per_faktur: { max: 1e9, label: 'Biaya pesan per faktur' },
+};
 
 // GET /api/pengaturan
 async function getPengaturan(req, res) {
@@ -21,6 +31,25 @@ async function updatePengaturan(req, res) {
     return res.status(400).json({ success: false, message: 'Tidak ada data yang dikirim' });
   }
   try {
+    // Validasi SEMUA dulu sebelum menulis apa pun, supaya tidak tersimpan setengah.
+    const { rows: adaRows } = await pool.query('SELECT key FROM pengaturan');
+    const kunciAda = new Set(adaRows.map((r) => r.key));
+    for (const [key, value] of Object.entries(updates)) {
+      if (!kunciAda.has(key)) {
+        return res.status(400).json({ success: false, message: `Pengaturan "${key}" tidak dikenal` });
+      }
+      if (typeof value !== 'string' && typeof value !== 'number') {
+        return res.status(400).json({ success: false, message: `Nilai "${key}" tidak valid` });
+      }
+      if (SPEC_NUMERIK[key]) {
+        const salah = periksaAngka({ [key]: value }, { [key]: SPEC_NUMERIK[key] });
+        if (salah || String(value).trim() === '') {
+          return res.status(400).json({ success: false, message: salah || `${SPEC_NUMERIK[key].label} wajib diisi` });
+        }
+      } else if (String(value).length > 255) {
+        return res.status(400).json({ success: false, message: `Nilai "${key}" terlalu panjang (maks 255 karakter)` });
+      }
+    }
     for (const [key, value] of Object.entries(updates)) {
       await pool.query(
         'UPDATE pengaturan SET value=$1, updated_at=NOW() WHERE key=$2',

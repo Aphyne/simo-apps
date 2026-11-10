@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { periksaAngka, idValid, tanggalValid } = require('../utils/validasi');
 const { kalkulasiLengkap, kalkulasiStepByStep } = require('../services/eoqService');
 const { hitungUlangObat } = require('../services/stokService');
 
@@ -129,6 +130,30 @@ function rapikanNama(nama) {
     .join(' ');
 }
 
+// Batas wajar input angka obat. Menolak NaN / Infinity / negatif / teks sebelum masuk database.
+const SPEC_OBAT = {
+  satuan_per_dus: { min: 1, max: 100000, int: true, label: 'Isi per dus' },
+  harga_beli: { max: 1e9, label: 'Harga beli' },
+  harga_jual: { max: 1e9, label: 'Harga jual' },
+  stok: { max: 1e9, int: true, label: 'Stok' },
+  demand_harian: { max: 1e8, label: 'Demand harian' },
+  demand_tahunan: { max: 1e10, label: 'Demand tahunan' },
+  std_dev_demand: { max: 1e8, label: 'Standar deviasi demand' },
+  biaya_pesan: { max: 1e9, label: 'Biaya pesan' },
+  biaya_simpan: { max: 1e9, label: 'Biaya simpan' },
+  lead_time: { min: 1, max: 365, int: true, label: 'Lead time' },
+  service_level: { min: 1, max: 100, label: 'Service level' },
+};
+
+// Mengembalikan pesan error untuk body obat, atau null kalau valid.
+function periksaBodyObat(body) {
+  const salahAngka = periksaAngka(body, SPEC_OBAT);
+  if (salahAngka) return salahAngka;
+  if (body.expired_terdekat && !tanggalValid(body.expired_terdekat)) return 'Format expired tidak valid (YYYY-MM-DD)';
+  if (body.supplier_id && !idValid(body.supplier_id)) return 'Supplier tidak valid';
+  return null;
+}
+
 async function create(req, res) {
   const {
     nama: namaMentah, kategori, satuan, satuan_per_dus,
@@ -141,6 +166,11 @@ async function create(req, res) {
 
   if (!nama || !kategori || !satuan) {
     return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
+  }
+
+  const salahBody = periksaBodyObat(req.body);
+  if (salahBody) {
+    return res.status(400).json({ success: false, message: salahBody });
   }
 
   const stok_awal = parseInt(stok) || 0;
@@ -227,6 +257,10 @@ async function update(req, res) {
     }
     const o = lama[0];
     const pilih = (nilai, lamaVal) => (nilai === undefined ? lamaVal : nilai);
+    const salahBody = periksaBodyObat(body);
+    if (salahBody) {
+      return res.status(400).json({ success: false, message: salahBody });
+    }
 
     const nama = body.nama === undefined ? o.nama : rapikanNama(body.nama);
     const kategori = pilih(body.kategori, o.kategori);
@@ -367,7 +401,7 @@ async function remove(req, res) {
   } catch (err) {
     console.error('obat.remove:', err);
     // Foreign key violation — obat masih ada di transaksi
-    if (err.code === '23503') {
+    if (err.code === '23503' || err.code === '23001') {
       return res.status(400).json({
         success: false,
         message: 'Obat tidak bisa dihapus karena masih memiliki riwayat transaksi',
