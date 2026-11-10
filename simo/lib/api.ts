@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clearTokenCookie } from '@/lib/cookie'
 
 const api = axios.create({
   // Tanpa timeout, request yang menggantung membuat halaman macet di skeleton selamanya.
@@ -33,7 +34,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== 'undefined' && !isLoginRequest) {
       sessionStorage.removeItem('simo_token')
       sessionStorage.removeItem('simo_user')
-      document.cookie = 'simo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      clearTokenCookie()
       window.location.href = '/login'
     }
     return Promise.reject(error)
