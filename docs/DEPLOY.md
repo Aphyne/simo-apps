@@ -79,6 +79,65 @@ Lalu `cd simo && npm run build && npm run start` (atau deploy ke hosting Next.js
 - [ ] DevTools → Application → Cookies: `simo_token` bertanda `Secure` dan `SameSite=Lax`.
 - [ ] Login Google dengan akun yang terdaftar di tabel users.
 
+## Pemantauan
+
+Dua alamat publik (tanpa login, tanpa info env/rahasia):
+
+| Alamat | Fungsi | Sehat | Gagal |
+|---|---|---|---|
+| `/api/health` | Server hidup (ringan, tidak menyentuh database) | 200 | tidak ada respons |
+| `/api/health/db` | Server bisa menjalankan `SELECT 1` ke database | 200 + `waktu_respons_ms` | 503 "Database tidak dapat dijangkau" |
+
+`/api/health/db` menunggu maksimal 5 detik, hasilnya disimpan 5 detik, dan dibatasi 30 permintaan/menit per IP (lebih dari itu 429). Di belakang proxy pastikan `TRUST_PROXY=1` agar batas dihitung per pengguna, bukan per proxy.
+
+**Mendaftar UptimeRobot (gratis, atau layanan sejenis):**
+1. Daftar di uptimerobot.com, lalu **Add New Monitor** dengan tipe **HTTP(s)**.
+2. Monitor 1: nama `SIMO API`, URL `https://<domain backend>/api/health`, interval **5 menit**.
+3. Monitor 2: nama `SIMO Database`, URL `https://<domain backend>/api/health/db`, interval **5 menit**. Jangan lebih rapat dari 1 menit.
+4. Di **Alert Contacts** tambahkan email pemilik (dan WhatsApp/Telegram bila ada), lalu centang kontak itu pada kedua monitor.
+5. Uji: matikan backend (`pm2 stop simo-backend`), tunggu notifikasi "Down", lalu nyalakan kembali (`pm2 start simo-backend`). Catatan: database Neon yang baru bangun dari tidur bisa membuat satu cek lambat; itu bukan kerusakan.
+
+**Rotasi log pm2** (agar log tidak memenuhi disk):
+```
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 14
+pm2 set pm2-logrotate:compress true
+```
+Artinya berkas log dipotong tiap 10 MB, 14 berkas terakhir disimpan dan dikompres.
+
+**Cek log:** `pm2 logs simo-backend --lines 100` (langsung), `pm2 status` (status dan jumlah restart). Kegagalan database tercatat satu baris berawalan `[health/db]` berisi waktu dan jenis kesalahan ringkas (misal `ECONNREFUSED` atau `timeout`), tanpa host atau kredensial. Nama proses mengikuti `backend/ecosystem.config.js`; sesuaikan bila berbeda.
+
+## Backup dan pemulihan
+
+Dua lapis: (1) backup bawaan Neon (cepat, titik waktu), (2) berkas backup logis buatan sendiri (cadangan di luar Neon).
+
+### 1. Backup logis dengan skrip (sudah diuji lokal)
+
+```
+cd backend
+node scripts/backup-db.js                # membaca DATABASE_URL dari backend/.env
+```
+- Hanya `SELECT` dalam transaksi read-only (snapshot tunggal); tidak menulis ke Neon dan tidak mencetak URL/kredensial.
+- Hasil: `backend/backups/simo-backup-YYYYMMDD-HHMMSS.json` (jam UTC). Folder ini ada di `.gitignore`. **Berkas berisi data sensitif (hash password, data usaha): jangan di-commit, jangan dikirim lewat chat.**
+- Pulihkan ke Postgres **lokal** (untuk uji atau memeriksa isi). Skema harus sudah ada (terapkan migrasi di DB lokal), tabel harus kosong:
+  ```
+  RESTORE_DATABASE_URL=postgresql://user:pass@localhost:PORT/nama_db node scripts/restore-db.js backups/<berkas>.json
+  ```
+  Skrip menolak host non-lokal dan menolak target yang tidak kosong kecuali memakai `--timpa` (mengosongkan tabel lebih dulu). Restore ke Neon production **tidak** dilakukan lewat skrip ini; gunakan pemulihan Neon di bawah.
+- Bukti uji (Postgres lokal): jumlah baris 7 tabel sama sebelum backup dan sesudah restore, isi tiap tabel identik (cek md5), tipe `date`, `numeric`, `timestamptz` terjaga.
+- **Jadwal:** minimal seminggu sekali dan sebelum setiap perubahan data besar (impor, migrasi). Windows: Task Scheduler menjalankan `node scripts/backup-db.js` dengan folder awal `backend`. Linux: `0 2 * * 0 cd /path/simo/backend && node scripts/backup-db.js`. Salin berkas ke tempat di luar server/laptop (mis. Google Drive pribadi atau flashdisk), simpan 8 minggu terakhir, hapus yang lebih lama. Jangan simpan di folder repo yang disinkronkan publik.
+
+### 2. Pemulihan lewat Neon (point-in-time restore / branch)
+
+> **TIDAK DIUJI: butuh konsol Neon.** Langkah di bawah berdasarkan fitur Neon; Boss perlu mencobanya sekali di konsol dan mencatat hasilnya.
+
+1. **Cek retensi:** konsol Neon, pilih project, menu **Settings > Storage / Restore window**. Paket gratis menyimpan riwayat singkat (sekitar 6 jam, bisa berubah); paket berbayar bisa lebih lama. Catat batasnya, karena data di luar jendela itu hanya bisa dipulihkan dari berkas backup logis.
+2. **Pulihkan tanpa menimpa production (disarankan):** menu **Branches > Create branch**, pilih induk `main` dan titik waktu (atau "Past data") sebelum kejadian. Hasilnya cabang baru dengan connection string sendiri.
+3. **Verifikasi:** arahkan salinan `.env` lokal ke cabang itu, jalankan `node scripts/backup-db.js` (read-only) lalu bandingkan jumlah baris per tabel dengan harapan (obat, barang_masuk, barang_keluar, users).
+4. **Ganti production:** bila data di cabang benar, pakai **Restore** pada branch `main` ke titik waktu itu, atau ganti `DATABASE_URL` backend ke cabang baru lalu restart (`pm2 restart simo-backend`). Setelah memulihkan, cek `/api/health/db`.
+5. **Latihan:** lakukan langkah 2-3 satu kali sebelum go-live agar prosedur terbiasa.
+
 ## G. Yang sengaja belum dikerjakan
 
 Paginasi laporan, tampilan mobile, modal aksesibel (pembaca layar), `bcrypt` native, upgrade dependensi, dan pembersihan riwayat git lama (rahasia lamanya sudah dirotasi; butuh force-push dan izin pemilik).
