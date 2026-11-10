@@ -1,6 +1,9 @@
 const pool = require('../db/pool');
 const { hitungUlangObat, updateExpiredTerdekat } = require('../services/stokService');
 const { hitungDemandDariRiwayat } = require('../services/demandService');
+const { HttpError, bulatPositif, idValid, tanggalValid, balasHttpError } = require('../utils/validasi');
+
+const KETERANGAN_VALID = ['Penjualan', 'Retur', 'Rusak', 'Kedaluarsa', 'Lainnya'];
 
 // Error yang sengaja dilempar dari dalam transaksi createBulk — dibedakan dari
 // error tak terduga supaya bisa direspon sebagai 400 (kesalahan input), bukan 500.
@@ -85,77 +88,102 @@ async function getAll(req, res) {
 }
 
 async function create(req, res) {
-  const { tanggal, obat_id, jumlah, keterangan, catatan } = req.body;
+  const { tanggal, obat_id, jumlah, keterangan, catatan } = req.body || {};
   const user_id = req.user?.id ?? null;
 
   if (!tanggal || !obat_id || !jumlah || !keterangan) {
     return res.status(400).json({ success: false, message: 'Tanggal, obat, jumlah, dan keterangan wajib diisi' });
   }
-  if (parseInt(jumlah) <= 0) {
-    return res.status(400).json({ success: false, message: 'Jumlah harus lebih dari 0' });
+  if (!tanggalValid(tanggal)) {
+    return res.status(400).json({ success: false, message: 'Format tanggal tidak valid (YYYY-MM-DD)' });
+  }
+  const obatId = idValid(obat_id);
+  if (!obatId) {
+    return res.status(400).json({ success: false, message: 'Obat tidak valid' });
+  }
+  const jml = bulatPositif(jumlah);
+  if (!jml) {
+    return res.status(400).json({ success: false, message: 'Jumlah harus bilangan bulat lebih dari 0' });
+  }
+  if (!KETERANGAN_VALID.includes(keterangan)) {
+    return res.status(400).json({ success: false, message: 'Keterangan tidak valid' });
   }
 
-  try {
-    const { rows: obatRows } = await pool.query('SELECT * FROM obat WHERE id = $1', [obat_id]);
-    if (!obatRows.length) {
-      return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
-    }
-    const obat = obatRows[0];
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
 
-    if (obat.stok < parseInt(jumlah)) {
-      return res.status(400).json({
-        success: false,
-        message: `Stok tidak cukup. Stok tersedia: ${obat.stok} ${obat.satuan}`,
-      });
+  let obat, stok_sesudah, baris;
+  try {
+    await client.query('BEGIN');
+
+    // FOR UPDATE: request lain untuk obat yang sama menunggu di sini, jadi stok yang
+    // dibaca selalu stok terbaru. Tanpa ini, penjualan paralel bisa sama-sama lolos
+    // cek stok dan stok tercatat berselisih dengan ledger (temuan QA BIZ-01).
+    const { rows: obatRows } = await client.query('SELECT * FROM obat WHERE id = $1 FOR UPDATE', [obatId]);
+    if (!obatRows.length) throw new HttpError(404, 'Obat tidak ditemukan');
+    obat = obatRows[0];
+
+    if (obat.stok < jml) {
+      throw new HttpError(400, `Stok tidak cukup. Stok tersedia: ${obat.stok} ${obat.satuan}`);
     }
 
     const stok_sebelum = obat.stok;
-    const stok_sesudah = stok_sebelum - parseInt(jumlah);
+    stok_sesudah = stok_sebelum - jml;
 
-    const { rows } = await pool.query(
+    const { rows } = await client.query(
       `INSERT INTO barang_keluar
          (tanggal, obat_id, jumlah, keterangan, catatan, user_id, stok_sebelum, stok_sesudah, harga_jual)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
-      [tanggal, obat_id, jumlah, keterangan, catatan || null, user_id, stok_sebelum, stok_sesudah, obat.harga_jual]
+      [tanggal, obatId, jml, keterangan, catatan || null, user_id, stok_sebelum, stok_sesudah, obat.harga_jual]
     );
+    baris = rows[0];
 
-    await pool.query(
-      'UPDATE obat SET stok = $1, updated_at = NOW() WHERE id = $2',
-      [stok_sesudah, obat_id]
-    );
+    await client.query('UPDATE obat SET stok = $1, updated_at = NOW() WHERE id = $2', [stok_sesudah, obatId]);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    client.release();
+    if (balasHttpError(err, res)) return;
+    console.error('barangKeluar.create:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+  client.release();
 
-    // Jika penjualan → update demand dari riwayat
+  // Setelah commit: kalkulasi turunan (demand, expired, EOQ/ROP). Kegagalannya tidak
+  // boleh membatalkan transaksi yang sudah tersimpan, jadi tidak ikut transaksi di atas.
+  let obatUpdated = null;
+  try {
     if (keterangan === 'Penjualan') {
-      const demand = await hitungDemandDariRiwayat(obat_id);
+      const demand = await hitungDemandDariRiwayat(obatId);
       if (demand) {
         await pool.query(
           'UPDATE obat SET demand_harian = $1, demand_tahunan = $2, std_dev_demand = $3 WHERE id = $4',
-          [demand.demand_harian, demand.demand_tahunan, demand.std_dev_demand, obat_id]
+          [demand.demand_harian, demand.demand_tahunan, demand.std_dev_demand, obatId]
         );
       }
     }
-
-    await updateExpiredTerdekat(obat_id);
-
-    // Hitung ulang EOQ/SS/ROP
-    const obatUpdated = await hitungUlangObat(obat_id);
-
-    const reorder_alert = obatUpdated.rop !== null && stok_sesudah <= parseFloat(obatUpdated.rop);
-
-    res.status(201).json({
-      success: true,
-      data: { ...rows[0], nama_obat: obat.nama, kode_obat: obat.kode, satuan: obat.satuan },
-      reorder_alert,
-      obat_nama: obat.nama,
-      stok_sesudah,
-      rop: obatUpdated.rop,
-      message: 'Barang keluar berhasil dicatat',
-    });
+    await updateExpiredTerdekat(obatId);
+    obatUpdated = await hitungUlangObat(obatId);
   } catch (err) {
-    console.error('barangKeluar.create:', err);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error('barangKeluar.create — hitung ulang gagal:', err);
   }
+
+  const rop = obatUpdated ? obatUpdated.rop : obat.rop;
+  const reorder_alert = rop !== null && rop !== undefined && stok_sesudah <= parseFloat(rop);
+
+  res.status(201).json({
+    success: true,
+    data: { ...baris, nama_obat: obat.nama, kode_obat: obat.kode, satuan: obat.satuan },
+    reorder_alert,
+    obat_nama: obat.nama,
+    stok_sesudah,
+    rop,
+    message: 'Barang keluar berhasil dicatat',
+  });
 }
 
 // Edit satu baris barang keluar (admin only). Obat TIDAK bisa diganti — kalau obatnya
@@ -165,8 +193,11 @@ async function update(req, res) {
   const { id } = req.params;
   const { tanggal, jumlah, keterangan, catatan } = req.body;
 
-  if (!tanggal || !jumlah || parseInt(jumlah) <= 0 || !keterangan) {
-    return res.status(400).json({ success: false, message: 'Tanggal, jumlah (lebih dari 0), dan keterangan wajib diisi' });
+  if (!tanggal || !jumlah || !keterangan || !bulatPositif(jumlah)) {
+    return res.status(400).json({ success: false, message: 'Tanggal, jumlah (bilangan bulat lebih dari 0), dan keterangan wajib diisi' });
+  }
+  if (!tanggalValid(tanggal) || !KETERANGAN_VALID.includes(keterangan)) {
+    return res.status(400).json({ success: false, message: 'Tanggal atau keterangan tidak valid' });
   }
 
   let client;
@@ -188,7 +219,7 @@ async function update(req, res) {
     const { rows: obatRows } = await client.query('SELECT * FROM obat WHERE id = $1 FOR UPDATE', [old.obat_id]);
     const obat = obatRows[0];
 
-    const jumlah_baru = parseInt(jumlah);
+    const jumlah_baru = bulatPositif(jumlah);
     const stok_setelah_reverse = obat.stok + old.jumlah;
     const stok_baru = stok_setelah_reverse - jumlah_baru;
 
@@ -305,9 +336,18 @@ async function createBulk(req, res) {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ success: false, message: 'Minimal 1 obat harus diisi' });
   }
+  if (!tanggalValid(tanggal)) {
+    return res.status(400).json({ success: false, message: 'Format tanggal tidak valid (YYYY-MM-DD)' });
+  }
+  if (!KETERANGAN_VALID.includes(keterangan)) {
+    return res.status(400).json({ success: false, message: 'Keterangan tidak valid' });
+  }
+  if (items.length > 200) {
+    return res.status(400).json({ success: false, message: 'Maksimal 200 obat per transaksi' });
+  }
   for (const item of items) {
-    if (!item.obat_id || !item.jumlah || parseInt(item.jumlah) <= 0) {
-      return res.status(400).json({ success: false, message: 'Setiap baris harus punya obat dan jumlah lebih dari 0' });
+    if (!item || !idValid(item.obat_id) || !bulatPositif(item.jumlah)) {
+      return res.status(400).json({ success: false, message: 'Setiap baris harus punya obat valid dan jumlah bilangan bulat lebih dari 0' });
     }
   }
 
@@ -320,6 +360,11 @@ async function createBulk(req, res) {
   try {
     await client.query('BEGIN');
 
+    // Kunci SEMUA obat yang terlibat dalam urutan id tetap (naik) sebelum memproses.
+    // Dua transaksi dengan urutan item terbalik (A,B vs B,A) tadinya saling menunggu
+    // → deadlock (temuan QA BIZ-04). Dengan urutan kunci seragam, mereka cukup antre.
+    await client.query('SELECT id FROM obat WHERE id = ANY($1::int[]) ORDER BY id FOR UPDATE', [items.map((it) => Number(it.obat_id))]);
+
     for (const item of items) {
       // FOR UPDATE mengunci baris obat ini sampai transaksi selesai — mencegah
       // request lain (form manual/import lain) membaca stok yang sama secara bersamaan.
@@ -328,7 +373,7 @@ async function createBulk(req, res) {
         throw new BulkValidationError(`Obat dengan ID ${item.obat_id} tidak ditemukan`);
       }
       const obat = obatRows[0];
-      const jumlah = parseInt(item.jumlah);
+      const jumlah = bulatPositif(item.jumlah);
 
       if (obat.stok < jumlah) {
         throw new BulkValidationError(
@@ -367,6 +412,7 @@ async function createBulk(req, res) {
     if (err instanceof BulkValidationError) {
       return res.status(400).json({ success: false, message: err.message });
     }
+    if (balasHttpError(err, res)) return;
     console.error('barangKeluar.createBulk:', err);
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
