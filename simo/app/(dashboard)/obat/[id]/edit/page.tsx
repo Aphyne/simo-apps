@@ -20,11 +20,11 @@ function IsiEditObatPage({ params }: { params: Promise<{ id: string }> }) {
   }
 
   if (isLoading) {
-    return <div className="text-gray-500 py-12 text-center">Memuat data obat...</div>
+    return <div className="text-fg-muted py-12 text-center">Memuat data obat...</div>
   }
 
   if (!obat) {
-    return <div className="text-red-600 py-12 text-center">Obat tidak ditemukan</div>
+    return <div className="text-danger-600 py-12 text-center">Obat tidak ditemukan</div>
   }
 
   return (
@@ -32,14 +32,14 @@ function IsiEditObatPage({ params }: { params: Promise<{ id: string }> }) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          className="p-1.5 rounded-lg text-fg-subtle hover:text-fg-secondary hover:bg-surface-muted transition-colors"
           title="Kembali"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Edit Obat</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{obat.kode} — {obat.nama}</p>
+          <h1 className="text-xl font-bold text-fg">Edit Obat</h1>
+          <p className="text-sm text-fg-muted mt-0.5">{obat.kode} — {obat.nama}</p>
         </div>
       </div>
       <ObatForm

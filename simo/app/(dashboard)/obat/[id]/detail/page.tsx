@@ -23,10 +23,10 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
   if (loadingObat) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-48 bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-8 w-48 bg-surface-muted rounded-lg animate-pulse" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-16 bg-surface-muted rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
   }
 
   if (!obat) {
-    return <div className="text-red-600 py-16 text-center text-sm">Obat tidak ditemukan</div>
+    return <div className="text-danger-600 py-16 text-center text-sm">Obat tidak ditemukan</div>
   }
 
   return (
@@ -45,17 +45,17 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         <div>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-600 mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg-tertiary mb-2 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             Kembali ke Data Obat
           </button>
-          <h1 className="text-xl font-bold text-gray-900">{obat.nama}</h1>
+          <h1 className="text-xl font-bold text-fg">{obat.nama}</h1>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
+            <span className="font-mono text-xs text-fg-tertiary bg-surface-muted px-2 py-0.5 rounded-md">
               {obat.kode}
             </span>
-            <span className="text-sm text-gray-500">{obat.kategori}</span>
+            <span className="text-sm text-fg-muted">{obat.kategori}</span>
             <StatusBadge status={obat.status} />
           </div>
         </div>
@@ -67,7 +67,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
               size="sm"
               onClick={() => hitungUlang.mutate(Number(id))}
               disabled={hitungUlang.isPending}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="border-line-strong text-fg-secondary hover:bg-surface-subtle"
             >
               <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${hitungUlang.isPending ? 'animate-spin' : ''}`} />
               Hitung Ulang
@@ -75,7 +75,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
           )}
           {isAdmin && (
             <Link href={`/obat/${id}/edit`}>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button size="sm" className="bg-brand-600 hover:bg-brand-700 text-fg-inverse">
                 <Pencil className="w-3.5 h-3.5 mr-1.5" />
                 Edit Data
               </Button>
@@ -100,11 +100,11 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
             key={item.label}
             className={`rounded-xl border p-3 shadow-sm ${
               item.alert
-                ? 'border-red-200 bg-red-50'
-                : 'border-gray-200 bg-white'
+                ? 'border-red-200 bg-danger-50'
+                : 'border-gray-200 bg-surface'
             }`}
           >
-            <p className="text-xs text-gray-500 font-medium">{item.label}</p>
+            <p className="text-xs text-fg-muted font-medium">{item.label}</p>
             <p className={`text-sm font-semibold mt-0.5 ${item.alert ? 'text-red-700' : 'text-gray-800'}`}>
               {item.nilai}
             </p>
@@ -113,25 +113,25 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* ── Detail Perhitungan ─────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">
+      <div className="bg-surface rounded-xl border border-line shadow-sm p-5">
+        <h2 className="text-sm font-semibold text-fg-secondary mb-4">
           Detail Perhitungan EOQ / Safety Stock / ROP
         </h2>
         {!isAdmin ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-gray-500 text-sm">
+          <div className="flex flex-col items-center gap-2 py-10 text-fg-muted text-sm">
             <Lock className="w-5 h-5" />
             Breakdown rumus perhitungan hanya bisa dilihat oleh admin
           </div>
         ) : loadingCalc ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-24 bg-surface-muted rounded-xl animate-pulse" />
             ))}
           </div>
         ) : perhitungan ? (
           <RumusDisplay data={perhitungan} />
         ) : (
-          <div className="text-center py-10 text-gray-500 text-sm">
+          <div className="text-center py-10 text-fg-muted text-sm">
             Data perhitungan tidak tersedia
           </div>
         )}

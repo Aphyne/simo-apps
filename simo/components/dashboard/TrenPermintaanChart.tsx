@@ -19,7 +19,7 @@ interface Props {
 export default function TrenPermintaanChart({ data }: Props) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
+      <div className="flex items-center justify-center h-48 text-fg-muted text-sm">
         Belum ada data penjualan
       </div>
     )

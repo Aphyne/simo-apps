@@ -36,8 +36,8 @@ function calcTC(D: number, S: number, eoq: number | null, H: number): number | n
 
 // ── Helper UI ─────────────────────────────────────────────────────────────────
 function Selisih({ val, isRupiah = false }: { val: number | null; isRupiah?: boolean }) {
-  if (val === null) return <span className="text-gray-500">—</span>
-  if (Math.abs(val) < 0.01) return <span className="text-xs text-gray-500">tidak berubah</span>
+  if (val === null) return <span className="text-fg-muted">—</span>
+  if (Math.abs(val) < 0.01) return <span className="text-xs text-fg-muted">tidak berubah</span>
   const plus = val > 0
   const label = isRupiah ? formatRupiah(Math.abs(val)) : Math.abs(val).toLocaleString('id-ID')
   return (
@@ -60,13 +60,13 @@ function BarisBanding({
     : `${Math.round(v).toLocaleString('id-ID')}${satuan ? ' ' + satuan : ''}`
 
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors last:border-0">
+    <tr className="border-b border-line-subtle hover:bg-surface-subtle transition-colors last:border-0">
       <td className="px-4 py-2.5 text-sm">
-        <div className="font-medium text-gray-700">{label}</div>
-        {desc && <div className="text-xs text-gray-500">{desc}</div>}
+        <div className="font-medium text-fg-secondary">{label}</div>
+        {desc && <div className="text-xs text-fg-muted">{desc}</div>}
       </td>
-      <td className="px-4 py-2.5 text-sm text-right text-gray-700">{fmt(sekarang)}</td>
-      <td className="px-4 py-2.5 text-sm text-right font-semibold text-blue-600">{fmt(simulasi)}</td>
+      <td className="px-4 py-2.5 text-sm text-right text-fg-secondary">{fmt(sekarang)}</td>
+      <td className="px-4 py-2.5 text-sm text-right font-semibold text-brand-600">{fmt(simulasi)}</td>
       <td className="px-4 py-2.5 text-sm text-right"><Selisih val={selisih} isRupiah={isRupiah} /></td>
     </tr>
   )
@@ -78,13 +78,13 @@ function RiwayatSimulasi() {
   const deleteMutation = useDeleteSimulasi()
   const [expanded, setExpanded] = useState<number | null>(null)
 
-  if (isLoading) return <div className="h-16 animate-pulse bg-gray-100 rounded-xl mx-5 mb-4" />
+  if (isLoading) return <div className="h-16 animate-pulse bg-surface-muted rounded-xl mx-5 mb-4" />
   if (list.length === 0) return (
-    <p className="text-center py-10 text-gray-500 text-sm">Belum ada simulasi yang disimpan.</p>
+    <p className="text-center py-10 text-fg-muted text-sm">Belum ada simulasi yang disimpan.</p>
   )
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-line-subtle">
       {list.map((s: SimulasiTersimpan) => {
         const p = s.parameter_input
         const h = s.hasil_simulasi
@@ -92,39 +92,39 @@ function RiwayatSimulasi() {
         return (
           <div key={s.id}>
             <div
-              className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+              className="flex items-center justify-between px-5 py-3 hover:bg-surface-subtle cursor-pointer transition-colors"
               onClick={() => setExpanded(isOpen ? null : s.id)}
             >
               <div>
-                <p className="text-sm font-medium text-gray-900">{s.nama_skenario}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-fg">{s.nama_skenario}</p>
+                <p className="text-xs text-fg-muted">
                   {s.nama_obat} · {formatTanggal(s.created_at)}
                   {s.nama_user && ` · oleh ${s.nama_user}`}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500 hidden sm:block">
+                <span className="text-xs text-fg-muted hidden sm:block">
                   {p.demand_perubahan_pct > 0 ? '+' : ''}{p.demand_perubahan_pct}% permintaan
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(s.id) }}
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg p-1.5 transition-colors"
+                  className="text-fg-subtle hover:text-danger-500 hover:bg-danger-50 rounded-lg p-1.5 transition-colors"
                   title="Hapus"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-fg-subtle transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </div>
             </div>
             {isOpen && (
-              <div className="px-5 pb-4 bg-gray-50/50">
+              <div className="px-5 pb-4 bg-surface-subtle/50">
                 <table className="w-full text-sm mt-2">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Metrik</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Sekarang</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-blue-600 uppercase tracking-wide">Simulasi</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Selisih</th>
+                    <tr className="border-b border-line">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-fg-muted uppercase tracking-wide">Metrik</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Sekarang</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-brand-600 uppercase tracking-wide">Simulasi</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Selisih</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -269,28 +269,28 @@ function IsiSimulasiPage() {
     { metrik: 'ROP',          Sekarang: Math.round(hasil.sekarang.rop),          Simulasi: Math.round(hasil.simulasi.rop) },
   ] : []
 
-  const inputCls = 'border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+  const inputCls = 'border border-line-strong rounded-lg px-3 py-2 text-sm text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500'
 
   return (
     <div className="space-y-5">
 
       {/* ── Pilih obat — selalu full width ──────────────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-sm font-semibold text-gray-700">Obat yang Disimulasikan</p>
-            <p className="text-xs text-gray-500 mt-0.5">Coba-coba skenario, data asli tidak akan berubah.</p>
+            <p className="text-sm font-semibold text-fg-secondary">Obat yang Disimulasikan</p>
+            <p className="text-xs text-fg-muted mt-0.5">Coba-coba skenario, data asli tidak akan berubah.</p>
           </div>
           <button
             onClick={() => setShowInfo1((v) => !v)}
-            className={`p-1.5 rounded-lg transition-colors ${showInfo1 ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+            className={`p-1.5 rounded-lg transition-colors ${showInfo1 ? 'text-brand-600 bg-brand-50' : 'text-fg-subtle hover:text-fg-tertiary hover:bg-surface-muted'}`}
             title="Tentang halaman ini"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
         </div>
         {showInfo1 && (
-          <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 leading-relaxed">
+          <div className="mb-3 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2.5 text-xs text-brand-700 leading-relaxed">
             Halaman ini untuk mencoba skenario bagaimana jika terjadi perubahan. Misalnya menjelang musim hujan saat permintaan obat flu dan batuk mulai naik, atau saat supplier akan menaikkan harga. Coba ubah angkanya, lihat hasilnya, lalu putuskan kapan harus pesan dan berapa banyak. Hasilnya hanya perkiraan dan tidak mengubah data yang sudah ada.
           </div>
         )}
@@ -305,37 +305,37 @@ function IsiSimulasiPage() {
               <option key={x.id} value={x.id}>{x.nama} ({x.kode})</option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
         </div>
 
         {/* Nilai saat ini — muncul setelah pilih */}
         {o && (
-          <div className="mt-3 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nilai Saat Ini</p>
+          <div className="mt-3 rounded-lg bg-surface-subtle border border-line px-3 py-2.5">
+            <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide mb-2">Nilai Saat Ini</p>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-x-4 gap-y-1 text-xs">
               <div>
-                <p className="text-gray-500">D/tahun</p>
-                <p className="font-medium text-gray-700">{Math.round(o.demand_tahunan ?? 0).toLocaleString('id-ID')} {o.satuan}</p>
+                <p className="text-fg-muted">D/tahun</p>
+                <p className="font-medium text-fg-secondary">{Math.round(o.demand_tahunan ?? 0).toLocaleString('id-ID')} {o.satuan}</p>
               </div>
               <div>
-                <p className="text-gray-500">D/hari</p>
-                <p className="font-medium text-gray-700">{o.demand_harian ?? 0} {o.satuan}</p>
+                <p className="text-fg-muted">D/hari</p>
+                <p className="font-medium text-fg-secondary">{o.demand_harian ?? 0} {o.satuan}</p>
               </div>
               <div>
-                <p className="text-gray-500">Biaya pesan (S)</p>
-                <p className="font-medium text-gray-700">{formatRupiah(o.biaya_pesan ?? 0)}</p>
+                <p className="text-fg-muted">Biaya pesan (S)</p>
+                <p className="font-medium text-fg-secondary">{formatRupiah(o.biaya_pesan ?? 0)}</p>
               </div>
               <div>
-                <p className="text-gray-500">Biaya simpan (H)</p>
-                <p className="font-medium text-gray-700">{formatRupiah(o.biaya_simpan ?? 0)}</p>
+                <p className="text-fg-muted">Biaya simpan (H)</p>
+                <p className="font-medium text-fg-secondary">{formatRupiah(o.biaya_simpan ?? 0)}</p>
               </div>
               <div>
-                <p className="text-gray-500">Lead time</p>
-                <p className="font-medium text-gray-700">{o.lead_time ?? 1} hari</p>
+                <p className="text-fg-muted">Lead time</p>
+                <p className="font-medium text-fg-secondary">{o.lead_time ?? 1} hari</p>
               </div>
               <div>
-                <p className="text-gray-500">σ (std dev)</p>
-                <p className="font-medium text-gray-700">{o.std_dev_demand ?? 0}</p>
+                <p className="text-fg-muted">σ (std dev)</p>
+                <p className="font-medium text-fg-secondary">{o.std_dev_demand ?? 0}</p>
               </div>
             </div>
           </div>
@@ -348,19 +348,19 @@ function IsiSimulasiPage() {
 
           {/* KOLOM KIRI — Parameter */}
           <div className="flex flex-col gap-4 h-full">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4 flex-1">
+            <div className="rounded-xl border border-line bg-surface p-5 shadow-sm space-y-4 flex-1">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-700">Parameter Skenario</p>
+                <p className="text-sm font-semibold text-fg-secondary">Parameter Skenario</p>
                 <button
                   onClick={() => setShowInfo2((v) => !v)}
-                  className={`p-1.5 rounded-lg transition-colors ${showInfo2 ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                  className={`p-1.5 rounded-lg transition-colors ${showInfo2 ? 'text-brand-600 bg-brand-50' : 'text-fg-subtle hover:text-fg-tertiary hover:bg-surface-muted'}`}
                   title="Penjelasan parameter"
                 >
                   <HelpCircle className="w-4 h-4" />
                 </button>
               </div>
               {showInfo2 && (
-                <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 leading-relaxed space-y-2">
+                <div className="rounded-lg border border-brand-100 bg-brand-50 px-3 py-2.5 text-xs text-brand-700 leading-relaxed space-y-2">
                   <p><span className="font-semibold">Perubahan Permintaan.</span> Naikkan jika perkiraan bulan depan penjualan lebih ramai (misal musim hujan), turunkan jika diperkirakan sepi. Misal +10% artinya jika biasanya terjual 100/bulan, jadi 110/bulan. Sistem akan hitung ulang berapa jumlah pesanan dan kapan harus pesan agar stok tidak kurang dan tidak berlebihan.</p>
                   <p><span className="font-semibold">Lead Time.</span> Berapa hari dari pesan ke supplier sampai obat tiba. Kalau supplier pernah telat, coba naikkan angkanya, sistem akan tunjukkan apakah stok pengaman masih cukup.</p>
                   <p><span className="font-semibold">Biaya sekali pesan.</span> Ongkir ditambah biaya admin per pemesanan. Kalau ongkir naik, sistem hitung ulang apakah lebih hemat pesan sedikit-sering atau banyak-jarang.</p>
@@ -369,9 +369,9 @@ function IsiSimulasiPage() {
               )}
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                <label className="text-sm font-medium text-fg-secondary mb-1 block">
                   Perubahan Permintaan (%)
-                  <span className="ml-2 text-xs text-gray-500 font-normal">
+                  <span className="ml-2 text-xs text-fg-muted font-normal">
                     → {Math.round((o.demand_tahunan ?? 0) * (1 + (parseFloat(pct) || 0) / 100)).toLocaleString('id-ID')} {o.satuan}/thn
                   </span>
                 </label>
@@ -383,7 +383,7 @@ function IsiSimulasiPage() {
                     step="5"
                     className={`w-24 ${inputCls}`}
                   />
-                  <span className="text-sm text-gray-500">%</span>
+                  <span className="text-sm text-fg-muted">%</span>
                   <div className="flex gap-1 flex-wrap">
                     {[-20, -10, 0, 10, 20, 30].map((v) => (
                       <button
@@ -391,8 +391,8 @@ function IsiSimulasiPage() {
                         onClick={() => setPct(String(v))}
                         className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
                           pct === String(v)
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                            ? 'bg-brand-600 text-white border-brand-600'
+                            : 'border-line-strong text-gray-600 hover:bg-surface-subtle'
                         }`}
                       >
                         {v > 0 ? '+' : ''}{v}%
@@ -403,8 +403,8 @@ function IsiSimulasiPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Lead Time baru <span className="text-gray-500 font-normal">(hari)</span>
+                <label className="text-sm font-medium text-fg-secondary mb-1 block">
+                  Lead Time baru <span className="text-fg-muted font-normal">(hari)</span>
                 </label>
                 <input
                   type="number"
@@ -416,8 +416,8 @@ function IsiSimulasiPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Biaya sekali pesan baru <span className="text-gray-500 font-normal">(Rp)</span>
+                <label className="text-sm font-medium text-fg-secondary mb-1 block">
+                  Biaya sekali pesan baru <span className="text-fg-muted font-normal">(Rp)</span>
                 </label>
                 <input
                   type="number"
@@ -429,8 +429,8 @@ function IsiSimulasiPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Biaya simpan baru <span className="text-gray-500 font-normal">(Rp / unit / tahun)</span>
+                <label className="text-sm font-medium text-fg-secondary mb-1 block">
+                  Biaya simpan baru <span className="text-fg-muted font-normal">(Rp / unit / tahun)</span>
                 </label>
                 <input
                   type="number"
@@ -443,7 +443,7 @@ function IsiSimulasiPage() {
 
               <button
                 onClick={handleReset}
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-fg-muted hover:text-fg-secondary transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Reset ke nilai aktual
@@ -452,8 +452,8 @@ function IsiSimulasiPage() {
 
             {/* Simpan skenario */}
             {hasil && (
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                <p className="text-sm font-semibold text-gray-700 mb-3">Simpan Skenario Ini</p>
+              <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
+                <p className="text-sm font-semibold text-fg-secondary mb-3">Simpan Skenario Ini</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -465,7 +465,7 @@ function IsiSimulasiPage() {
                   <button
                     onClick={handleSimpan}
                     disabled={simpan.isPending}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-fg-inverse text-sm font-medium rounded-lg transition-colors flex-shrink-0"
                   >
                     <Save className="w-4 h-4" />
                     {simpan.isPending ? 'Menyimpan…' : 'Simpan'}
@@ -476,10 +476,10 @@ function IsiSimulasiPage() {
           </div>
 
           {/* KOLOM KANAN — Tabel + Chart */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
-              <p className="text-sm font-semibold text-gray-700">Tabel Perbandingan</p>
-              <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full">
+          <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-line">
+              <p className="text-sm font-semibold text-fg-secondary">Tabel Perbandingan</p>
+              <span className="text-xs font-medium bg-success-100 text-success-700 px-2.5 py-0.5 rounded-full">
                 Live update
               </span>
             </div>
@@ -487,14 +487,14 @@ function IsiSimulasiPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Parameter</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Sekarang</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-blue-600 uppercase tracking-wide">Simulasi</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Selisih</th>
+                  <tr className="border-b border-line">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wide">Parameter</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Sekarang</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand-600 uppercase tracking-wide">Simulasi</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Selisih</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-line-subtle">
                   <BarisBanding
                     label="Permintaan / tahun" satuan={o.satuan}
                     sekarang={hasil!.sekarang.demand_tahunan}
@@ -543,22 +543,22 @@ function IsiSimulasiPage() {
                   : null,
               ].filter(Boolean)
               return lines.length > 0 ? (
-                <div className="mx-4 my-3 rounded-lg bg-orange-100 border border-orange-200 px-3 py-2.5 text-xs text-orange-700 space-y-1">
+                <div className="mx-4 my-3 rounded-lg bg-warning-100 border border-warning-200 px-3 py-2.5 text-xs text-warning-700 space-y-1">
                   {lines}
                 </div>
               ) : null
             })()}
 
             {/* Chart */}
-            <div className="border-t border-gray-100 bg-gray-50/50 px-5 pt-4 pb-5">
+            <div className="border-t border-line-subtle bg-surface-subtle/50 px-5 pt-4 pb-5">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold text-gray-500">Perbandingan Sekarang vs Skenario</p>
+                <p className="text-xs font-semibold text-fg-muted">Perbandingan Sekarang vs Skenario</p>
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="flex items-center gap-1.5 text-xs text-fg-muted">
                     <span className="w-2 h-2 rounded-full bg-[#94a3b8] inline-block flex-shrink-0" />
                     Sekarang
                   </span>
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="flex items-center gap-1.5 text-xs text-fg-muted">
                     <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block flex-shrink-0" />
                     Simulasi
                   </span>
@@ -585,10 +585,10 @@ function IsiSimulasiPage() {
       )}
 
       {/* ── Riwayat — selalu full width di bawah ─────────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-700">Riwayat Skenario Tersimpan</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Klik baris untuk lihat detail</p>
+      <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-line">
+          <h2 className="text-sm font-semibold text-fg-secondary">Riwayat Skenario Tersimpan</h2>
+          <p className="text-xs text-fg-muted mt-0.5">Klik baris untuk lihat detail</p>
         </div>
         <RiwayatSimulasi />
       </div>

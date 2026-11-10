@@ -45,7 +45,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-surface-subtle">
       <div className="w-full max-w-sm px-4">
 
         {/* Brand */}
@@ -53,50 +53,50 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
             <Image src="/logo.png" alt="SIMO" width={96} height={96} priority />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">SIMO</h1>
-          <p className="text-sm text-gray-500 mt-1">Apotek Rezky Medika · Manokwari</p>
+          <h1 className="text-2xl font-bold text-fg tracking-tight">SIMO</h1>
+          <p className="text-sm text-fg-muted mt-1">Apotek Rezky Medika · Manokwari</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-md">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Masuk ke Sistem</h2>
-          <p className="text-sm text-gray-500 mb-6">Masukkan username dan password akun Anda</p>
+        <div className="rounded-2xl border border-line bg-surface p-8 shadow-md">
+          <h2 className="text-lg font-semibold text-fg mb-1">Masuk ke Sistem</h2>
+          <p className="text-sm text-fg-muted mb-6">Masukkan username dan password akun Anda</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Username</label>
+              <label className="text-sm font-medium text-fg-secondary mb-1 block">Username</label>
               <input
                 placeholder="Masukkan username"
                 autoComplete="username"
                 autoFocus
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-line-strong rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 {...register('username', { required: 'Username wajib diisi' })}
               />
-              {errors.username && <p className="text-xs text-red-600 mt-1">{errors.username.message}</p>}
+              {errors.username && <p className="text-xs text-danger-600 mt-1">{errors.username.message}</p>}
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Password</label>
+              <label className="text-sm font-medium text-fg-secondary mb-1 block">Password</label>
               <input
                 type="password"
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-line-strong rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 {...register('password', { required: 'Password wajib diisi' })}
               />
-              {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>}
+              {errors.password && <p className="text-xs text-danger-600 mt-1">{errors.password.message}</p>}
             </div>
 
             {errorMsg && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
-                <p className="text-sm text-red-600">{errorMsg}</p>
+              <div className="rounded-lg bg-danger-50 border border-danger-200 px-3 py-2.5">
+                <p className="text-sm text-danger-600">{errorMsg}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoggingIn ? 'Sedang masuk...' : 'Masuk'}
             </button>
@@ -105,7 +105,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-500 font-medium">atau</span>
+            <span className="text-xs text-fg-muted font-medium">atau</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
@@ -124,11 +124,11 @@ export default function LoginPage() {
           </div>
 
           {googleLoading && (
-            <p className="text-center text-xs text-gray-500 mt-3">Memverifikasi akun Google...</p>
+            <p className="text-center text-xs text-fg-muted mt-3">Memverifikasi akun Google...</p>
           )}
         </div>
 
-        <p className="text-center text-xs text-gray-500 mt-6">
+        <p className="text-center text-xs text-fg-muted mt-6">
           Sistem Informasi Manajemen Persediaan Obat · 2026
         </p>
       </div>

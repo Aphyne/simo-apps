@@ -24,38 +24,38 @@ import type { Obat } from '@/types/obat'
 
 // ─── Helper: estimasi hari habis ─────────────────────────────────────────────
 function EstimasiHabis({ hari }: { hari: number | null }) {
-  if (hari === null) return <span className="text-gray-500">—</span>
-  if (hari <= 7)  return <span className="text-xs font-semibold text-red-600">{hari} hari</span>
-  if (hari <= 30) return <span className="text-xs font-medium text-orange-700">{hari} hari</span>
-  return <span className="text-xs text-gray-500">{hari} hari</span>
+  if (hari === null) return <span className="text-fg-muted">—</span>
+  if (hari <= 7)  return <span className="text-xs font-semibold text-danger-600">{hari} hari</span>
+  if (hari <= 30) return <span className="text-xs font-medium text-warning-700">{hari} hari</span>
+  return <span className="text-xs text-fg-muted">{hari} hari</span>
 }
 
 // ─── Helper: tanggal expired ──────────────────────────────────────────────────
 function ExpiredCell({ tanggal }: { tanggal: string | null }) {
-  if (!tanggal) return <span className="text-gray-500">—</span>
+  if (!tanggal) return <span className="text-fg-muted">—</span>
   const selisihHari = Math.floor(
     (new Date(tanggal).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   )
   const label = formatTanggalPendek(tanggal)
   if (selisihHari <= 90)
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 font-medium">
+      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-danger-100 text-danger-700 font-medium">
         {label}
       </span>
     )
   if (selisihHari <= 180)
-    return <span className="text-xs font-medium text-orange-700">{label}</span>
-  return <span className="text-xs text-gray-500">{label}</span>
+    return <span className="text-xs font-medium text-warning-700">{label}</span>
+  return <span className="text-xs text-fg-muted">{label}</span>
 }
 
 // ─── Helper: nilai kalkulasi (abu-abu jika belum ada) ─────────────────────────
 function KalkulasiCell({ value, satuan }: { value: number | null; satuan?: string }) {
   if (value === null || value === undefined)
-    return <span className="text-gray-500 text-xs">—</span>
+    return <span className="text-fg-muted text-xs">—</span>
   return (
-    <span className="text-sm text-gray-700">
+    <span className="text-sm text-fg-secondary">
       {formatAngka(value, 1)}
-      {satuan && <span className="text-gray-500 text-xs ml-0.5">{satuan}</span>}
+      {satuan && <span className="text-fg-muted text-xs ml-0.5">{satuan}</span>}
     </span>
   )
 }
@@ -73,10 +73,10 @@ function SkeletonRows() {
   return (
     <>
       {Array.from({ length: 6 }).map((_, i) => (
-        <tr key={i} className="border-b border-gray-100">
+        <tr key={i} className="border-b border-line-subtle">
           {Array.from({ length: 10 }).map((_, j) => (
             <td key={j} className="px-3 py-3.5">
-              <div className="h-3.5 bg-gray-100 rounded-md animate-pulse" />
+              <div className="h-3.5 bg-surface-muted rounded-md animate-pulse" />
             </td>
           ))}
         </tr>
@@ -131,7 +131,7 @@ export default function ObatTable() {
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle pointer-events-none" />
           <Input
             placeholder="Cari nama atau kode obat..."
             value={search}
@@ -164,7 +164,7 @@ export default function ObatTable() {
 
         {isAdmin && (
           <Link href="/obat/tambah" className="ml-auto">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm">
+            <Button className="bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm">
               <Plus className="w-4 h-4 mr-1.5" />
               Tambah Obat
             </Button>
@@ -173,68 +173,68 @@ export default function ObatTable() {
       </div>
 
       {/* ── Tabel ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-xl border border-line shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50/50">
-                <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Kode</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Nama Obat</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Kategori</th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Stok</th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+              <tr className="border-b border-line bg-surface-subtle/50">
+                <th className="text-left px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Kode</th>
+                <th className="text-left px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Nama Obat</th>
+                <th className="text-left px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Kategori</th>
+                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Stok</th>
+                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
                   ROP
-                  <span className="block text-gray-500 normal-case font-normal tracking-normal">reorder point</span>
+                  <span className="block text-fg-muted normal-case font-normal tracking-normal">reorder point</span>
                 </th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
                   EOQ
-                  <span className="block text-gray-500 normal-case font-normal tracking-normal">qty order optimal</span>
+                  <span className="block text-fg-muted normal-case font-normal tracking-normal">qty order optimal</span>
                 </th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
                   Est. Habis
-                  <span className="block text-gray-500 normal-case font-normal tracking-normal">dari stok saat ini</span>
+                  <span className="block text-fg-muted normal-case font-normal tracking-normal">dari stok saat ini</span>
                 </th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                <th className="text-center px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
                   Expired
-                  <span className="block text-gray-500 normal-case font-normal tracking-normal">terdekat</span>
+                  <span className="block text-fg-muted normal-case font-normal tracking-normal">terdekat</span>
                 </th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Status</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Aksi</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Status</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? (
                 <SkeletonRows />
               ) : obatList.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-10 text-gray-500 text-sm">
+                  <td colSpan={10} className="text-center py-10 text-fg-muted text-sm">
                     Tidak ada data obat
                   </td>
                 </tr>
               ) : (
                 obatList.map((obat) => (
-                  <tr key={obat.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={obat.id} className="hover:bg-surface-subtle transition-colors">
 
                     {/* Kode */}
-                    <td className="px-3 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-3 font-mono text-xs text-fg-muted whitespace-nowrap">
                       {obat.kode}
                     </td>
 
                     {/* Nama */}
                     <td className="px-3 py-3 whitespace-nowrap max-w-[200px]">
-                      <span className="font-medium text-gray-900 truncate block">{obat.nama}</span>
+                      <span className="font-medium text-fg truncate block">{obat.nama}</span>
                       {obat.nama_supplier && (
-                        <span className="text-xs text-gray-500">{obat.nama_supplier}</span>
+                        <span className="text-xs text-fg-muted">{obat.nama_supplier}</span>
                       )}
                     </td>
 
                     {/* Kategori */}
-                    <td className="px-3 py-3 text-sm text-gray-600 whitespace-nowrap">{obat.kategori}</td>
+                    <td className="px-3 py-3 text-sm text-fg-tertiary whitespace-nowrap">{obat.kategori}</td>
 
                     {/* Stok */}
                     <td className="px-3 py-3 text-right whitespace-nowrap">
-                      <span className="font-semibold text-gray-900">{formatAngka(obat.stok, 0)}</span>
-                      <span className="text-gray-500 text-xs ml-1">{obat.satuan}</span>
+                      <span className="font-semibold text-fg">{formatAngka(obat.stok, 0)}</span>
+                      <span className="text-fg-muted text-xs ml-1">{obat.satuan}</span>
                     </td>
 
                     {/* ROP */}
@@ -247,7 +247,7 @@ export default function ObatTable() {
                       {obat.eoq !== null && obat.eoq !== undefined ? (
                         <KalkulasiCell value={obat.eoq} satuan={obat.satuan} />
                       ) : (
-                        <span className="text-xs text-gray-500 italic">Belum dihitung</span>
+                        <span className="text-xs text-fg-muted italic">Belum dihitung</span>
                       )}
                     </td>
 
@@ -273,7 +273,7 @@ export default function ObatTable() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"
+                            className="h-8 w-8 text-fg-subtle hover:text-success-600 hover:bg-success-50"
                             title="Detail Kalkulasi"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export default function ObatTable() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                                className="h-8 w-8 text-fg-subtle hover:text-brand-600 hover:bg-brand-50"
                                 title="Edit"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -296,7 +296,7 @@ export default function ObatTable() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                  className="h-8 w-8 text-fg-subtle hover:text-danger-600 hover:bg-danger-50"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
@@ -319,8 +319,8 @@ export default function ObatTable() {
 
         {/* ── Pagination ─────────────────────────────────────────────────── */}
         {meta && meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50/50">
-            <span className="text-xs text-gray-500 tabular-nums">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-surface-subtle/50">
+            <span className="text-xs text-fg-muted tabular-nums">
               {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} dari {meta.total} obat
             </span>
             <div className="flex items-center gap-1">
@@ -328,7 +328,7 @@ export default function ObatTable() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ‹
               </button>
@@ -336,15 +336,15 @@ export default function ObatTable() {
               {/* Page numbers */}
               {getPageNumbers(page, meta.last_page).map((p, i) =>
                 p === '...' ? (
-                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-gray-400 select-none">…</span>
+                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-fg-subtle select-none">…</span>
                 ) : (
                   <button
                     key={p}
                     onClick={() => setPage(p)}
                     className={`min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                       p === page
-                        ? 'bg-blue-600 text-white border border-blue-600'
-                        : 'border border-gray-200 text-gray-600 hover:bg-gray-100'
+                        ? 'bg-brand-600 text-white border border-brand-600'
+                        : 'border border-line text-gray-600 hover:bg-surface-muted'
                     }`}
                   >
                     {p}
@@ -356,7 +356,7 @@ export default function ObatTable() {
               <button
                 onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
                 disabled={page === meta.last_page}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ›
               </button>
@@ -366,17 +366,17 @@ export default function ObatTable() {
       </div>
 
       {/* ── Legenda ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500 px-1">
+      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-fg-muted px-1">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-red-400 inline-block flex-shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-danger-400 inline-block flex-shrink-0" />
           Est. habis ≤ 7 hari atau expired &lt; 3 bulan
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-orange-400 inline-block flex-shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-warning-400 inline-block flex-shrink-0" />
           Est. habis 8–30 hari atau expired 3–6 bulan
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-gray-500 font-mono">—</span>
+          <span className="text-fg-muted font-mono">—</span>
           Data belum tersedia (perlu isi demand harian)
         </span>
       </div>

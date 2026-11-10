@@ -15,8 +15,8 @@ function IsiPemantauan() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Pemantauan Aktivitas</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-bold text-fg">Pemantauan Aktivitas</h1>
+        <p className="text-sm text-fg-muted mt-0.5">
           Bukti pemakaian sistem oleh pengguna: kapan login, halaman yang dibuka, dan aksi data yang dilakukan.
         </p>
       </div>

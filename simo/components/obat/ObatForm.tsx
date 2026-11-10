@@ -38,14 +38,14 @@ function Info_({text}: { text: string }) {
         onMouseLeave={() => setShow(false)}
         onFocus={() => setShow(true)}
         onBlur={() => setShow(false)}
-        className="text-gray-400 hover:text-blue-500 focus:outline-none"
+        className="text-fg-subtle hover:text-brand-500 focus:outline-none"
         tabIndex={-1}
         aria-label="Informasi"
       >
         <Info className="w-3.5 h-3.5" />
       </button>
       {show && (
-        <span className="absolute left-5 top-0 z-20 w-72 text-xs bg-gray-800 text-white rounded-lg px-3 py-2 shadow-xl leading-relaxed">
+        <span className="absolute left-5 top-0 z-20 w-72 text-xs bg-gray-800 text-fg-inverse rounded-lg px-3 py-2 shadow-xl leading-relaxed">
           {text}
         </span>
       )}
@@ -56,11 +56,11 @@ function Info_({text}: { text: string }) {
 // ─── Section header ───────────────────────────────────────────────────────────
 function SectionTitle({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-gray-100">
-      <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+    <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-line-subtle">
+      <span className="w-6 h-6 rounded-lg bg-brand-100 text-brand-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
         {num}
       </span>
-      <h3 className="text-sm font-semibold text-gray-700">{children}</h3>
+      <h3 className="text-sm font-semibold text-fg-secondary">{children}</h3>
     </div>
   )
 }
@@ -146,22 +146,22 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
       {/* ── SEKSI 1: INFORMASI DASAR ─────────────────────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
         <SectionTitle num={1}>Informasi Dasar</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="nama">Nama Obat <span className="text-red-600">*</span></Label>
+            <Label htmlFor="nama">Nama Obat <span className="text-danger-600">*</span></Label>
             <Input
               id="nama"
               placeholder="cth. Paracetamol 500mg"
               {...register('nama', { required: 'Nama obat wajib diisi' })}
             />
-            {errors.nama && <p className="text-xs text-red-600">{errors.nama.message}</p>}
+            {errors.nama && <p className="text-xs text-danger-600">{errors.nama.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Kategori <span className="text-red-600">*</span></Label>
+            <Label>Kategori <span className="text-danger-600">*</span></Label>
             <Select value={kategoriValue} onValueChange={(v) => setValue('kategori', v)}>
               <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
               <SelectContent>
@@ -169,11 +169,11 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
               </SelectContent>
             </Select>
             <input type="hidden" {...register('kategori', { required: 'Kategori wajib dipilih' })} />
-            {errors.kategori && <p className="text-xs text-red-600">{errors.kategori.message}</p>}
+            {errors.kategori && <p className="text-xs text-danger-600">{errors.kategori.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Satuan Terkecil <span className="text-red-600">*</span>
+            <Label>Satuan Terkecil <span className="text-danger-600">*</span>
               <Info_ text="Satuan terkecil yang digunakan untuk menghitung stok. Contoh: tablet, kapsul, botol. Bukan dus atau strip." />
             </Label>
             <Select value={satuanValue} onValueChange={(v) => setValue('satuan', v)}>
@@ -183,27 +183,27 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
               </SelectContent>
             </Select>
             <input type="hidden" {...register('satuan', { required: 'Satuan wajib dipilih' })} />
-            {errors.satuan && <p className="text-xs text-red-600">{errors.satuan.message}</p>}
+            {errors.satuan && <p className="text-xs text-danger-600">{errors.satuan.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="satuan_per_dus">
-              Isi per Dus <span className="text-red-600">*</span>
+              Isi per Dus <span className="text-danger-600">*</span>
               <Info_ text={`Berapa ${satuanValue || 'satuan'} dalam 1 dus/box kemasan besar. Contoh: 1 dus Paracetamol = 100 tablet, isi "100".`} />
             </Label>
             <Input id="satuan_per_dus" type="number" min={1}
               {...register('satuan_per_dus', { valueAsNumber: true, min: { value: 1, message: 'Isi per dus minimal 1' }, required: 'Isi per dus wajib diisi' })} />
-            {errors.satuan_per_dus && <p className="text-xs text-red-600">{errors.satuan_per_dus.message}</p>}
+            {errors.satuan_per_dus && <p className="text-xs text-danger-600">{errors.satuan_per_dus.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="stok">
-              Stok Awal <span className="text-red-600">*</span>
+              Stok Awal <span className="text-danger-600">*</span>
               <Info_ text={`Jumlah stok saat ini dalam satuan terkecil (${satuanValue || 'satuan'}), bukan dus. Isi 0 jika obat belum tersedia.`} />
             </Label>
             <Input id="stok" type="number" min={0}
               {...register('stok', { valueAsNumber: true, min: { value: 0, message: 'Stok tidak boleh negatif' } })} />
-            {errors.stok && <p className="text-xs text-red-600">{errors.stok.message}</p>}
+            {errors.stok && <p className="text-xs text-danger-600">{errors.stok.message}</p>}
           </div>
 
 
@@ -211,7 +211,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── SEKSI 2: DATA PERMINTAAN ─────────────────────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
         <SectionTitle num={2}>Data Permintaan (Demand)</SectionTitle>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,7 +231,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 value={demandHarian ?? 0}
                 onChange={(e) => handleDemandHarianChange(parseFloat(e.target.value) || 0)}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">
                 {satuanValue || 'unit'}/hari
               </span>
             </div>
@@ -253,7 +253,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 value={Math.round(demandTahunan ?? 0)}
                 onChange={(e) => handleDemandTahunanChange(parseFloat(e.target.value) || 0)}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">
                 {satuanValue || 'unit'}/tahun
               </span>
             </div>
@@ -271,7 +271,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
             <button
               type="button"
               onClick={() => setShowBantuHitung(!showBantuHitung)}
-              className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
+              className="flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-700 font-medium"
             >
               <Calculator className="w-3.5 h-3.5" />
               Bantu Hitung dari Riwayat Penjualan
@@ -287,26 +287,26 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
               step="any"
               {...register('std_dev_demand', { valueAsNumber: true, min: 0 })}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">
               {satuanValue || 'unit'}/hari
             </span>
           </div>
 
           {/* Panel Bantu Hitung */}
           {showBantuHitung && (
-            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+            <div className="mt-3 bg-brand-50 border border-brand-200 rounded-lg p-4 space-y-3">
               <div>
-                <p className="text-sm font-medium text-blue-800">
+                <p className="text-sm font-medium text-brand-800">
                   Masukkan data penjualan harian selama beberapa hari terakhir
                 </p>
-                <p className="text-xs text-blue-600 mt-0.5">
+                <p className="text-xs text-brand-600 mt-0.5">
                   Minimal 2 hari. Semakin banyak data, semakin akurat hasilnya.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {riwayatHarian.map((val, i) => (
                   <div key={i} className="space-y-1">
-                    <p className="text-xs text-gray-500 text-center">Hari {i + 1}</p>
+                    <p className="text-xs text-fg-muted text-center">Hari {i + 1}</p>
                     <Input
                       type="number"
                       min={0}
@@ -328,7 +328,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                     <button
                       type="button"
                       onClick={() => setRiwayatHarian([...riwayatHarian, ''])}
-                      className="h-9 w-9 rounded-md border border-dashed border-blue-300 text-blue-400 hover:border-blue-500 hover:text-blue-600 text-lg flex items-center justify-center"
+                      className="h-9 w-9 rounded-md border border-dashed border-brand-300 text-brand-400 hover:border-brand-500 hover:text-brand-600 text-lg flex items-center justify-center"
                     >
                       +
                     </button>
@@ -342,13 +342,13 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 if (angka.length < 2) return null
                 const { mean, stdDev } = hitungDariRiwayat(angka)
                 return (
-                  <div className="bg-white rounded-md border border-blue-200 px-4 py-3 text-sm">
-                    <p className="text-gray-600">
+                  <div className="bg-surface rounded-md border border-brand-200 px-4 py-3 text-sm">
+                    <p className="text-fg-tertiary">
                       Dari <strong>{angka.length} hari</strong> data:
                     </p>
                     <div className="flex gap-6 mt-1">
-                      <span>Rata-rata harian: <strong className="text-blue-700">{mean} {satuanValue || 'unit'}/hari</strong></span>
-                      <span>Standar deviasi: <strong className="text-blue-700">{stdDev}</strong></span>
+                      <span>Rata-rata harian: <strong className="text-brand-700">{mean} {satuanValue || 'unit'}/hari</strong></span>
+                      <span>Standar deviasi: <strong className="text-brand-700">{stdDev}</strong></span>
                     </div>
                   </div>
                 )
@@ -358,7 +358,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
                 type="button"
                 size="sm"
                 onClick={terapkanBantuHitung}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-brand-600 hover:bg-brand-700 text-fg-inverse"
               >
                 Terapkan ke Form
               </Button>
@@ -368,7 +368,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── SEKSI 3: PARAMETER EOQ ───────────────────────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
         <SectionTitle num={3}>Parameter Kalkulasi EOQ/ROP</SectionTitle>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -376,15 +376,15 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
           {/* Biaya Pesan */}
           <div className="space-y-1.5">
             <Label htmlFor="biaya_pesan">
-              Biaya Pesan / Order (S) <span className="text-red-600">*</span>
+              Biaya Pesan / Order (S) <span className="text-danger-600">*</span>
               <Info_ text="Biaya yang dikeluarkan setiap kali memesan obat ini, misalnya alokasi ongkos kirim atau biaya admin. Isi 0 jika tidak ada biaya pemesanan." />
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">Rp</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-fg-muted">Rp</span>
               <Input id="biaya_pesan" type="number" min={0} step={100} className="pl-9"
                 {...register('biaya_pesan', { valueAsNumber: true, min: 0 })} />
             </div>
-            <p className="text-xs text-gray-500">Isi 0 jika tidak ada biaya pemesanan</p>
+            <p className="text-xs text-fg-muted">Isi 0 jika tidak ada biaya pemesanan</p>
           </div>
 
           {/* Service Level */}
@@ -413,7 +413,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── SEKSI 4: INFO TAMBAHAN ───────────────────────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
         <SectionTitle num={4}>Informasi Tambahan</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -444,12 +444,12 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       </div>
 
       {/* ── TOMBOL AKSI ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
         <Button type="button" variant="outline" onClick={() => { window.location.href = '/obat' }}
-          className="border-gray-300 text-gray-700 hover:bg-gray-50">
+          className="border-line-strong text-fg-secondary hover:bg-surface-subtle">
           Batal
         </Button>
-        <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[110px]">
+        <Button type="submit" disabled={isLoading} className="bg-brand-600 hover:bg-brand-700 text-fg-inverse min-w-[110px]">
           {isLoading ? 'Menyimpan...' : submitLabel}
         </Button>
       </div>

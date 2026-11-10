@@ -22,37 +22,37 @@ export default function ResetPasswordModal({ user, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <h2 className="text-sm font-semibold text-gray-900">Reset Password</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
+      <div className="w-full max-w-sm rounded-xl bg-surface shadow-2xl">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <h2 className="text-sm font-semibold text-fg">Reset Password</h2>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-fg-subtle hover:bg-surface-muted transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
-          <p className="text-sm text-gray-500">
-            Reset password untuk <span className="font-semibold text-gray-700">{user.nama}</span>{' '}
-            <span className="font-mono text-xs text-gray-500">({user.username})</span>
+          <p className="text-sm text-fg-muted">
+            Reset password untuk <span className="font-semibold text-fg-secondary">{user.nama}</span>{' '}
+            <span className="font-mono text-xs text-fg-muted">({user.username})</span>
           </p>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Password Baru</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Password Baru</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
               placeholder="Minimal 6 karakter"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Konfirmasi Password</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Konfirmasi Password</label>
             <input type="password" value={konfirmasi} onChange={e => setKonfirmasi(e.target.value)} required
               placeholder="Ulangi password baru"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose}
-              className="border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm transition-colors">
+              className="border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-4 py-2 text-sm transition-colors">
               Batal
             </button>
             <button type="submit" disabled={reset.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm disabled:opacity-60 transition-colors">
+              className="bg-danger-600 hover:bg-danger-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm disabled:opacity-60 transition-colors">
               {reset.isPending ? 'Menyimpan...' : 'Reset Password'}
             </button>
           </div>

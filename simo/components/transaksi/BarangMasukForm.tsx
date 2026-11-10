@@ -52,9 +52,9 @@ const EMPTY_ITEM: ItemForm = {
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-sm font-medium text-gray-700 mb-1 block">
+    <label className="text-sm font-medium text-fg-secondary mb-1 block">
       {children}
-      {required && <span className="text-red-600 ml-0.5">*</span>}
+      {required && <span className="text-danger-600 ml-0.5">*</span>}
     </label>
   )
 }
@@ -68,7 +68,7 @@ function HargaPreview({ obat, item, ppnPct }: { obat?: Obat; item: ItemForm; ppn
   const margin = item.harga_jual > 0 ? (((item.harga_jual - beliPerSatuan) / beliPerSatuan) * 100).toFixed(1) : null
 
   return (
-    <p className="text-xs text-gray-500 flex flex-wrap gap-x-3">
+    <p className="text-xs text-fg-muted flex flex-wrap gap-x-3">
       <span>
         = Rp {hargaRiilDus.toLocaleString('id-ID', { maximumFractionDigits: 0 })}/dus riil
         {ppnPct > 0 && ' (setelah PPN)'}
@@ -162,12 +162,12 @@ export default function BarangMasukForm({ onSuccess }: Props) {
               </Select>
             )}
           />
-          {errors.supplier_id_str && <p className="text-xs text-red-600 mt-1">Wajib dipilih</p>}
+          {errors.supplier_id_str && <p className="text-xs text-danger-600 mt-1">Wajib dipilih</p>}
         </div>
         <div>
           <FieldLabel required>No. Faktur</FieldLabel>
           <Input placeholder="cth. 112/PBF/2026" {...register('no_faktur', { required: true })} />
-          {errors.no_faktur && <p className="text-xs text-red-600 mt-1">Wajib diisi</p>}
+          {errors.no_faktur && <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>}
         </div>
       </div>
 
@@ -175,7 +175,7 @@ export default function BarangMasukForm({ onSuccess }: Props) {
         <div>
           <FieldLabel required>Tanggal</FieldLabel>
           <Input type="date" {...register('tanggal', { required: true })} />
-          {errors.tanggal && <p className="text-xs text-red-600 mt-1">Wajib diisi</p>}
+          {errors.tanggal && <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>}
         </div>
         <div>
           <FieldLabel>PPN % (opsional)</FieldLabel>
@@ -184,14 +184,14 @@ export default function BarangMasukForm({ onSuccess }: Props) {
               type="number" min="0" max="100" step="0.5" className="pr-8"
               {...register('ppn_pct', { valueAsNumber: true, min: 0, max: 100 })}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">%</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted pointer-events-none">%</span>
           </div>
         </div>
       </div>
 
       {/* ── Divider ─────────────────────────────────────────────────────── */}
-      <div className="border-t border-gray-100 pt-1">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div className="border-t border-line-subtle pt-1">
+        <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
           Daftar Obat ({fields.length})
         </p>
       </div>
@@ -206,14 +206,14 @@ export default function BarangMasukForm({ onSuccess }: Props) {
           const itemErrors = errors.items?.[index]
 
           return (
-            <div key={row.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
+            <div key={row.id} className="rounded-lg border border-line p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500">Obat {index + 1}</span>
+                <span className="text-xs font-semibold text-fg-muted">Obat {index + 1}</span>
                 <button
                   type="button"
                   onClick={() => remove(index)}
                   disabled={fields.length <= 1}
-                  className="h-7 w-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
+                  className="h-7 w-7 flex items-center justify-center rounded-lg text-fg-subtle hover:text-danger-600 hover:bg-danger-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-fg-subtle transition-colors"
                   aria-label="Hapus baris"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -228,10 +228,10 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                   <ObatCombobox obatList={obatList} value={field.value} onChange={field.onChange} error={!!itemErrors?.obat_id_str} />
                 )}
               />
-              {itemErrors?.obat_id_str && <p className="text-xs text-red-600">Obat wajib dipilih</p>}
+              {itemErrors?.obat_id_str && <p className="text-xs text-danger-600">Obat wajib dipilih</p>}
               {selectedObat && (
-                <p className="text-xs text-gray-500">
-                  Stok: <span className="font-medium text-gray-600">{selectedObat.stok} {selectedObat.satuan}</span>
+                <p className="text-xs text-fg-muted">
+                  Stok: <span className="font-medium text-fg-tertiary">{selectedObat.stok} {selectedObat.satuan}</span>
                   {' · '}1 dus = {selectedObat.satuan_per_dus} {selectedObat.satuan}
                 </p>
               )}
@@ -240,12 +240,12 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                 <div>
                   <FieldLabel required>No. Batch</FieldLabel>
                   <Input placeholder="cth. B501J26" {...register(`items.${index}.no_batch`, { required: true })} />
-                  {itemErrors?.no_batch && <p className="text-xs text-red-600 mt-1">Wajib diisi</p>}
+                  {itemErrors?.no_batch && <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>}
                 </div>
                 <div>
                   <FieldLabel required>Expired Batch</FieldLabel>
                   <Input type="date" {...register(`items.${index}.expired_batch`, { required: true })} />
-                  {itemErrors?.expired_batch && <p className="text-xs text-red-600 mt-1">Wajib diisi</p>}
+                  {itemErrors?.expired_batch && <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>}
                 </div>
               </div>
 
@@ -256,18 +256,18 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                     type="number" step="any" min="0.01" placeholder="cth. 2.5"
                     {...register(`items.${index}.jumlah_dus`, { required: true, min: 0.01, valueAsNumber: true })}
                   />
-                  {itemErrors?.jumlah_dus && <p className="text-xs text-red-600 mt-1">Harus &gt; 0</p>}
+                  {itemErrors?.jumlah_dus && <p className="text-xs text-danger-600 mt-1">Harus &gt; 0</p>}
                 </div>
                 <div>
                   <FieldLabel>
-                    % Biaya Simpan <span className="text-gray-500 font-normal">(H)</span>
+                    % Biaya Simpan <span className="text-fg-muted font-normal">(H)</span>
                   </FieldLabel>
                   <div className="relative">
                     <Input type="number" min="0" max="100" step="0.5" className="pr-6"
                       {...register(`items.${index}.biaya_simpan_pct`, { valueAsNumber: true, min: 0, max: 100 })} />
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">%</span>
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-fg-muted pointer-events-none">%</span>
                   </div>
-                  {itemErrors?.biaya_simpan_pct && <p className="text-xs text-red-600 mt-1">Biaya simpan harus antara 0 sampai 100</p>}
+                  {itemErrors?.biaya_simpan_pct && <p className="text-xs text-danger-600 mt-1">Biaya simpan harus antara 0 sampai 100</p>}
                 </div>
               </div>
 
@@ -275,7 +275,7 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                 <div>
                   <FieldLabel>Harga Beli/Dus</FieldLabel>
                   <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">Rp</span>
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-fg-muted pointer-events-none">Rp</span>
                     <Input type="number" min="0" step="100" placeholder="0" className="pl-7"
                       {...register(`items.${index}.harga_beli_dus`, { valueAsNumber: true, min: 0 })} />
                   </div>
@@ -283,7 +283,7 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                 <div>
                   <FieldLabel>Harga Jual/{selectedObat?.satuan ?? 'satuan'}</FieldLabel>
                   <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">Rp</span>
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-fg-muted pointer-events-none">Rp</span>
                     <Input type="number" min="0" step="100" placeholder="0" className="pl-7"
                       {...register(`items.${index}.harga_jual`, { valueAsNumber: true, min: 0 })} />
                   </div>
@@ -299,7 +299,7 @@ export default function BarangMasukForm({ onSuccess }: Props) {
       <button
         type="button"
         onClick={() => append({ ...EMPTY_ITEM })}
-        className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 border border-dashed border-blue-300 hover:border-blue-500 rounded-lg py-2 transition-colors"
+        className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 border border-dashed border-brand-300 hover:border-brand-500 rounded-lg py-2 transition-colors"
       >
         <Plus className="w-4 h-4" />
         Tambah Obat
@@ -312,18 +312,18 @@ export default function BarangMasukForm({ onSuccess }: Props) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-subtle">
         <Button
           type="button"
           variant="outline"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm"
+          className="border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-4 py-2 text-sm"
           onClick={() => { reset(); onSuccess() }}
         >
           Batal
         </Button>
         <Button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm"
+          className="bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm"
           disabled={bulkMutation.isPending}
         >
           {bulkMutation.isPending ? 'Menyimpan...' : 'Simpan Semua'}

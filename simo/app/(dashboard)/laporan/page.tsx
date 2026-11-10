@@ -43,9 +43,9 @@ function nilaiStr(v: number | null | undefined) {
 function LoadingRow({ cols }: { cols: number }) {
   return (
     <tr>
-      <td colSpan={cols} className="py-10 text-center text-sm text-gray-500">
+      <td colSpan={cols} className="py-10 text-center text-sm text-fg-muted">
         <div className="flex items-center justify-center gap-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
           Memuat data…
         </div>
       </td>
@@ -56,14 +56,14 @@ function LoadingRow({ cols }: { cols: number }) {
 function EmptyRow({ cols }: { cols: number }) {
   return (
     <tr>
-      <td colSpan={cols} className="py-10 text-center text-sm text-gray-500">Tidak ada data</td>
+      <td colSpan={cols} className="py-10 text-center text-sm text-fg-muted">Tidak ada data</td>
     </tr>
   )
 }
 
 // ── Shared filter classes ─────────────────────────────────────────────────────
-const filterInputCls = 'border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-const filterSelectCls = 'w-full appearance-none border border-gray-300 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-500 bg-gray-50'
+const filterInputCls = 'border border-line-strong rounded-lg px-3 py-2 text-sm text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500'
+const filterSelectCls = 'w-full appearance-none border border-line-strong rounded-lg pl-3 pr-8 py-2 text-sm text-fg-secondary focus:outline-none focus:border-brand-500 bg-surface-subtle'
 
 // ── Custom Select wrapper (removes native arrow, adds custom icon) ─────────────
 function FilterSelect({ value, onChange, children }: {
@@ -74,7 +74,7 @@ function FilterSelect({ value, onChange, children }: {
       <select value={value} onChange={e => onChange(e.target.value)} className={filterSelectCls}>
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
     </div>
   )
 }
@@ -124,32 +124,32 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl bg-surface shadow-2xl">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-blue-600" />
+            <Eye className="h-4 w-4 text-brand-600" />
             <span className="font-semibold text-gray-800">Preview Laporan</span>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <button onClick={onClose} className="rounded p-1 text-fg-subtle hover:bg-surface-muted hover:text-fg-tertiary">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto bg-gray-100 p-6">
+        <div className="flex-1 overflow-auto bg-surface-muted p-6">
           {/* Lebar ~210mm (A4 portrait) supaya preview sama proporsinya dengan PDF yang diunduh */}
-          <div className="relative mx-auto rounded-sm bg-white px-10 py-8 shadow-md" style={{ fontFamily: 'Helvetica, Arial, sans-serif', width: '210mm' }}>
-            <div className="absolute left-10 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600">
-              <span className="text-xs font-bold text-white leading-none">+</span>
+          <div className="relative mx-auto rounded-sm bg-surface px-10 py-8 shadow-md" style={{ fontFamily: 'Helvetica, Arial, sans-serif', width: '210mm' }}>
+            <div className="absolute left-10 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600">
+              <span className="text-xs font-bold text-fg-inverse leading-none">+</span>
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-bold uppercase text-gray-900">{namaApotek}</div>
+              <div className="text-lg font-bold uppercase text-fg">{namaApotek}</div>
               <div className="my-1.5 border-t border-gray-400" />
-              <div className="text-xs text-gray-500">{alamatApotek}</div>
-              <div className="mt-2 text-base font-bold uppercase text-gray-900">{judul}</div>
+              <div className="text-xs text-fg-muted">{alamatApotek}</div>
+              <div className="mt-2 text-base font-bold uppercase text-fg">{judul}</div>
             </div>
 
-            <div className="mt-4 text-sm text-gray-500">
+            <div className="mt-4 text-sm text-fg-muted">
               {keterangan && <div>{keterangan}</div>}
               <div>Dicetak: {tgl}</div>
             </div>
@@ -157,7 +157,7 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
               <thead>
                 <tr>
                   {kolom.map((h, i) => (
-                    <th key={i} className="border border-gray-300 px-1.5 py-1 text-left font-semibold text-white break-words"
+                    <th key={i} className="border border-line-strong px-1.5 py-1 text-left font-semibold text-white break-words"
                         style={{ backgroundColor: '#2563eb' }}>
                       {h}
                     </th>
@@ -167,14 +167,14 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
               <tbody>
                 {baris.length === 0 ? (
                   <tr>
-                    <td colSpan={kolom.length} className="border border-gray-200 px-2 py-4 text-center text-gray-500">
+                    <td colSpan={kolom.length} className="border border-line px-2 py-4 text-center text-fg-muted">
                       Tidak ada data
                     </td>
                   </tr>
                 ) : baris.map((row, ri) => (
                   <tr key={ri} style={{ backgroundColor: ri % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="border border-gray-200 px-1.5 py-1 break-words text-gray-700">{cell}</td>
+                      <td key={ci} className="border border-line px-1.5 py-1 break-words text-fg-secondary">{cell}</td>
                     ))}
                   </tr>
                 ))}
@@ -184,30 +184,30 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
                   {footerBaris.map((row, ri) => (
                     <tr key={ri} style={{ backgroundColor: '#2563eb' }}>
                       {row.map((cell, ci) => (
-                        <td key={ci} className="border border-blue-400 px-1.5 py-1 break-words font-semibold text-white">{cell}</td>
+                        <td key={ci} className="border border-brand-400 px-1.5 py-1 break-words font-semibold text-white">{cell}</td>
                       ))}
                     </tr>
                   ))}
                 </tfoot>
               )}
             </table>
-            <div className="mt-4 text-right text-xs text-gray-500">Total {baris.length} baris data</div>
+            <div className="mt-4 text-right text-xs text-fg-muted">Total {baris.length} baris data</div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
+        <div className="flex items-center justify-between border-t border-line px-5 py-3">
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
           <div className="flex gap-2">
             <button onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              className="rounded-lg border border-line-strong px-4 py-1.5 text-sm font-medium text-fg-secondary hover:bg-surface-subtle">
               Tutup
             </button>
             <button onClick={() => { onDownloadExcel(); onClose() }}
-              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700">
+              className="flex items-center gap-1.5 rounded-lg bg-success-600 px-4 py-1.5 text-sm font-medium text-fg-inverse hover:bg-success-700">
               <FileSpreadsheet className="h-4 w-4" /> Download Excel
             </button>
             <button onClick={() => { onDownloadPDF(); onClose() }}
-              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
+              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-fg-inverse hover:bg-brand-700">
               <Download className="h-4 w-4" /> Download PDF
             </button>
           </div>
@@ -236,38 +236,38 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl bg-surface shadow-2xl">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-blue-600" />
+            <Eye className="h-4 w-4 text-brand-600" />
             <span className="font-semibold text-gray-800">Preview Kartu Stok</span>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <button onClick={onClose} className="rounded p-1 text-fg-subtle hover:bg-surface-muted hover:text-fg-tertiary">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto bg-gray-100 p-6">
+        <div className="flex-1 overflow-auto bg-surface-muted p-6">
           {/* Lebar ~210mm (A4 portrait) supaya preview sama proporsinya dengan PDF yang diunduh */}
-          <div className="relative mx-auto rounded-sm bg-white px-10 py-8 shadow-md" style={{ fontFamily: 'Helvetica, Arial, sans-serif', width: '210mm' }}>
+          <div className="relative mx-auto rounded-sm bg-surface px-10 py-8 shadow-md" style={{ fontFamily: 'Helvetica, Arial, sans-serif', width: '210mm' }}>
             {/* Logo kecil, pojok kiri-atas, lepas dari teks — sejajar baris nama apotek, bukan garis */}
-            <div className="absolute left-10 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600">
-              <span className="text-xs font-bold text-white leading-none">+</span>
+            <div className="absolute left-10 top-8 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600">
+              <span className="text-xs font-bold text-fg-inverse leading-none">+</span>
             </div>
 
             <div className="text-center">
-              <div className="text-lg font-bold uppercase text-gray-900">{info.namaApotek}</div>
+              <div className="text-lg font-bold uppercase text-fg">{info.namaApotek}</div>
               <div className="my-1.5 border-t border-gray-400" />
-              <div className="text-xs text-gray-500">{info.alamatApotek}</div>
-              <div className="mt-2 text-base font-bold text-gray-900">KARTU STOK</div>
+              <div className="text-xs text-fg-muted">{info.alamatApotek}</div>
+              <div className="mt-2 text-base font-bold text-fg">KARTU STOK</div>
             </div>
 
             <div className="mt-4 space-y-1 text-sm">
-              <div className="flex"><span className="w-28 text-gray-700">Kode Obat</span><span className="text-gray-700">: {info.kodeObat}</span></div>
-              <div className="flex"><span className="w-28 text-gray-700">Nama Obat</span><span className="text-gray-700">: {info.namaObat}</span></div>
-              <div className="flex"><span className="w-28 text-gray-700">Kemasan</span><span className="text-gray-700">: {info.kemasan}</span></div>
-              <div className="flex"><span className="w-28 text-gray-700">Satuan</span><span className="text-gray-700">: {info.satuan}</span></div>
-              <div className="flex"><span className="w-28 text-gray-700">Tanggal</span><span className="text-gray-700">: {info.tanggalFilter}</span></div>
+              <div className="flex"><span className="w-28 text-fg-secondary">Kode Obat</span><span className="text-fg-secondary">: {info.kodeObat}</span></div>
+              <div className="flex"><span className="w-28 text-fg-secondary">Nama Obat</span><span className="text-fg-secondary">: {info.namaObat}</span></div>
+              <div className="flex"><span className="w-28 text-fg-secondary">Kemasan</span><span className="text-fg-secondary">: {info.kemasan}</span></div>
+              <div className="flex"><span className="w-28 text-fg-secondary">Satuan</span><span className="text-fg-secondary">: {info.satuan}</span></div>
+              <div className="flex"><span className="w-28 text-fg-secondary">Tanggal</span><span className="text-fg-secondary">: {info.tanggalFilter}</span></div>
             </div>
 
             {/* Lebar kolom proporsional: Tanggal/Masuk/Keluar/Sisa/Expired sempit
@@ -286,7 +286,7 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
               <thead>
                 <tr>
                   {kolom.map((h, i) => (
-                    <th key={i} className="border border-gray-300 px-2 py-1.5 text-left font-semibold text-white break-words"
+                    <th key={i} className="border border-line-strong px-2 py-1.5 text-left font-semibold text-white break-words"
                         style={{ backgroundColor: '#2563eb' }}>
                       {h}
                     </th>
@@ -296,36 +296,36 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
               <tbody>
                 {baris.length === 0 ? (
                   <tr>
-                    <td colSpan={kolom.length} className="border border-gray-200 px-2 py-4 text-center text-gray-500">
+                    <td colSpan={kolom.length} className="border border-line px-2 py-4 text-center text-fg-muted">
                       Tidak ada data
                     </td>
                   </tr>
                 ) : baris.map((row, ri) => (
                   <tr key={ri} style={{ backgroundColor: ri % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="border border-gray-200 px-2 py-1.5 break-words text-gray-700">{cell}</td>
+                      <td key={ci} className="border border-line px-2 py-1.5 break-words text-fg-secondary">{cell}</td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
-            <div className="mt-4 text-right text-xs text-gray-500">Total {baris.length} baris data</div>
+            <div className="mt-4 text-right text-xs text-fg-muted">Total {baris.length} baris data</div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
+        <div className="flex items-center justify-between border-t border-line px-5 py-3">
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
           <div className="flex gap-2">
             <button onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              className="rounded-lg border border-line-strong px-4 py-1.5 text-sm font-medium text-fg-secondary hover:bg-surface-subtle">
               Tutup
             </button>
             <button onClick={() => { onDownloadExcel(); onClose() }}
-              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700">
+              className="flex items-center gap-1.5 rounded-lg bg-success-600 px-4 py-1.5 text-sm font-medium text-fg-inverse hover:bg-success-700">
               <FileSpreadsheet className="h-4 w-4" /> Download Excel
             </button>
             <button onClick={() => { onDownloadPDF(); onClose() }}
-              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
+              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-fg-inverse hover:bg-brand-700">
               <Download className="h-4 w-4" /> Download PDF
             </button>
           </div>
@@ -342,15 +342,15 @@ function ActionBar({ onPreview, onExcel, onPDF }: {
   return (
     <div className="flex gap-2">
       <button onClick={onPreview}
-        className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        className="flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-fg-secondary hover:bg-surface-subtle">
         <Eye className="h-4 w-4" /> Preview
       </button>
       <button onClick={onExcel}
-        className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+        className="flex items-center gap-1.5 rounded-lg bg-success-600 px-3 py-2 text-sm font-medium text-fg-inverse hover:bg-success-700">
         <FileSpreadsheet className="h-4 w-4" /> Excel
       </button>
       <button onClick={onPDF}
-        className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+        className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-fg-inverse hover:bg-brand-700">
         <Download className="h-4 w-4" /> PDF
       </button>
     </div>
@@ -358,11 +358,11 @@ function ActionBar({ onPreview, onExcel, onPDF }: {
 }
 
 // ── Shared table wrapper ───────────────────────────────────────────────────────
-const tableWrap = 'rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden'
-const theadTr   = 'border-b border-gray-200'
+const tableWrap = 'rounded-xl border border-line bg-surface shadow-sm overflow-hidden'
+const theadTr   = 'border-b border-line'
 const th        = 'px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap'
 const td        = 'px-4 py-3 text-sm text-gray-700'
-const tr        = 'hover:bg-gray-50 transition-colors'
+const tr        = 'hover:bg-surface-subtle transition-colors'
 
 // ── Tab: Laporan Stok ─────────────────────────────────────────────────────────
 function TabStok() {
@@ -410,12 +410,12 @@ function TabStok() {
         <KategoriSelect value={kategori} onChange={setKategori} />
         {(obatId || kategori) && (
           <button onClick={() => { setObatId(''); setKategori('') }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg-secondary">
             <X className="h-3 w-3" /> Reset
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} obat</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -428,12 +428,12 @@ function TabStok() {
                 {kolom.map(h => <th key={h} className={th}>{h}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? <LoadingRow cols={10} /> :
                rows.length === 0 ? <EmptyRow cols={10} /> :
                rows.map(r => (
                 <tr key={r.id} className={tr}>
-                  <td className={`${td} font-mono text-xs text-gray-500`}>{r.kode}</td>
+                  <td className={`${td} font-mono text-xs text-fg-muted`}>{r.kode}</td>
                   <td className={`${td} font-medium text-gray-900`}>{r.nama}</td>
                   <td className={td}>{r.kategori}</td>
                   <td className={td}>{r.satuan}</td>
@@ -448,8 +448,8 @@ function TabStok() {
             </tbody>
             {rows.length > 0 && (
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-white">
-                  <td colSpan={4} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</td>
+                <tr className="border-t-2 border-line bg-surface">
+                  <td colSpan={4} className="px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide">Total</td>
                   <td className="px-4 py-3 text-right font-bold text-gray-900">{totalStok.toLocaleString('id-ID')}</td>
                   <td colSpan={3} />
                   <td className="px-4 py-3 text-right font-bold text-gray-900">{totalBiaya > 0 ? formatRupiah(totalBiaya) : '-'}</td>
@@ -529,18 +529,18 @@ function TabKartuStok() {
         <ObatFilterSelect value={obatId} onChange={setObatId} />
         <div className="flex items-center gap-2">
           <input type="date" value={dari} onChange={e => setDari(e.target.value)} className={filterInputCls} />
-          <span className="text-xs text-gray-500">s/d</span>
+          <span className="text-xs text-fg-muted">s/d</span>
           <input type="date" value={sampai} onChange={e => setSampai(e.target.value)} className={filterInputCls} />
         </div>
         {hasFilter && (
           <button onClick={() => { setDari(''); setSampai('') }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg-secondary">
             <X className="h-3 w-3" /> Reset
           </button>
         )}
         {selectedObat && (
           <div className="ml-auto flex items-center gap-2">
-            <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} mutasi</span>
+            <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} mutasi</span>
             <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
           </div>
         )}
@@ -548,13 +548,13 @@ function TabKartuStok() {
 
       {!selectedObat ? (
         <div className={tableWrap}>
-          <p className="py-16 text-center text-sm text-gray-500">Pilih obat terlebih dahulu untuk melihat Kartu Stok</p>
+          <p className="py-16 text-center text-sm text-fg-muted">Pilih obat terlebih dahulu untuk melihat Kartu Stok</p>
         </div>
       ) : (
         <div className={tableWrap}>
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900">{selectedObat.nama}</p>
-            <p className="text-xs text-gray-500 font-mono">{selectedObat.kode} · Stok saat ini: {selectedObat.stok} {selectedObat.satuan}</p>
+          <div className="px-4 py-3 border-b border-line-subtle">
+            <p className="text-sm font-semibold text-fg">{selectedObat.nama}</p>
+            <p className="text-xs text-fg-muted font-mono">{selectedObat.kode} · Stok saat ini: {selectedObat.stok} {selectedObat.satuan}</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -563,17 +563,17 @@ function TabKartuStok() {
                   {kolom.map(h => <th key={h} className={th}>{h}</th>)}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-line-subtle">
                 {isLoading ? <LoadingRow cols={kolom.length} /> :
                  rows.length === 0 ? <EmptyRow cols={kolom.length} /> :
                  rows.map((r, i) => (
                   <tr key={i} className={tr}>
                     <td className={`${td} whitespace-nowrap`}>{formatTanggal(r.tanggal)}</td>
                     <td className={td}>
-                      <span className={`font-medium ${r.jenis === 'Masuk' ? 'text-blue-700' : 'text-red-600'}`}>{r.jenis}</span>
+                      <span className={`font-medium ${r.jenis === 'Masuk' ? 'text-brand-700' : 'text-danger-600'}`}>{r.jenis}</span>
                       {' - '}{r.keterangan}
                     </td>
-                    <td className={`${td} text-right font-medium text-blue-700`}>{r.masuk > 0 ? r.masuk : '-'}</td>
+                    <td className={`${td} text-right font-medium text-brand-700`}>{r.masuk > 0 ? r.masuk : '-'}</td>
                     <td className={`${td} text-right font-medium text-red-600`}>{r.keluar > 0 ? r.keluar : '-'}</td>
                     <td className={`${td} text-right font-semibold text-gray-900`}>{r.sisa}</td>
                     <td className={`${td} whitespace-nowrap`}>{r.expired_batch ? formatTanggal(r.expired_batch) : '-'}</td>
@@ -648,18 +648,18 @@ function TabBarangMasuk() {
         <ObatFilterSelect value={obatId} onChange={setObatId} />
         <div className="flex items-center gap-2">
           <input type="date" value={dari} onChange={e => setDari(e.target.value)} className={filterInputCls} />
-          <span className="text-xs text-gray-500">s/d</span>
+          <span className="text-xs text-fg-muted">s/d</span>
           <input type="date" value={sampai} onChange={e => setSampai(e.target.value)} className={filterInputCls} />
         </div>
         <KategoriSelect value={kategori} onChange={setKategori} />
         {hasFilter && (
           <button onClick={() => { setObatId(''); setDari(''); setSampai(''); setKategori('') }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg-secondary">
             <X className="h-3 w-3" /> Reset
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} transaksi</span>
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} transaksi</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -672,31 +672,31 @@ function TabBarangMasuk() {
                 {kolom.map(h => <th key={h} className={th}>{h}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? <LoadingRow cols={kolom.length} /> :
                rows.length === 0 ? <EmptyRow cols={kolom.length} /> :
                rows.map(r => (
                 <tr key={r.id} className={tr}>
                   <td className={`${td} whitespace-nowrap`}>{formatTanggal(r.tanggal)}</td>
-                  <td className={`${td} font-mono text-xs text-gray-500`}>{r.kode}</td>
+                  <td className={`${td} font-mono text-xs text-fg-muted`}>{r.kode}</td>
                   <td className={`${td} font-medium text-gray-900`}>{r.nama_obat}</td>
                   <td className={td}>{r.kategori}</td>
                   <td className={td}>{r.satuan}</td>
                   <td className={`${td} text-right`}>{r.jumlah_dus}</td>
                   <td className={`${td} text-right font-semibold text-gray-900`}>{r.jumlah_satuan}</td>
                   <td className={td}>{r.nama_supplier ?? '-'}</td>
-                  <td className={`${td} font-mono text-xs text-gray-500`}>{r.no_faktur ?? '-'}</td>
+                  <td className={`${td} font-mono text-xs text-fg-muted`}>{r.no_faktur ?? '-'}</td>
                   <td className={`${td} whitespace-nowrap`}>
                     {r.nama_user ?? '-'}
-                    {r.role_user && <span className="ml-1 text-xs text-gray-500">({r.role_user})</span>}
+                    {r.role_user && <span className="ml-1 text-xs text-fg-muted">({r.role_user})</span>}
                   </td>
                 </tr>
               ))}
             </tbody>
             {rows.length > 0 && (
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-white">
-                  <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</td>
+                <tr className="border-t-2 border-line bg-surface">
+                  <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide">Total</td>
                   <td className="px-4 py-3 text-right font-bold text-gray-900">{totalDus.toLocaleString('id-ID')}</td>
                   <td className="px-4 py-3 text-right font-bold text-gray-900">{totalSatuan.toLocaleString('id-ID')}</td>
                   <td colSpan={3} />
@@ -717,7 +717,7 @@ function TabBarangMasuk() {
 
 // ── Tab: Barang Keluar ────────────────────────────────────────────────────────
 const KETERANGAN_BADGE: Record<string, string> = {
-  Penjualan:  'bg-blue-100 text-blue-700',
+  Penjualan:  'bg-brand-100 text-brand-700',
   Retur:      'bg-purple-100 text-purple-700',
   Rusak:      'bg-orange-100 text-orange-700',
   Kedaluarsa: 'bg-red-100 text-red-700',
@@ -781,7 +781,7 @@ function TabBarangKeluar() {
         <ObatFilterSelect value={obatId} onChange={setObatId} />
         <div className="flex items-center gap-2">
           <input type="date" value={dari} onChange={e => setDari(e.target.value)} className={filterInputCls} />
-          <span className="text-xs text-gray-500">s/d</span>
+          <span className="text-xs text-fg-muted">s/d</span>
           <input type="date" value={sampai} onChange={e => setSampai(e.target.value)} className={filterInputCls} />
         </div>
         <FilterSelect value={keterangan} onChange={setKeterangan}>
@@ -795,12 +795,12 @@ function TabBarangKeluar() {
         <KategoriSelect value={kategori} onChange={setKategori} />
         {hasFilter && (
           <button onClick={() => { setObatId(''); setDari(''); setSampai(''); setKeterangan(''); setKategori('') }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg-secondary">
             <X className="h-3 w-3" /> Reset
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} transaksi</span>
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} transaksi</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -813,13 +813,13 @@ function TabBarangKeluar() {
                 {kolom.map(h => <th key={h} className={th}>{h}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? <LoadingRow cols={kolom.length} /> :
                rows.length === 0 ? <EmptyRow cols={kolom.length} /> :
                rows.map(r => (
                 <tr key={r.id} className={tr}>
                   <td className={`${td} whitespace-nowrap`}>{formatTanggal(r.tanggal)}</td>
-                  <td className={`${td} font-mono text-xs text-gray-500`}>{r.kode}</td>
+                  <td className={`${td} font-mono text-xs text-fg-muted`}>{r.kode}</td>
                   <td className={`${td} font-medium text-gray-900`}>{r.nama_obat}</td>
                   <td className={td}>{r.kategori}</td>
                   <td className={td}>{r.satuan}</td>
@@ -833,21 +833,21 @@ function TabBarangKeluar() {
                   <td className={`${td} text-right`}>{r.stok_sesudah}</td>
                   <td className={`${td} whitespace-nowrap`}>
                     {r.nama_user ?? '-'}
-                    {r.role_user && <span className="ml-1 text-xs text-gray-500">({r.role_user})</span>}
+                    {r.role_user && <span className="ml-1 text-xs text-fg-muted">({r.role_user})</span>}
                   </td>
                 </tr>
               ))}
             </tbody>
             {rows.length > 0 && (
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-white">
-                  <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</td>
+                <tr className="border-t-2 border-line bg-surface">
+                  <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide">Total</td>
                   <td className="px-4 py-3 text-right font-bold text-red-600">{totalKeluar.toLocaleString('id-ID')}</td>
                   <td colSpan={4} />
                 </tr>
                 {breakdown.map(({ k, total }) => (
-                  <tr key={k} className="bg-white">
-                    <td colSpan={5} className="px-4 py-1.5 pl-8 text-xs text-gray-500">↳ {k}</td>
+                  <tr key={k} className="bg-surface">
+                    <td colSpan={5} className="px-4 py-1.5 pl-8 text-xs text-fg-muted">↳ {k}</td>
                     <td className="px-4 py-1.5 text-right text-xs font-medium text-gray-600">{total.toLocaleString('id-ID')}</td>
                     <td colSpan={4} />
                   </tr>
@@ -899,7 +899,7 @@ function TabKedaluarsa() {
           {[30, 60, 90, 180].map(d => (
             <button key={d} onClick={() => setHari(d)}
               className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                hari === d ? 'bg-blue-600 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                hari === d ? 'bg-brand-600 text-white' : 'border border-line-strong text-gray-700 hover:bg-surface-subtle'
               }`}>{d} hari</button>
           ))}
         </div>
@@ -907,12 +907,12 @@ function TabKedaluarsa() {
         <KategoriSelect value={kategori} onChange={setKategori} />
         {(obatId || kategori) && (
           <button onClick={() => { setObatId(''); setKategori('') }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg-secondary">
             <X className="h-3 w-3" /> Reset Kategori
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} obat</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -925,12 +925,12 @@ function TabKedaluarsa() {
                 {kolom.map(h => <th key={h} className={th}>{h}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? <LoadingRow cols={7} /> :
                rows.length === 0 ? <EmptyRow cols={7} /> :
                rows.map(r => (
                 <tr key={r.id} className={tr}>
-                  <td className={`${td} font-mono text-xs text-gray-500`}>{r.kode}</td>
+                  <td className={`${td} font-mono text-xs text-fg-muted`}>{r.kode}</td>
                   <td className={`${td} font-medium text-gray-900`}>{r.nama}</td>
                   <td className={td}>{r.kategori}</td>
                   <td className={td}>{r.satuan}</td>
@@ -946,8 +946,8 @@ function TabKedaluarsa() {
             </tbody>
             {rows.length > 0 && (
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-white">
-                  <td colSpan={7} className="px-4 py-3 text-xs font-semibold text-gray-500">{rows.length} jenis obat akan kedaluarsa</td>
+                <tr className="border-t-2 border-line bg-surface">
+                  <td colSpan={7} className="px-4 py-3 text-xs font-semibold text-fg-muted">{rows.length} jenis obat akan kedaluarsa</td>
                 </tr>
               </tfoot>
             )}
@@ -1003,12 +1003,12 @@ function TabEoqRop() {
         <KategoriSelect value={kategori} onChange={setKategori} />
         {(obatId || kategori) && (
           <button onClick={() => { setObatId(''); setKategori('') }}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg-secondary">
             <X className="h-3 w-3" /> Reset
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
+          <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} obat</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -1021,21 +1021,21 @@ function TabEoqRop() {
                 {kolom.map(h => <th key={h} className={th}>{h}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? <LoadingRow cols={kolom.length} /> :
                rows.length === 0 ? <EmptyRow cols={kolom.length} /> :
                rows.map(r => (
                 <tr key={r.id} className={tr}>
-                  <td className={`${td} font-mono text-xs text-gray-500`}>{r.kode}</td>
+                  <td className={`${td} font-mono text-xs text-fg-muted`}>{r.kode}</td>
                   <td className={`${td} font-medium text-gray-900`}>{r.nama}</td>
                   <td className={td}>{r.satuan}</td>
                   <td className={`${td} text-right`}>{nilaiStr(r.demand_tahunan)}</td>
                   <td className={`${td} text-right`}>{formatRupiah(r.biaya_pesan)}</td>
                   <td className={`${td} text-right`}>{formatRupiah(r.biaya_simpan)}</td>
                   <td className={`${td} text-center`}>{r.lead_time} hr</td>
-                  <td className={`${td} text-right font-semibold text-blue-700`}>{nilaiStr(r.eoq)}</td>
+                  <td className={`${td} text-right font-semibold text-brand-700`}>{nilaiStr(r.eoq)}</td>
                   <td className={`${td} text-right font-semibold text-emerald-700`}>{nilaiStr(r.safety_stock)}</td>
-                  <td className={`${td} text-right font-semibold text-orange-700`}>{nilaiStr(r.rop)}</td>
+                  <td className={`${td} text-right font-semibold text-warning-700`}>{nilaiStr(r.rop)}</td>
                   <td className={`${td} text-right`}>{r.total_biaya != null ? formatRupiah(r.total_biaya) : '-'}</td>
                 </tr>
               ))}
@@ -1102,7 +1102,7 @@ function TabSimulasi() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} skenario tersimpan</span>
+        <span className="h-9 flex items-center text-xs font-medium text-fg-tertiary bg-surface-muted px-2.5 rounded-lg">{rows.length} skenario tersimpan</span>
         <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
       </div>
 
@@ -1120,7 +1120,7 @@ function TabSimulasi() {
                 <th className={th}>Dibuat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? <LoadingRow cols={7} /> :
                rows.length === 0 ? <EmptyRow cols={7} /> :
                rows.map(r => {
@@ -1131,23 +1131,23 @@ function TabSimulasi() {
                     <td className={`${td} font-medium text-gray-900`}>{r.nama_skenario}</td>
                     <td className={td}>
                       <div className="font-medium text-gray-800">{r.nama_obat}</div>
-                      <div className="font-mono text-xs text-gray-500">{r.kode_obat}</div>
+                      <div className="font-mono text-xs text-fg-muted">{r.kode_obat}</div>
                     </td>
                     <td className={`${td} text-xs`}>
-                      <div className="text-gray-500">Sek: {nilaiStr(a.eoq)}</div>
-                      <div className="font-semibold text-blue-700">Sim: {nilaiStr(s.eoq)}</div>
+                      <div className="text-fg-muted">Sek: {nilaiStr(a.eoq)}</div>
+                      <div className="font-semibold text-brand-700">Sim: {nilaiStr(s.eoq)}</div>
                     </td>
                     <td className={`${td} text-xs`}>
-                      <div className="text-gray-500">Sek: {Math.round(a.safety_stock).toLocaleString('id-ID')}</div>
-                      <div className="font-semibold text-emerald-700">Sim: {Math.round(s.safety_stock).toLocaleString('id-ID')}</div>
+                      <div className="text-fg-muted">Sek: {Math.round(a.safety_stock).toLocaleString('id-ID')}</div>
+                      <div className="font-semibold text-success-700">Sim: {Math.round(s.safety_stock).toLocaleString('id-ID')}</div>
                     </td>
                     <td className={`${td} text-xs`}>
-                      <div className="text-gray-500">Sek: {Math.round(a.rop).toLocaleString('id-ID')}</div>
-                      <div className="font-semibold text-orange-700">Sim: {Math.round(s.rop).toLocaleString('id-ID')}</div>
+                      <div className="text-fg-muted">Sek: {Math.round(a.rop).toLocaleString('id-ID')}</div>
+                      <div className="font-semibold text-warning-700">Sim: {Math.round(s.rop).toLocaleString('id-ID')}</div>
                     </td>
                     <td className={`${td} text-xs`}>
-                      <div className="text-gray-500">Sek: {a.total_biaya != null ? formatRupiah(a.total_biaya) : '-'}</div>
-                      <div className="font-semibold text-blue-700">Sim: {s.total_biaya != null ? formatRupiah(s.total_biaya) : '-'}</div>
+                      <div className="text-fg-muted">Sek: {a.total_biaya != null ? formatRupiah(a.total_biaya) : '-'}</div>
+                      <div className="font-semibold text-brand-700">Sim: {s.total_biaya != null ? formatRupiah(s.total_biaya) : '-'}</div>
                     </td>
                     <td className={`${td} whitespace-nowrap text-xs`}>{formatTanggal(r.created_at)}</td>
                   </tr>
@@ -1178,15 +1178,15 @@ function LaporanContent() {
     <div className="space-y-5">
 
       {/* Tab Navigation */}
-      <div className="flex p-1 bg-white border border-gray-200 rounded-xl overflow-x-auto">
+      <div className="flex p-1 bg-surface border border-line rounded-xl overflow-x-auto">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 whitespace-nowrap px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'bg-brand-600 text-white'
+                : 'text-gray-500 hover:text-fg-secondary hover:bg-surface-subtle'
             }`}
           >
             {tab.label}

@@ -26,15 +26,15 @@ export default function AnalisisChart({ detail, isLoading }: Props) {
   }))
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-700">Grafik Perbandingan Biaya</h2>
+        <h2 className="text-sm font-semibold text-fg-secondary">Grafik Perbandingan Biaya</h2>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="flex items-center gap-1.5 text-xs text-fg-muted">
             <span className="w-2 h-2 rounded-full bg-[#94a3b8] inline-block" />
             Sebelum EOQ
           </span>
-          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="flex items-center gap-1.5 text-xs text-fg-muted">
             <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block" />
             Dengan EOQ
           </span>
@@ -42,9 +42,9 @@ export default function AnalisisChart({ detail, isLoading }: Props) {
       </div>
 
       {isLoading ? (
-        <div className="h-64 animate-pulse bg-gray-100 rounded-xl" />
+        <div className="h-64 animate-pulse bg-surface-muted rounded-xl" />
       ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-gray-500 text-sm">
+        <p className="text-center py-10 text-fg-muted text-sm">
           Belum ada obat dengan parameter EOQ lengkap (isi biaya pesan, biaya simpan, dan demand).
         </p>
       ) : (

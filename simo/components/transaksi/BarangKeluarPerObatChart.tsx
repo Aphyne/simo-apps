@@ -23,9 +23,9 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   if (!active || !payload?.length) return null
   const data = payload[0].payload
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm">
+    <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-sm">
       <p className="font-medium text-gray-800 mb-1">{data.nama}</p>
-      <p className="text-blue-600">Keluar: <span className="font-medium">{data.total} unit</span></p>
+      <p className="text-brand-600">Keluar: <span className="font-medium">{data.total} unit</span></p>
       <p className="text-[#10B981]">Total Pendapatan: <span className="font-medium">{formatRupiah(data.pendapatan)}</span></p>
     </div>
   )
@@ -87,22 +87,22 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
     : `Tahun ${selectedYear}`
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div>
-          <p className="text-sm font-semibold text-gray-700">Keluar per Obat</p>
-          <p className="text-xs text-gray-500 mt-0.5">{periodeLabel} · khusus Penjualan</p>
+          <p className="text-sm font-semibold text-fg-secondary">Keluar per Obat</p>
+          <p className="text-xs text-fg-muted mt-0.5">{periodeLabel} · khusus Penjualan</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle Bulanan / Tahunan */}
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+          <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
             {(['bulanan', 'tahunan'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  mode === m ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-fg-secondary'
                 }`}
               >
                 {m === 'bulanan' ? 'Bulanan' : 'Tahunan'}
@@ -115,7 +115,7 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-line rounded-lg px-2.5 py-1 text-xs text-fg-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               {MONTHS.map((name, i) => (
                 <option key={i} value={i}>{name}</option>
@@ -127,7 +127,7 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-line rounded-lg px-2.5 py-1 text-xs text-fg-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             {availableYears.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -137,9 +137,9 @@ export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) 
       </div>
 
       {isLoading ? (
-        <div className="h-[200px] animate-pulse bg-gray-100 rounded-xl" />
+        <div className="h-[200px] animate-pulse bg-surface-muted rounded-xl" />
       ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-gray-500 text-sm">
+        <p className="text-center py-10 text-fg-muted text-sm">
           Tidak ada barang keluar di {periodeLabel}
         </p>
       ) : (

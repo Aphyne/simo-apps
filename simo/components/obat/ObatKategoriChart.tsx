@@ -67,18 +67,18 @@ export default function ObatKategoriChart({ allObat, isLoading, kategoriAktif = 
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-gray-700 mb-3">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-sm">
+      <p className="text-sm font-semibold text-fg-secondary mb-3">
         Distribusi per Kategori
         {!isLoading && irisan.length > 0 && (
-          <span className="ml-2 text-xs font-normal text-gray-500">{irisan.length} kategori</span>
+          <span className="ml-2 text-xs font-normal text-fg-muted">{irisan.length} kategori</span>
         )}
       </p>
 
       {isLoading ? (
-        <div className="h-[140px] animate-pulse bg-gray-100 rounded-xl" />
+        <div className="h-[140px] animate-pulse bg-surface-muted rounded-xl" />
       ) : irisan.length === 0 ? (
-        <p className="text-center py-6 text-gray-500 text-sm">Belum ada data obat</p>
+        <p className="text-center py-6 text-fg-muted text-sm">Belum ada data obat</p>
       ) : (
         <div className="flex items-center gap-6 flex-wrap sm:flex-nowrap">
           {/* Donut */}
@@ -129,14 +129,14 @@ export default function ObatKategoriChart({ allObat, isLoading, kategoriAktif = 
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 pointer-events-none" aria-live="polite">
               {detail ? (
                 <>
-                  <span className="text-[11px] leading-tight font-medium text-gray-700 line-clamp-2">{detail.name}</span>
-                  <span className="text-xl font-bold leading-tight text-gray-900 tabular-nums mt-0.5">{detail.value}</span>
-                  <span className="text-[11px] text-gray-500 tabular-nums">{detail.pct}%</span>
+                  <span className="text-[11px] leading-tight font-medium text-fg-secondary line-clamp-2">{detail.name}</span>
+                  <span className="text-xl font-bold leading-tight text-fg tabular-nums mt-0.5">{detail.value}</span>
+                  <span className="text-[11px] text-fg-muted tabular-nums">{detail.pct}%</span>
                 </>
               ) : (
                 <>
-                  <span className="text-2xl font-bold leading-tight text-gray-900 tabular-nums">{total}</span>
-                  <span className="text-[11px] text-gray-500">obat</span>
+                  <span className="text-2xl font-bold leading-tight text-fg tabular-nums">{total}</span>
+                  <span className="text-[11px] text-fg-muted">obat</span>
                 </>
               )}
             </div>
@@ -159,12 +159,12 @@ export default function ObatKategoriChart({ allObat, isLoading, kategoriAktif = 
                     aria-pressed={dipilih}
                     disabled={!onPilihKategori}
                     title={onPilihKategori ? (dipilih ? `Batalkan filter ${d.name}` : `Filter tabel: ${d.name}`) : d.name}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors duration-150 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors duration-150 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 ${
                       dipilih
-                        ? 'bg-blue-50 text-gray-900 ring-1 ring-blue-600'
+                        ? 'bg-brand-50 text-gray-900 ring-1 ring-brand-600'
                         : aktif
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-surface-muted text-gray-900'
+                          : 'text-gray-700 hover:bg-surface-subtle'
                     } ${onPilihKategori ? 'cursor-pointer' : 'cursor-default'}`}
                   >
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.warna }} />

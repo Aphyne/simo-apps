@@ -22,9 +22,9 @@ interface Props {
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-sm font-medium text-gray-700 mb-1 block">
+    <label className="text-sm font-medium text-fg-secondary mb-1 block">
       {children}
-      {required && <span className="text-red-600 ml-0.5">*</span>}
+      {required && <span className="text-danger-600 ml-0.5">*</span>}
     </label>
   )
 }
@@ -60,17 +60,17 @@ export default function BarangKeluarEditForm({ item, onSuccess }: Props) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
 
       {/* Obat — tidak bisa diedit, cuma info */}
-      <div className="bg-gray-50 rounded-lg px-3 py-2.5">
-        <p className="text-xs text-gray-500">Obat</p>
-        <p className="text-sm font-medium text-gray-800">{item.nama_obat} <span className="text-gray-500 font-mono text-xs">({item.kode_obat})</span></p>
-        <p className="text-xs text-gray-500 mt-0.5">Obat tidak bisa diganti saat edit — hapus baris ini dan catat ulang kalau obatnya salah.</p>
+      <div className="bg-surface-subtle rounded-lg px-3 py-2.5">
+        <p className="text-xs text-fg-muted">Obat</p>
+        <p className="text-sm font-medium text-gray-800">{item.nama_obat} <span className="text-fg-muted font-mono text-xs">({item.kode_obat})</span></p>
+        <p className="text-xs text-fg-muted mt-0.5">Obat tidak bisa diganti saat edit — hapus baris ini dan catat ulang kalau obatnya salah.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <FieldLabel required>Tanggal</FieldLabel>
           <Input type="date" {...register('tanggal', { required: true })} />
-          {errors.tanggal && <p className="text-xs text-red-600 mt-1">Wajib diisi</p>}
+          {errors.tanggal && <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>}
         </div>
         <div>
           <FieldLabel required>Jumlah ({item.satuan})</FieldLabel>
@@ -78,7 +78,7 @@ export default function BarangKeluarEditForm({ item, onSuccess }: Props) {
             type="number" min="1"
             {...register('jumlah', { required: true, min: 1, valueAsNumber: true })}
           />
-          {errors.jumlah && <p className="text-xs text-red-600 mt-1">Harus lebih dari 0</p>}
+          {errors.jumlah && <p className="text-xs text-danger-600 mt-1">Harus lebih dari 0</p>}
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function BarangKeluarEditForm({ item, onSuccess }: Props) {
             </Select>
           )}
         />
-        {errors.keterangan && <p className="text-xs text-red-600 mt-1">Wajib dipilih</p>}
+        {errors.keterangan && <p className="text-xs text-danger-600 mt-1">Wajib dipilih</p>}
       </div>
 
       <div>
@@ -109,18 +109,18 @@ export default function BarangKeluarEditForm({ item, onSuccess }: Props) {
         <Input placeholder="Catatan tambahan (opsional)" {...register('catatan')} />
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-subtle">
         <Button
           type="button"
           variant="outline"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm"
+          className="border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-4 py-2 text-sm"
           onClick={onSuccess}
         >
           Batal
         </Button>
         <Button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm"
+          className="bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm"
           disabled={updateMutation.isPending}
         >
           {updateMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}

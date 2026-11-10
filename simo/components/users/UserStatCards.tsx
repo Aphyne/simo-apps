@@ -13,31 +13,31 @@ export default function UserStatCards({ users }: Props) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <Users className="w-5 h-5 text-blue-600" />
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
+        <div className="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
+          <Users className="w-5 h-5 text-brand-600" />
         </div>
         <div>
-          <p className="text-xs text-gray-500 font-medium">Total User</p>
-          <p className="text-2xl font-bold leading-tight text-gray-900">{users.length}</p>
+          <p className="text-xs text-fg-muted font-medium">Total User</p>
+          <p className="text-2xl font-bold leading-tight text-fg">{users.length}</p>
         </div>
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-          <UserCheck className="w-5 h-5 text-emerald-600" />
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
+        <div className="w-11 h-11 rounded-xl bg-success-100 flex items-center justify-center flex-shrink-0">
+          <UserCheck className="w-5 h-5 text-success-600" />
         </div>
         <div>
-          <p className="text-xs text-gray-500 font-medium">Aktif</p>
-          <p className="text-2xl font-bold leading-tight text-gray-900">{aktif}</p>
+          <p className="text-xs text-fg-muted font-medium">Aktif</p>
+          <p className="text-2xl font-bold leading-tight text-fg">{aktif}</p>
         </div>
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-          <UserX className="w-5 h-5 text-gray-500" />
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
+        <div className="w-11 h-11 rounded-xl bg-surface-muted flex items-center justify-center flex-shrink-0">
+          <UserX className="w-5 h-5 text-fg-muted" />
         </div>
         <div>
-          <p className="text-xs text-gray-500 font-medium">Non-aktif</p>
-          <p className="text-2xl font-bold leading-tight text-gray-900">{nonAktif}</p>
+          <p className="text-xs text-fg-muted font-medium">Non-aktif</p>
+          <p className="text-2xl font-bold leading-tight text-fg">{nonAktif}</p>
         </div>
       </div>
     </div>

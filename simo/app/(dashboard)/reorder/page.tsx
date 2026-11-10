@@ -7,8 +7,9 @@ import { usePengaturan } from '@/hooks/usePengaturan'
 import ReorderObatList, { type FilterSupplier } from '@/components/reorder/ReorderObatList'
 import ReorderKeranjang, { type ItemKeranjang } from '@/components/reorder/ReorderKeranjang'
 import type { IdentitasApotek } from '@/lib/reorder'
+import AdminOnly from '@/components/layout/AdminOnly'
 
-export default function ReorderPage() {
+function IsiReorderPage() {
   const { data: alerts = [], isLoading } = useReorderAlerts()
   const { data: pengaturan } = usePengaturan()
 
@@ -89,22 +90,22 @@ export default function ReorderPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Reorder</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-bold text-fg">Reorder</h1>
+        <p className="text-sm text-fg-muted mt-0.5">
           Pilih obat yang mau dipesan, lalu kirim Surat Pesanan (PDF) ke supplier lewat WhatsApp.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <Info className="w-4 h-4 text-blue-600" />
+      <div className="rounded-xl border border-line bg-surface p-4 shadow-sm flex items-start gap-3">
+        <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
+          <Info className="w-4 h-4 text-brand-600" />
         </div>
-        <div className="text-xs text-gray-600 leading-relaxed">
+        <div className="text-xs text-fg-tertiary leading-relaxed">
           <p>
             Jumlah awal adalah <span className="font-medium">saran sistem</span> (dari EOQ bila tersedia, kalau belum dari ROP ditambah kebutuhan 7 hari) dan bisa diubah di keranjang.
             Surat Pesanan dibuat dalam format surat apotek, satu surat per supplier.
           </p>
-          <p className="mt-1 text-gray-500">
+          <p className="mt-1 text-fg-muted">
             WhatsApp tidak bisa melampirkan file otomatis: di HP file langsung ikut terkirim lewat menu bagikan, di komputer PDF diunduh lalu Anda lampirkan ke chat yang terbuka.
             Obat prekursor/OOT memakai Surat Pesanan khusus yang berbeda, jangan dipesan dari sini.
           </p>
@@ -112,12 +113,12 @@ export default function ReorderPage() {
       </div>
 
       {!isLoading && alerts.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-10 shadow-sm text-center">
-          <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center mx-auto mb-3">
-            <PackageCheck className="w-5 h-5 text-emerald-600" />
+        <div className="rounded-xl border border-line bg-surface p-10 shadow-sm text-center">
+          <div className="w-11 h-11 rounded-xl bg-success-100 flex items-center justify-center mx-auto mb-3">
+            <PackageCheck className="w-5 h-5 text-success-600" />
           </div>
-          <p className="text-sm font-medium text-gray-900">Tidak ada obat yang perlu dipesan</p>
-          <p className="text-xs text-gray-500 mt-1">Semua stok masih di atas ROP.</p>
+          <p className="text-sm font-medium text-fg">Tidak ada obat yang perlu dipesan</p>
+          <p className="text-xs text-fg-muted mt-1">Semua stok masih di atas ROP.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -143,5 +144,13 @@ export default function ReorderPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ReorderPage() {
+  return (
+    <AdminOnly>
+      <IsiReorderPage />
+    </AdminOnly>
   )
 }

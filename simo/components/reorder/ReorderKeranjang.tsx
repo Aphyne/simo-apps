@@ -56,7 +56,7 @@ function InputJumlah({ label, jumlah, onUbah }: { label: string; jumlah: number;
         if (v !== '' && Number.isFinite(n) && n >= 1) onUbah(n)
       }}
       onBlur={() => setTeks(null)}
-      className="w-16 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      className="w-16 border border-line-strong rounded-lg px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
     />
   )
 }
@@ -135,19 +135,19 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden lg:sticky lg:top-6">
-      <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+    <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden lg:sticky lg:top-6">
+      <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line-subtle">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-            <ShoppingCart className="w-5 h-5 text-emerald-600" />
+          <div className="w-10 h-10 rounded-xl bg-success-100 flex items-center justify-center flex-shrink-0">
+            <ShoppingCart className="w-5 h-5 text-success-600" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-700">Keranjang Reorder</h2>
-            <p className="text-xs text-gray-500 mt-0.5">{isi.length} obat · {grup.length} supplier</p>
+            <h2 className="text-sm font-semibold text-fg-secondary">Keranjang Reorder</h2>
+            <p className="text-xs text-fg-muted mt-0.5">{isi.length} obat · {grup.length} supplier</p>
           </div>
         </div>
         {isi.length > 0 && (
-          <button onClick={onKosongkan} className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-600 transition-colors">
+          <button onClick={onKosongkan} className="flex items-center gap-1 text-xs text-fg-muted hover:text-danger-600 transition-colors">
             <Trash2 className="w-3.5 h-3.5" /> Kosongkan
           </button>
         )}
@@ -155,7 +155,7 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
 
       <div className="max-h-[calc(100vh-11rem)] overflow-y-auto">
         {isi.length === 0 && (
-          <div className="text-center py-10 px-5 text-gray-500 text-sm">
+          <div className="text-center py-10 px-5 text-fg-muted text-sm">
             Keranjang masih kosong.
             <span className="block text-xs mt-1">Tambahkan obat dari daftar di sebelah kiri.</span>
           </div>
@@ -165,20 +165,20 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
           const adaWa = !!normalisasiWa(g.whatsapp)
           const lagiKirim = sibuk === g.supplierId
           return (
-            <section key={g.supplierId} className="px-5 py-4 border-b border-gray-100 last:border-b-0">
+            <section key={g.supplierId} className="px-5 py-4 border-b border-line-subtle last:border-b-0">
               <div className="mb-3">
-                <h3 className="text-sm font-semibold text-gray-900">{g.nama}</h3>
+                <h3 className="text-sm font-semibold text-fg">{g.nama}</h3>
                 <p className="text-xs mt-0.5">
                   {adaWa ? (
-                    <span className="text-emerald-700 font-medium">WhatsApp {g.whatsapp}</span>
+                    <span className="text-success-700 font-medium">WhatsApp {g.whatsapp}</span>
                   ) : (
-                    <span className="text-orange-700 font-medium">Nomor WhatsApp belum diisi</span>
+                    <span className="text-warning-700 font-medium">Nomor WhatsApp belum diisi</span>
                   )}
                 </p>
               </div>
 
               {!adaWa && (
-                <div className="flex items-start gap-2 mb-3 rounded-lg bg-orange-50 border border-orange-100 px-3 py-2 text-xs text-orange-700">
+                <div className="flex items-start gap-2 mb-3 rounded-lg bg-warning-50 border border-warning-100 px-3 py-2 text-xs text-warning-700">
                   <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>
                     WhatsApp akan terbuka tanpa tujuan, pilih kontaknya sendiri.{' '}
@@ -190,17 +190,17 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
               <ul className="space-y-2 mb-3">
                 {g.isi.map(({ item, jumlah }) => (
                   <li key={item.id} className="flex items-center gap-2">
-                    <span className="flex-1 min-w-0 text-sm text-gray-900 leading-snug">{item.nama}</span>
+                    <span className="flex-1 min-w-0 text-sm text-fg leading-snug">{item.nama}</span>
                     <InputJumlah
                       label={`Jumlah pesan ${item.nama}`}
                       jumlah={jumlah}
                       onUbah={(n) => onUbahJumlah(item.id, n)}
                     />
-                    <span className="text-xs text-gray-500 w-10 truncate">{item.satuan_pesan}</span>
+                    <span className="text-xs text-fg-muted w-10 truncate">{item.satuan_pesan}</span>
                     <button
                       onClick={() => onHapus(item.id)}
                       aria-label={`Hapus ${item.nama} dari keranjang`}
-                      className="text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-lg p-1.5"
+                      className="text-fg-muted hover:text-danger-600 hover:bg-surface-muted rounded-lg p-1.5"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -211,21 +211,21 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => pratinjau(g)}
-                  className="flex items-center gap-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-3 py-2 text-xs font-medium"
+                  className="flex items-center gap-1.5 border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-3 py-2 text-xs font-medium"
                   title="Lihat PDF di tab baru"
                 >
                   <Eye className="w-3.5 h-3.5" /> Lihat
                 </button>
                 <button
                   onClick={() => unduh(g)}
-                  className="flex items-center gap-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-3 py-2 text-xs font-medium"
+                  className="flex items-center gap-1.5 border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-3 py-2 text-xs font-medium"
                 >
                   <Download className="w-3.5 h-3.5" /> PDF
                 </button>
                 <button
                   onClick={() => kirim(g)}
                   disabled={lagiKirim}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-medium rounded-lg px-3 py-2 text-xs"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-success-600 hover:bg-success-700 disabled:opacity-60 text-fg-inverse font-medium rounded-lg px-3 py-2 text-xs"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   {lagiKirim ? 'Menyiapkan...' : 'Kirim via WhatsApp'}

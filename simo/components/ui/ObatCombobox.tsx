@@ -70,9 +70,9 @@ export default function ObatCombobox({
   return (
     <div ref={ref} className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-subtle pointer-events-none" />
         <input
-          className={`h-9 w-full border rounded-lg pl-8 pr-8 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+          className={`h-9 w-full border rounded-lg pl-8 pr-8 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
             error ? 'border-red-300' : 'border-gray-300'
           }`}
           placeholder={placeholder}
@@ -88,7 +88,7 @@ export default function ObatCombobox({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-fg-muted transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -96,16 +96,16 @@ export default function ObatCombobox({
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-surface border border-line rounded-lg shadow-lg max-h-56 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="px-4 py-3 text-xs text-gray-500 text-center">Tidak ada obat yang cocok</p>
+            <p className="px-4 py-3 text-xs text-fg-muted text-center">Tidak ada obat yang cocok</p>
           ) : (
             filtered.map((o) => (
               <button
                 key={o.id}
                 type="button"
-                className={`w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center justify-between gap-2 transition-colors ${
-                  String(o.id) === value ? 'bg-blue-50' : ''
+                className={`w-full text-left px-4 py-2.5 hover:bg-brand-50 flex items-center justify-between gap-2 transition-colors ${
+                  String(o.id) === value ? 'bg-brand-50' : ''
                 }`}
                 onMouseDown={(e) => {
                   e.preventDefault()
@@ -114,16 +114,16 @@ export default function ObatCombobox({
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{o.nama}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-muted">
                     Stok: <span className={o.stok <= 0 ? 'text-red-600 font-medium' : 'text-gray-600'}>{o.stok} {o.satuan}</span>
                   </p>
                 </div>
-                <span className="text-xs text-gray-500 font-mono flex-shrink-0">{o.kode}</span>
+                <span className="text-xs text-fg-muted font-mono flex-shrink-0">{o.kode}</span>
               </button>
             ))
           )}
           {!query && obatList.length > 15 && (
-            <p className="px-4 py-2 text-xs text-gray-500 text-center border-t border-gray-100">
+            <p className="px-4 py-2 text-xs text-fg-muted text-center border-t border-line-subtle">
               Ketik untuk mencari dari {obatList.length} obat
             </p>
           )}

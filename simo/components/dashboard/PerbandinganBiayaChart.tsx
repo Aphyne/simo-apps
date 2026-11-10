@@ -25,7 +25,7 @@ interface Props {
 export default function PerbandinganBiayaChart({ data }: Props) {
   if (data.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500 text-sm">
+      <div className="text-center py-10 text-fg-muted text-sm">
         Belum ada data biaya — isi biaya pesan &amp; simpan pada data obat.
       </div>
     )

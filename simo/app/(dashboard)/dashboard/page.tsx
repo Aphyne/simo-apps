@@ -54,9 +54,9 @@ export default function DashboardPage() {
       {/* ── Row 1: 5 Stat Cards ─────────────────────────────────────── */}
       {loadingSummary ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="rounded-xl bg-blue-400/60 h-24 animate-pulse" />
+          <div className="rounded-xl bg-brand-400/60 h-24 animate-pulse" />
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-gray-200 bg-gray-100 h-24 animate-pulse" />
+            <div key={i} className="rounded-xl border border-line bg-surface-muted h-24 animate-pulse" />
           ))}
         </div>
       ) : (
@@ -76,13 +76,13 @@ export default function DashboardPage() {
         <DaftarExpiredCard data={daftarExpired} isLoading={loadingSummary} totalUrgent={totalUrgent} />
 
         {/* Aksi Cepat */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-4">
-          <h2 className="text-sm font-semibold text-gray-700">Aksi Cepat</h2>
+        <div className="bg-surface rounded-xl border border-line shadow-sm p-5 flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-fg-secondary">Aksi Cepat</h2>
 
           <div className="space-y-2">
             <button
               onClick={() => setOpenMasuk(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-sm font-medium transition-colors text-left"
             >
               <PackagePlus className="w-4 h-4 flex-shrink-0" />
               Catat Stok Masuk
@@ -90,7 +90,7 @@ export default function DashboardPage() {
 
             <button
               onClick={() => setOpenKeluar(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 text-sm font-medium transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-warning-50 hover:bg-warning-100 text-warning-700 text-sm font-medium transition-colors text-left"
             >
               <PackageMinus className="w-4 h-4 flex-shrink-0" />
               Catat Stok Keluar
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
             <button
               onClick={() => setOpenTambahObat(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-success-50 hover:bg-success-100 text-success-700 text-sm font-medium transition-colors text-left"
             >
               <PlusCircle className="w-4 h-4 flex-shrink-0" />
               Tambah Obat Baru
@@ -106,13 +106,13 @@ export default function DashboardPage() {
           </div>
 
           {(cards?.obat_expiring ?? 0) > 0 && (
-            <div className="mt-auto p-3 rounded-lg bg-orange-50 border border-orange-200">
-              <p className="text-xs font-semibold text-orange-700">
+            <div className="mt-auto p-3 rounded-lg bg-warning-50 border border-warning-200">
+              <p className="text-xs font-semibold text-warning-700">
                 {cards?.obat_expiring} obat akan expired dalam 90 hari
               </p>
               <button
                 onClick={() => router.push('/monitoring')}
-                className="text-xs text-orange-700 hover:underline mt-1 block"
+                className="text-xs text-warning-700 hover:underline mt-1 block"
               >
                 Lihat di Monitoring →
               </button>
@@ -123,12 +123,12 @@ export default function DashboardPage() {
 
       {/* ── Row 3: Tren Permintaan + Aktivitas Hari Ini ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className="lg:col-span-2 bg-surface rounded-xl border border-line shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-fg-secondary mb-4">
             Tren Permintaan — 6 Bulan Terakhir
           </h2>
           {loadingTren ? (
-            <div className="h-52 bg-gray-100 animate-pulse rounded-lg" />
+            <div className="h-52 bg-surface-muted animate-pulse rounded-lg" />
           ) : (
             <TrenPermintaanChart data={tren ?? []} />
           )}

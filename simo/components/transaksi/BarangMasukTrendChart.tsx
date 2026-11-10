@@ -65,19 +65,19 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
   }, [allList, mode, selectedYear])
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-        <p className="text-sm font-semibold text-gray-700">Tren Stok Masuk</p>
+        <p className="text-sm font-semibold text-fg-secondary">Tren Stok Masuk</p>
 
         <div className="flex items-center gap-2">
           {/* Toggle periode */}
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+          <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
             {(['mingguan', 'bulanan'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  mode === m ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-fg-secondary'
                 }`}
               >
                 {m === 'mingguan' ? 'Per Minggu' : 'Bulanan'}
@@ -90,7 +90,7 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             disabled={mode === 'mingguan'}
-            className={`border border-gray-200 rounded-lg px-2.5 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+            className={`border border-line rounded-lg px-2.5 py-1 text-xs bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors ${
               mode === 'mingguan' ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700'
             }`}
           >
@@ -102,7 +102,7 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
       </div>
 
       {isLoading ? (
-        <div className="h-[200px] animate-pulse bg-gray-100 rounded-xl" />
+        <div className="h-[200px] animate-pulse bg-surface-muted rounded-xl" />
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={trendData} barSize={mode === 'bulanan' ? 24 : 28}>
@@ -115,7 +115,7 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
                 if (!active || !payload?.length) return null
                 const d = payload[0].payload as { unit: number; nilai: number }
                 return (
-                  <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm">
+                  <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-sm">
                     <p className="font-semibold text-gray-900 mb-1">{label}</p>
                     <p className="text-emerald-700">Masuk: <span className="font-semibold tabular-nums">{formatAngka(d.unit)}</span> unit</p>
                     <p className="text-gray-700">Total pengeluaran: <span className="font-semibold tabular-nums">{formatRupiah(d.nilai)}</span></p>

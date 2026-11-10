@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
   { label: 'Data Obat', href: '/obat', icon: Pill },
   { label: 'Stok Masuk', href: '/barang-masuk', icon: PackagePlus },
   { label: 'Stok Keluar', href: '/barang-keluar', icon: PackageMinus },
-  { label: 'Reorder', href: '/reorder', icon: ShoppingCart },
+  { label: 'Reorder', href: '/reorder', icon: ShoppingCart, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/simulasi/page.tsx
   // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/analisis/page.tsx
@@ -116,7 +116,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       ref={asideRef}
       aria-label="Menu utama"
       className={cn(
-        'fixed inset-y-0 left-0 z-40 h-dvh w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0',
+        'fixed inset-y-0 left-0 z-40 h-dvh w-64 bg-surface border-r border-line flex flex-col flex-shrink-0',
         'lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 lg:visible',
         open
           ? 'translate-x-0 visible [transition:transform_200ms,visibility_0s]'
@@ -124,15 +124,15 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       )}
     >
       {/* Brand */}
-      <div className="px-6 h-14 flex items-center gap-2 border-b border-gray-200">
+      <div className="px-6 h-14 flex items-center gap-2 border-b border-line">
         <Image src="/logo.png" alt="" width={40} height={40} className="flex-shrink-0" />
-        <h1 className="text-xl font-bold text-gray-900 tracking-tight">SIMO</h1>
+        <h1 className="text-xl font-bold text-fg tracking-tight">SIMO</h1>
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label="Tutup menu"
-          className="ml-auto rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+          className="ml-auto rounded-lg p-2 text-fg-muted hover:bg-surface-muted hover:text-fg-secondary lg:hidden"
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -152,8 +152,8 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-gray-600 hover:bg-surface-muted hover:text-fg'
               )}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -164,15 +164,15 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       </nav>
 
       {/* Footer: logout + versi */}
-      <div className="px-6 py-3 border-t border-gray-200 space-y-1">
+      <div className="px-6 py-3 border-t border-line space-y-1">
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-fg-tertiary hover:bg-danger-50 hover:text-danger-600 transition-colors"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           Keluar
         </button>
-        <p className="text-xs text-gray-500">SIMO v1.0 · 2026</p>
+        <p className="text-xs text-fg-muted">SIMO v1.0 · 2026</p>
       </div>
     </aside>
     </>

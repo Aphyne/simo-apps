@@ -32,10 +32,10 @@ function SkeletonRows() {
   return (
     <>
       {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="border-b border-gray-100">
+        <tr key={i} className="border-b border-line-subtle">
           {Array.from({ length: 8 }).map((_, j) => (
             <td key={j} className="py-3 px-4">
-              <div className="h-4 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-4 bg-surface-muted rounded-xl animate-pulse" />
             </td>
           ))}
         </tr>
@@ -47,7 +47,7 @@ function SkeletonRows() {
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
 
 const KETERANGAN_WARNA: Record<string, string> = {
-  Penjualan:  'bg-blue-100 text-blue-700',
+  Penjualan:  'bg-brand-100 text-brand-700',
   Retur:      'bg-yellow-100 text-yellow-700',
   Rusak:      'bg-red-100 text-red-700',
   Kedaluarsa: 'bg-orange-100 text-orange-700',
@@ -164,12 +164,12 @@ export default function BarangKeluarTable() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {summaryLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
-              <div className="w-11 h-11 rounded-xl bg-gray-100 animate-pulse flex-shrink-0" />
+            <div key={i} className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-surface-muted animate-pulse flex-shrink-0" />
               <div className="space-y-2 flex-1">
-                <div className="h-3 bg-gray-100 rounded animate-pulse w-24" />
-                <div className="h-7 bg-gray-100 rounded animate-pulse w-16" />
-                <div className="h-3 bg-gray-100 rounded animate-pulse w-20" />
+                <div className="h-3 bg-surface-muted rounded animate-pulse w-24" />
+                <div className="h-7 bg-surface-muted rounded animate-pulse w-16" />
+                <div className="h-3 bg-surface-muted rounded animate-pulse w-20" />
               </div>
             </div>
           ))
@@ -193,9 +193,9 @@ export default function BarangKeluarTable() {
       {/* Controls row */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[180px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle pointer-events-none" />
           <input
-            className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-line-strong rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             placeholder="Cari nama atau kode obat..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
@@ -205,7 +205,7 @@ export default function BarangKeluarTable() {
         <select
           value={keterangan}
           onChange={(e) => { setKeterangan(e.target.value); setPage(1) }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="border border-line-strong rounded-lg px-3 py-2 text-sm text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
         >
           <option value="">Semua Keterangan</option>
           <option value="Penjualan">Penjualan</option>
@@ -226,8 +226,8 @@ export default function BarangKeluarTable() {
             }}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               !mingguan && date === today
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'border-line-strong text-gray-600 hover:bg-surface-subtle'
             }`}
           >
             Harian
@@ -240,8 +240,8 @@ export default function BarangKeluarTable() {
             }}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               mingguan
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'border-line-strong text-gray-600 hover:bg-surface-subtle'
             }`}
           >
             Mingguan
@@ -251,12 +251,12 @@ export default function BarangKeluarTable() {
             type="date"
             value={date}
             onChange={(e) => { setMingguan(false); setDate(e.target.value); setPage(1) }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="border border-line-strong rounded-lg px-3 py-2 text-sm text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           />
           {(date || mingguan) && (
             <button
               onClick={() => { setDate(''); setMingguan(false); setPage(1) }}
-              className="text-xs text-gray-500 hover:text-gray-600 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              className="text-xs text-fg-muted hover:text-fg-tertiary px-2 py-1.5 rounded-lg hover:bg-surface-muted transition-colors"
             >
               Reset
             </button>
@@ -266,7 +266,7 @@ export default function BarangKeluarTable() {
         <div className="ml-auto">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm">
+              <Button className="bg-danger-600 hover:bg-danger-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm">
                 <PackageMinus className="w-4 h-4 mr-1.5" />
                 Catat Stok Keluar
               </Button>
@@ -301,9 +301,9 @@ export default function BarangKeluarTable() {
               <DialogTitle className="text-sm font-semibold text-gray-800">Detail Stok Keluar</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg px-4 py-3">
-                <p className="font-semibold text-gray-900">{selectedItem.nama_obat}</p>
-                <p className="text-xs text-gray-500 font-mono mt-0.5">{selectedItem.kode_obat} · {formatTanggalPendek(selectedItem.tanggal)}</p>
+              <div className="bg-surface-subtle rounded-lg px-4 py-3">
+                <p className="font-semibold text-fg">{selectedItem.nama_obat}</p>
+                <p className="text-xs text-fg-muted font-mono mt-0.5">{selectedItem.kode_obat} · {formatTanggalPendek(selectedItem.tanggal)}</p>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                 {[
@@ -315,13 +315,13 @@ export default function BarangKeluarTable() {
                   { label: 'Dicatat oleh', value: selectedItem.nama_user ?? '—' },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+                    <p className="text-xs text-fg-muted mb-0.5">{label}</p>
                     <p className="text-sm font-medium text-gray-800">{value}</p>
                   </div>
                 ))}
                 <div className="col-span-2">
-                  <p className="text-xs text-gray-500 mb-0.5">Catatan</p>
-                  <p className="text-sm text-gray-800">{selectedItem.catatan || <span className="text-gray-500">—</span>}</p>
+                  <p className="text-xs text-fg-muted mb-0.5">Catatan</p>
+                  <p className="text-sm text-gray-800">{selectedItem.catatan || <span className="text-fg-muted">—</span>}</p>
                 </div>
               </div>
             </div>
@@ -330,27 +330,27 @@ export default function BarangKeluarTable() {
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Tanggal</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Obat</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Jumlah Keluar</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Total</th>
-                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Keterangan</th>
-                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Perubahan Stok</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Dicatat oleh</th>
+              <tr className="border-b border-line">
+                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Tanggal</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Obat</th>
+                <th className="text-right py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Jumlah Keluar</th>
+                <th className="text-right py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Total</th>
+                <th className="text-center py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Keterangan</th>
+                <th className="text-center py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Perubahan Stok</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Dicatat oleh</th>
                 <th className="py-3 px-3 w-10"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? (
                 <SkeletonRows />
               ) : list.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-gray-500 text-sm">
+                  <td colSpan={8} className="text-center py-16 text-fg-muted text-sm">
                     {mingguan
                       ? (search || keterangan ? 'Tidak ada hasil untuk filter ini' : 'Belum ada transaksi 7 hari terakhir')
                       : date === today
@@ -362,24 +362,24 @@ export default function BarangKeluarTable() {
                 </tr>
               ) : (
                 list.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-700">
+                  <tr key={item.id} className="border-b border-line-subtle hover:bg-surface-subtle transition-colors">
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-fg-secondary">
                       {formatTanggalPendek(item.tanggal)}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <p className="font-medium text-gray-900">{item.nama_obat}</p>
-                      <p className="text-xs text-gray-500 font-mono">{item.kode_obat}</p>
+                      <p className="font-medium text-fg">{item.nama_obat}</p>
+                      <p className="text-xs text-fg-muted font-mono">{item.kode_obat}</p>
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <p className="font-semibold text-red-600">−{item.jumlah} {item.satuan}</p>
+                      <p className="font-semibold text-danger-600">−{item.jumlah} {item.satuan}</p>
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       {item.keterangan === 'Penjualan' && Number(item.harga_jual) > 0 ? (
-                        <p className="font-medium text-emerald-700">
+                        <p className="font-medium text-success-700">
                           Rp {(item.jumlah * Number(item.harga_jual)).toLocaleString('id-ID')}
                         </p>
                       ) : (
-                        <span className="text-gray-500 text-xs">—</span>
+                        <span className="text-fg-muted text-xs">—</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
@@ -387,28 +387,28 @@ export default function BarangKeluarTable() {
                         {item.keterangan}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap text-xs text-gray-500">
-                      <span className="text-gray-500">{item.stok_sebelum}</span>
-                      <span className="mx-1 text-red-400">→</span>
+                    <td className="py-3 px-4 text-center whitespace-nowrap text-xs text-fg-muted">
+                      <span className="text-fg-muted">{item.stok_sebelum}</span>
+                      <span className="mx-1 text-danger-400">→</span>
                       <span className="font-medium text-gray-800">{item.stok_sesudah}</span>
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
                       {item.nama_user ? (
                         <div>
-                          <p className="text-xs font-medium text-gray-700">{item.nama_user}</p>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full inline-block mt-0.5 font-medium ${item.role_user === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                          <p className="text-xs font-medium text-fg-secondary">{item.nama_user}</p>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full inline-block mt-0.5 font-medium ${item.role_user === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-surface-muted text-fg-tertiary'}`}>
                             {item.role_user === 'admin' ? 'Admin' : 'Staf'}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-gray-500 text-xs">—</span>
+                        <span className="text-fg-muted text-xs">—</span>
                       )}
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-0.5">
                         <button
                           onClick={() => setSelectedItem(item)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded-lg text-fg-subtle hover:text-brand-600 hover:bg-brand-50 transition-colors"
                           title="Lihat detail"
                         >
                           <Eye className="w-4 h-4" />
@@ -417,7 +417,7 @@ export default function BarangKeluarTable() {
                         <>
                           <button
                             onClick={() => setEditingItem(item)}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-1.5 rounded-lg text-fg-subtle hover:text-brand-600 hover:bg-brand-50 transition-colors"
                             title="Edit"
                           >
                             <Pencil className="w-4 h-4" />
@@ -425,7 +425,7 @@ export default function BarangKeluarTable() {
                           <ConfirmDialog
                             trigger={
                               <button
-                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="p-1.5 rounded-lg text-fg-subtle hover:text-danger-600 hover:bg-danger-50 transition-colors"
                                 title="Hapus"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -448,29 +448,29 @@ export default function BarangKeluarTable() {
         </div>
 
         {meta && meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50/50">
-            <span className="text-xs text-gray-500 tabular-nums">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-surface-subtle/50">
+            <span className="text-xs text-fg-muted tabular-nums">
               {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} dari {meta.total} transaksi
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ‹
               </button>
               {getPageNumbers(page, meta.last_page).map((p, i) =>
                 p === '...' ? (
-                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-gray-400 select-none">…</span>
+                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-fg-subtle select-none">…</span>
                 ) : (
                   <button
                     key={p}
                     onClick={() => setPage(p as number)}
                     className={`min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                       page === p
-                        ? 'bg-blue-600 text-white border border-blue-600'
-                        : 'border border-gray-200 text-gray-600 hover:bg-gray-100'
+                        ? 'bg-brand-600 text-white border border-brand-600'
+                        : 'border border-line text-gray-600 hover:bg-surface-muted'
                     }`}
                   >
                     {p}
@@ -480,7 +480,7 @@ export default function BarangKeluarTable() {
               <button
                 onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
                 disabled={page === meta.last_page}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ›
               </button>
@@ -491,15 +491,15 @@ export default function BarangKeluarTable() {
         {/* Total nilai — cuma muncul kalau ada filter aktif (search/tanggal/mingguan/keterangan),
             dan hasil filter-nya tidak kosong. Tidak muncul kalau belum ada filter sama sekali. */}
         {(search || date || mingguan || keterangan) && filteredAllList.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-blue-50/50">
-            <span className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-brand-50/50">
+            <span className="text-xs text-fg-muted">
               Total {filteredAllList.length} transaksi
               {mingguan ? ` · 7 hari terakhir (${formatTanggalPendek(sevenDaysAgo)}–${formatTanggalPendek(today)})` : ''}
               {!mingguan && date ? ` · tanggal ${formatTanggalPendek(date)}` : ''}
               {keterangan ? ` · ${keterangan}` : ''}
               {search ? ` · "${search}"` : ''}
             </span>
-            <span className="text-sm font-semibold text-gray-900">
+            <span className="text-sm font-semibold text-fg">
               Total Nilai (Penjualan): {formatRupiah(totalNilaiKeluar)}
             </span>
           </div>

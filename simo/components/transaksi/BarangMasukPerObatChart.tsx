@@ -62,22 +62,22 @@ export default function BarangMasukPerObatChart({ allList, isLoading }: Props) {
     : `Tahun ${selectedYear}`
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div>
-          <p className="text-sm font-semibold text-gray-700">Masuk per Obat</p>
-          <p className="text-xs text-gray-500 mt-0.5">{periodeLabel}</p>
+          <p className="text-sm font-semibold text-fg-secondary">Masuk per Obat</p>
+          <p className="text-xs text-fg-muted mt-0.5">{periodeLabel}</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle Bulanan / Tahunan */}
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+          <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
             {(['bulanan', 'tahunan'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  mode === m ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-fg-secondary'
                 }`}
               >
                 {m === 'bulanan' ? 'Bulanan' : 'Tahunan'}
@@ -90,7 +90,7 @@ export default function BarangMasukPerObatChart({ allList, isLoading }: Props) {
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-line rounded-lg px-2.5 py-1 text-xs text-fg-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               {MONTHS.map((name, i) => (
                 <option key={i} value={i}>{name}</option>
@@ -102,7 +102,7 @@ export default function BarangMasukPerObatChart({ allList, isLoading }: Props) {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-line rounded-lg px-2.5 py-1 text-xs text-fg-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             {availableYears.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -112,9 +112,9 @@ export default function BarangMasukPerObatChart({ allList, isLoading }: Props) {
       </div>
 
       {isLoading ? (
-        <div className="h-[200px] animate-pulse bg-gray-100 rounded-xl" />
+        <div className="h-[200px] animate-pulse bg-surface-muted rounded-xl" />
       ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-gray-500 text-sm">
+        <p className="text-center py-10 text-fg-muted text-sm">
           Tidak ada barang masuk di {periodeLabel}
         </p>
       ) : (

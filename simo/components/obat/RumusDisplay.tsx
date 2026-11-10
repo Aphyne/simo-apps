@@ -11,14 +11,14 @@ type ModalKey = 'eoq' | 'ss' | 'rop' | 'tc' | null
 // ─── Parameter mini grid (hanya yang relevan, 2 kolom) ───────────────────────
 function ParamGrid({ items }: { items: { label: string; nilai: string }[] }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-sm">
+      <p className="text-xs font-semibold text-fg-secondary uppercase tracking-wide mb-3">
         Parameter yang Digunakan
       </p>
       <div className="grid grid-cols-2 gap-2">
         {items.map((p, idx) => (
-          <div key={p.label} className={`bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100 ${idx === items.length - 1 && items.length % 2 !== 0 ? 'col-span-2' : ''}`}>
-            <p className="text-xs text-gray-500 mb-0.5">{p.label}</p>
+          <div key={p.label} className={`bg-surface-subtle rounded-lg px-3 py-2.5 border border-line-subtle ${idx === items.length - 1 && items.length % 2 !== 0 ? 'col-span-2' : ''}`}>
+            <p className="text-xs text-fg-muted mb-0.5">{p.label}</p>
             <p className="text-sm font-semibold text-gray-800">{p.nilai}</p>
           </div>
         ))}
@@ -39,14 +39,14 @@ function ParamGridAll({ input }: { input: DetailPerhitungan['input'] }) {
     { label: 'Z — Service Level',  nilai: `${input.Z}` },
   ]
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-sm">
+      <p className="text-xs font-semibold text-fg-secondary uppercase tracking-wide mb-3">
         Parameter yang Digunakan
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {items.map((p, idx) => (
-          <div key={p.label} className={`bg-gray-50 rounded-lg px-3 py-2 border border-gray-100 ${idx === items.length - 1 && items.length % 4 !== 0 ? 'col-span-2 sm:col-span-2' : ''}`}>
-            <p className="text-xs text-gray-500">{p.label}</p>
+          <div key={p.label} className={`bg-surface-subtle rounded-lg px-3 py-2 border border-line-subtle ${idx === items.length - 1 && items.length % 4 !== 0 ? 'col-span-2 sm:col-span-2' : ''}`}>
+            <p className="text-xs text-fg-muted">{p.label}</p>
             <p className="text-sm font-semibold text-gray-800 mt-0.5 break-words">{p.nilai}</p>
           </div>
         ))}
@@ -73,7 +73,7 @@ function KartuLangkah({
     : `${formatAngka(langkah.hasil, 2)}${satuan ? ` ${satuan}` : ''}`
 
   return (
-    <div className={`rounded-xl border border-gray-200 border-l-4 ${borderColor} bg-white p-4 shadow-sm`}>
+    <div className={`rounded-xl border border-line border-l-4 ${borderColor} bg-surface p-4 shadow-sm`}>
       <div className="flex items-start gap-3">
         <span className={`flex-shrink-0 w-7 h-7 rounded-lg ${badgeColor} text-xs font-bold flex items-center justify-center`}>
           {nomor}
@@ -81,33 +81,33 @@ function KartuLangkah({
         <div className="flex-1 space-y-2 min-w-0">
           <p className="font-semibold text-gray-800 text-sm">{judul}</p>
 
-          <div className="bg-gray-50 rounded-lg px-3 py-1.5 font-mono text-sm text-gray-700 border border-gray-100 break-all">
+          <div className="bg-surface-subtle rounded-lg px-3 py-1.5 font-mono text-sm text-fg-secondary border border-line-subtle break-all">
             {langkah.rumus}
           </div>
 
-          <div className="text-sm text-gray-600 break-words">
-            <span className="text-xs text-gray-500 uppercase tracking-wide mr-2">Substitusi:</span>
+          <div className="text-sm text-fg-tertiary break-words">
+            <span className="text-xs text-fg-muted uppercase tracking-wide mr-2">Substitusi:</span>
             <span className="font-mono break-all">{langkah.substitusi}</span>
           </div>
 
           {langkah.langkah && (
-            <div className="text-sm text-gray-600 break-words">
-              <span className="text-xs text-gray-500 uppercase tracking-wide mr-2">Kalkulasi:</span>
+            <div className="text-sm text-fg-tertiary break-words">
+              <span className="text-xs text-fg-muted uppercase tracking-wide mr-2">Kalkulasi:</span>
               <span className="font-mono break-all">{langkah.langkah}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-            <span className="text-xs text-gray-500">Hasil:</span>
+          <div className="flex items-center gap-2 pt-1 border-t border-line-subtle">
+            <span className="text-xs text-fg-muted">Hasil:</span>
             {langkah.hasil !== null ? (
-              <span className="text-lg font-bold text-gray-900">{hasilStr}</span>
+              <span className="text-lg font-bold text-fg">{hasilStr}</span>
             ) : (
-              <span className="text-sm text-gray-500 italic">Tidak dapat dihitung</span>
+              <span className="text-sm text-fg-muted italic">Tidak dapat dihitung</span>
             )}
           </div>
 
           {langkah.catatan && (
-            <div className="rounded-lg bg-orange-50 border border-orange-200 px-3 py-2 text-xs text-orange-700">
+            <div className="rounded-lg bg-warning-50 border border-warning-200 px-3 py-2 text-xs text-warning-700">
               {langkah.catatan}
             </div>
           )}
@@ -134,12 +134,12 @@ function HasilCard({
   const [showDef, setShowDef] = useState(false)
 
   return (
-    <div className={`relative bg-white rounded-xl border border-gray-200 border-l-4 ${borderColor} shadow-sm p-5 text-center`}>
+    <div className={`relative bg-surface rounded-xl border border-line border-l-4 ${borderColor} shadow-sm p-5 text-center`}>
       {/* ? — penjelasan konsep */}
       <button
         onClick={() => setShowDef((v) => !v)}
         className={`absolute top-3 left-3 p-1 rounded-lg transition-colors ${
-          showDef ? 'text-blue-500 bg-blue-50' : 'text-gray-300 hover:text-blue-500 hover:bg-blue-50'
+          showDef ? 'text-brand-500 bg-brand-50' : 'text-gray-300 hover:text-brand-500 hover:bg-brand-50'
         }`}
         title="Apa ini?"
       >
@@ -149,7 +149,7 @@ function HasilCard({
       {/* ⓘ — langkah perhitungan */}
       <button
         onClick={onInfo}
-        className="absolute top-3 right-3 p-1 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+        className="absolute top-3 right-3 p-1 text-gray-300 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
         title="Lihat detail perhitungan"
       >
         <Info className="w-4 h-4" />
@@ -164,17 +164,17 @@ function HasilCard({
           {isRupiah ? formatRupiah(nilai) : formatAngka(nilai, 2)}
         </p>
       ) : (
-        <p className="text-sm text-gray-500 italic">Tidak dapat dihitung</p>
+        <p className="text-sm text-fg-muted italic">Tidak dapat dihitung</p>
       )}
 
       {satuan && nilai !== null && nilai !== undefined && (
-        <p className="text-xs text-gray-500 mt-1">{satuan}</p>
+        <p className="text-xs text-fg-muted mt-1">{satuan}</p>
       )}
 
       {/* Panel definisi — muncul saat ? diklik */}
       {showDef && (
-        <div className="mt-3 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2.5 text-left">
-          <p className="text-xs text-blue-700 leading-relaxed">{definisi}</p>
+        <div className="mt-3 rounded-lg bg-brand-50 border border-brand-100 px-3 py-2.5 text-left">
+          <p className="text-xs text-brand-700 leading-relaxed">{definisi}</p>
         </div>
       )}
     </div>
@@ -206,11 +206,11 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       label: 'EOQ',
       nilai: langkah_eoq.hasil,
       satuan: 'unit per pemesanan',
-      warna: 'text-blue-600',
-      bgWarna: 'bg-blue-100',
+      warna: 'text-brand-600',
+      bgWarna: 'bg-brand-100',
       judul: 'Economic Order Quantity (EOQ)',
-      borderColor: 'border-l-blue-500',
-      badgeColor: 'bg-blue-100 text-blue-600',
+      borderColor: 'border-l-brand-500',
+      badgeColor: 'bg-brand-100 text-brand-600',
       langkah: langkah_eoq,
       definisi: 'Jumlah unit optimal yang sebaiknya dipesan setiap kali melakukan pemesanan, agar total biaya pemesanan dan biaya penyimpanan per tahun menjadi paling minimal.',
       params: [
@@ -224,11 +224,11 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       label: 'SS',
       nilai: langkah_safety_stock.hasil,
       satuan: 'unit stok pengaman',
-      warna: 'text-emerald-700',
-      bgWarna: 'bg-emerald-100',
+      warna: 'text-success-700',
+      bgWarna: 'bg-success-100',
       judul: 'Safety Stock (SS) — Stok Pengaman',
-      borderColor: 'border-l-emerald-500',
-      badgeColor: 'bg-emerald-100 text-emerald-700',
+      borderColor: 'border-l-success-500',
+      badgeColor: 'bg-success-100 text-success-700',
       langkah: langkah_safety_stock,
       definisi: 'Stok cadangan yang disimpan sebagai penyangga apabila permintaan tiba-tiba melonjak atau barang dari supplier terlambat datang. Semakin tinggi fluktuasi penjualan, semakin besar safety stock yang dibutuhkan.',
       params: [
@@ -242,11 +242,11 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       label: 'ROP',
       nilai: langkah_rop.hasil,
       satuan: 'unit titik pemesanan ulang',
-      warna: 'text-orange-700',
-      bgWarna: 'bg-orange-100',
+      warna: 'text-warning-700',
+      bgWarna: 'bg-warning-100',
       judul: 'Reorder Point (ROP) — Titik Pemesanan Ulang',
-      borderColor: 'border-l-orange-500',
-      badgeColor: 'bg-orange-100 text-orange-700',
+      borderColor: 'border-l-warning-500',
+      badgeColor: 'bg-warning-100 text-warning-700',
       langkah: langkah_rop,
       definisi: 'Batas stok minimum. Ketika stok tersisa menyentuh angka ini, saatnya segera melakukan pemesanan ulang agar stok tidak habis sebelum barang baru tiba.',
       params: [
@@ -284,7 +284,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
 
       {/* ── 4 Hasil Kalkulasi ───────────────────────────────────────────── */}
       <div>
-        <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+        <p className="text-xs text-fg-muted mb-3 flex items-center gap-1">
           Klik <Info className="w-3 h-3" /> pada kartu untuk melihat langkah perhitungan
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -21,10 +21,10 @@ function SkeletonRows() {
   return (
     <>
       {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="border-b border-gray-100">
+        <tr key={i} className="border-b border-line-subtle">
           {Array.from({ length: 9 }).map((_, j) => (
             <td key={j} className="py-3 px-4">
-              <div className="h-4 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-4 bg-surface-muted rounded-xl animate-pulse" />
             </td>
           ))}
         </tr>
@@ -38,17 +38,17 @@ function DetailPanel({ obat }: { obat: Obat }) {
   const hitungUlang = useHitungUlang()
 
   return (
-    <div className="border-t border-gray-100 bg-white px-6 py-5">
+    <div className="border-t border-line-subtle bg-surface px-6 py-5">
       <div className="w-full">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-sm font-semibold text-fg-secondary">
             Detail Perhitungan — {obat.nama}
           </h3>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 text-xs"
+              className="border-line-strong text-fg-secondary hover:bg-surface-subtle text-xs"
               onClick={() => hitungUlang.mutate(obat.id)}
               disabled={hitungUlang.isPending}
             >
@@ -56,7 +56,7 @@ function DetailPanel({ obat }: { obat: Obat }) {
               Hitung Ulang
             </Button>
             <Link href={`/obat/${obat.id}/detail`}>
-              <Button size="sm" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 text-xs">
+              <Button size="sm" variant="outline" className="border-line-strong text-fg-secondary hover:bg-surface-subtle text-xs">
                 <Eye className="w-3.5 h-3.5 mr-1.5" />
                 Halaman Penuh
               </Button>
@@ -64,11 +64,11 @@ function DetailPanel({ obat }: { obat: Obat }) {
           </div>
         </div>
         {isLoading ? (
-          <div className="text-center py-10 text-gray-500 text-sm">Memuat perhitungan...</div>
+          <div className="text-center py-10 text-fg-muted text-sm">Memuat perhitungan...</div>
         ) : perhitungan ? (
           <RumusDisplay data={perhitungan} />
         ) : (
-          <div className="text-center py-10 text-gray-500 text-sm">Data tidak tersedia</div>
+          <div className="text-center py-10 text-fg-muted text-sm">Data tidak tersedia</div>
         )}
       </div>
     </div>
@@ -111,9 +111,9 @@ export default function PerhitunganTable() {
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[180px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle pointer-events-none" />
           <input
-            className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-line-strong rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             placeholder="Cari nama atau kode obat..."
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setPage(1) }}
@@ -123,7 +123,7 @@ export default function PerhitunganTable() {
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="border border-line-strong rounded-lg px-3 py-2 text-sm text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
         >
           <option value="">Semua Status</option>
           <option value="AMAN">Aman</option>
@@ -135,8 +135,8 @@ export default function PerhitunganTable() {
           onClick={() => setBelumDihitung((v) => !v)}
           className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
             belumDihitung
-              ? 'bg-orange-100 text-orange-700 border-orange-200'
-              : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+              ? 'bg-warning-100 text-warning-700 border-warning-200'
+              : 'border-line-strong text-fg-tertiary hover:bg-surface-subtle'
           }`}
         >
           Belum Dihitung
@@ -147,8 +147,8 @@ export default function PerhitunganTable() {
           disabled={hitungProgress !== null}
           className={`ml-auto flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             hitungProgress !== null
-              ? 'bg-blue-400 text-white cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+              ? 'bg-brand-400 text-fg-inverse cursor-not-allowed'
+              : 'bg-brand-600 hover:bg-brand-700 text-fg-inverse'
           }`}
         >
           <RefreshCw className={`w-4 h-4 ${hitungProgress !== null ? 'animate-spin' : ''}`} />
@@ -159,78 +159,78 @@ export default function PerhitunganTable() {
       </div>
 
       {/* Tabel */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Kode</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Nama Obat</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  D<span className="block normal-case font-normal tracking-normal text-gray-500">demand/tahun</span>
+              <tr className="border-b border-line">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Kode</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Nama Obat</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
+                  D<span className="block normal-case font-normal tracking-normal text-fg-muted">demand/tahun</span>
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  EOQ<span className="block normal-case font-normal tracking-normal text-gray-500">qty order optimal</span>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
+                  EOQ<span className="block normal-case font-normal tracking-normal text-fg-muted">qty order optimal</span>
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  SS<span className="block normal-case font-normal tracking-normal text-gray-500">safety stock</span>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
+                  SS<span className="block normal-case font-normal tracking-normal text-fg-muted">safety stock</span>
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  ROP<span className="block normal-case font-normal tracking-normal text-gray-500">reorder point</span>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
+                  ROP<span className="block normal-case font-normal tracking-normal text-fg-muted">reorder point</span>
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  Total Cost<span className="block normal-case font-normal tracking-normal text-gray-500">biaya/tahun</span>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
+                  Total Cost<span className="block normal-case font-normal tracking-normal text-fg-muted">biaya/tahun</span>
                 </th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Status</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Detail</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Status</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Detail</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {isLoading ? (
                 <SkeletonRows />
               ) : obatList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-10 text-gray-500 text-sm">Tidak ada data</td>
+                  <td colSpan={9} className="text-center py-10 text-fg-muted text-sm">Tidak ada data</td>
                 </tr>
               ) : (
                 obatList.map((obat) => (
                   <React.Fragment key={obat.id}>
                     <tr
                       className={`cursor-pointer transition-colors ${
-                        selectedId === obat.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+                        selectedId === obat.id ? 'bg-brand-50' : 'hover:bg-surface-subtle'
                       }`}
                       onClick={() => toggleDetail(obat.id)}
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{obat.kode}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{obat.nama}</td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap text-gray-700">
-                        {obat.demand_tahunan ? formatAngka(obat.demand_tahunan, 0) : <span className="text-gray-500">—</span>}
+                      <td className="px-4 py-3 font-mono text-xs text-fg-muted whitespace-nowrap">{obat.kode}</td>
+                      <td className="px-4 py-3 font-medium text-fg whitespace-nowrap">{obat.nama}</td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-fg-secondary">
+                        {obat.demand_tahunan ? formatAngka(obat.demand_tahunan, 0) : <span className="text-fg-muted">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.eoq != null
-                          ? <span className="font-semibold text-blue-700">{formatAngka(obat.eoq, 1)}</span>
-                          : <span className="text-xs text-gray-500 italic">—</span>}
+                          ? <span className="font-semibold text-brand-700">{formatAngka(obat.eoq, 1)}</span>
+                          : <span className="text-xs text-fg-muted italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.safety_stock != null
-                          ? <span className="font-semibold text-emerald-700">{formatAngka(obat.safety_stock, 2)}</span>
-                          : <span className="text-xs text-gray-500 italic">—</span>}
+                          ? <span className="font-semibold text-success-700">{formatAngka(obat.safety_stock, 2)}</span>
+                          : <span className="text-xs text-fg-muted italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.rop != null
-                          ? <span className="font-semibold text-orange-700">{formatAngka(obat.rop, 2)}</span>
-                          : <span className="text-xs text-gray-500 italic">—</span>}
+                          ? <span className="font-semibold text-warning-700">{formatAngka(obat.rop, 2)}</span>
+                          : <span className="text-xs text-fg-muted italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.total_biaya != null
                           ? formatRupiah(obat.total_biaya)
-                          : <span className="text-xs text-gray-500 italic">—</span>}
+                          : <span className="text-xs text-fg-muted italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-center whitespace-nowrap">
                         <StatusBadge status={obat.status} />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-xs font-medium ${selectedId === obat.id ? 'text-blue-600' : 'text-gray-500'}`}>
+                        <span className={`text-xs font-medium ${selectedId === obat.id ? 'text-brand-600' : 'text-fg-muted'}`}>
                           {selectedId === obat.id ? '▲ Tutup' : '▼ Lihat'}
                         </span>
                       </td>
@@ -250,29 +250,29 @@ export default function PerhitunganTable() {
         </div>
 
         {meta && meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50/50">
-            <span className="text-xs text-gray-500 tabular-nums">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-surface-subtle/50">
+            <span className="text-xs text-fg-muted tabular-nums">
               {(page - 1) * 20 + 1}–{Math.min(page * 20, meta.total)} dari {meta.total} obat
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ‹
               </button>
               {getPageNumbers(page, meta.last_page).map((p, i) =>
                 p === '...' ? (
-                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-gray-400 select-none">…</span>
+                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-fg-subtle select-none">…</span>
                 ) : (
                   <button
                     key={p}
                     onClick={() => setPage(p as number)}
                     className={`min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                       page === p
-                        ? 'bg-blue-600 text-white border border-blue-600'
-                        : 'border border-gray-200 text-gray-600 hover:bg-gray-100'
+                        ? 'bg-brand-600 text-white border border-brand-600'
+                        : 'border border-line text-gray-600 hover:bg-surface-muted'
                     }`}
                   >
                     {p}
@@ -282,7 +282,7 @@ export default function PerhitunganTable() {
               <button
                 onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
                 disabled={page === meta.last_page}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ›
               </button>
@@ -291,7 +291,7 @@ export default function PerhitunganTable() {
         )}
       </div>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-fg-muted">
         Klik baris untuk expand detail kalkulasi • Klik "Halaman Penuh" untuk tampilan lebih lengkap
       </p>
     </div>

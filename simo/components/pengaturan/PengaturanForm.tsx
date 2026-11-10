@@ -72,82 +72,82 @@ export default function PengaturanForm({ data }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6">
 
       {/* Informasi Apotek */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Informasi Apotek</h2>
+      <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-fg-secondary mb-4">Informasi Apotek</h2>
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Nama Apotek</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Nama Apotek</label>
             <input value={form.nama_apotek} onChange={e => set('nama_apotek', e.target.value)}
               placeholder="Apotek Rezky Medika"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-500">Tampil di header semua laporan yang dicetak</p>
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+            <p className="mt-1 text-xs text-fg-muted">Tampil di header semua laporan yang dicetak</p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Alamat Apotek</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Alamat Apotek</label>
             <textarea value={form.alamat_apotek} onChange={e => set('alamat_apotek', e.target.value)}
               rows={2} placeholder="Jalan ..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" />
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none" />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Nama Apoteker Penanggung Jawab (APJ)</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Nama Apoteker Penanggung Jawab (APJ)</label>
             <input value={form.nama_apj} onChange={e => set('nama_apj', e.target.value)}
               placeholder="apt. Nama Lengkap, S.Farm."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Nomor SIA</label>
+              <label className="mb-1 block text-sm font-medium text-fg-secondary">Nomor SIA</label>
               <input value={form.nomor_sia} onChange={e => set('nomor_sia', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Nomor SIPA APJ</label>
+              <label className="mb-1 block text-sm font-medium text-fg-secondary">Nomor SIPA APJ</label>
               <input value={form.nomor_sipa_apj} onChange={e => set('nomor_sipa_apj', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Kota (untuk tanggal surat)</label>
+              <label className="mb-1 block text-sm font-medium text-fg-secondary">Kota (untuk tanggal surat)</label>
               <input value={form.kota_apotek} onChange={e => set('kota_apotek', e.target.value)}
                 placeholder="Manokwari"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
             </div>
           </div>
-          <p className="text-xs text-gray-500">SIA, SIPA, nama APJ, dan kota dipakai di kop &amp; tanda tangan Surat Pesanan saat reorder via WhatsApp.</p>
+          <p className="text-xs text-fg-muted">SIA, SIPA, nama APJ, dan kota dipakai di kop &amp; tanda tangan Surat Pesanan saat reorder via WhatsApp.</p>
         </div>
       </div>
 
       {/* Default Kalkulasi EOQ */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 mb-1">Default Kalkulasi EOQ</h2>
-        <p className="text-xs text-gray-500 mb-4">Nilai ini dipakai saat obat baru ditambahkan dan belum diisi manual. Bisa diubah per obat di halaman Edit Obat.</p>
+      <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-fg-secondary mb-1">Default Kalkulasi EOQ</h2>
+        <p className="text-xs text-fg-muted mb-4">Nilai ini dipakai saat obat baru ditambahkan dan belum diisi manual. Bisa diubah per obat di halaman Edit Obat.</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Service Level Default</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Service Level Default</label>
             <select value={form.default_service_level} onChange={e => set('default_service_level', e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
               {SERVICE_LEVEL_OPTIONS.map(o => (
                 <option key={o.value} value={String(o.value)}>{o.label}</option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-gray-500">Dipakai untuk hitung Safety Stock</p>
+            <p className="mt-1 text-xs text-fg-muted">Dipakai untuk hitung Safety Stock</p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Lead Time Default (hari)</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Lead Time Default (hari)</label>
             <input type="number" min="1" value={form.default_lead_time} onChange={e => set('default_lead_time', e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-500">Berapa hari barang datang setelah dipesan</p>
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+            <p className="mt-1 text-xs text-fg-muted">Berapa hari barang datang setelah dipesan</p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Pesan Default (Rp)</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Biaya Pesan Default (Rp)</label>
             <input type="number" min="0" value={form.default_biaya_pesan} onChange={e => set('default_biaya_pesan', e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-500">Nilai awal saat obat baru ditambahkan manual lewat Tambah Obat</p>
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+            <p className="mt-1 text-xs text-fg-muted">Nilai awal saat obat baru ditambahkan manual lewat Tambah Obat</p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Pesan per Faktur (Rp)</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Biaya Pesan per Faktur (Rp)</label>
             <input type="number" min="0" value={form.biaya_pesan_per_faktur} onChange={e => set('biaya_pesan_per_faktur', e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <p className="mt-1 text-xs text-gray-500">
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+            <p className="mt-1 text-xs text-fg-muted">
               Ongkos kirim/admin per sekali pesan (1 faktur) — dibagi rata ke tiap obat berbeda dalam faktur yang sama saat Stok Masuk dicatat, supaya biaya pesan tidak dihitung dobel per obat.
             </p>
           </div>
@@ -155,39 +155,39 @@ export default function PengaturanForm({ data }: Props) {
       </div>
 
       {/* Analisis Komparatif */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 mb-1">Analisis Komparatif</h2>
-        <p className="text-xs text-gray-500 mb-4">
+      <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-fg-secondary mb-1">Analisis Komparatif</h2>
+        <p className="text-xs text-fg-muted mb-4">
           Dipakai untuk menghitung biaya skenario &quot;sebelum EOQ&quot; (tradisional) di halaman Analisis Komparatif dan chart Perbandingan Biaya Dashboard.
         </p>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Asumsi Jumlah Dus per Pemesanan (Tradisional)</label>
+          <label className="mb-1 block text-sm font-medium text-fg-secondary">Asumsi Jumlah Dus per Pemesanan (Tradisional)</label>
           <input type="number" min="0.1" step="0.1" value={form.asumsi_dus_tradisional} onChange={e => set('asumsi_dus_tradisional', e.target.value)}
-            className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          <p className="mt-1 text-xs text-gray-500">
+            className="w-32 rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+          <p className="mt-1 text-xs text-fg-muted">
             Angka asumsi tetap, bukan dihitung dari riwayat transaksi supaya tidak tercemar kebiasaan pesan yang sudah ikut rekomendasi EOQ dari sistem ini. Default 2 dus.
           </p>
         </div>
       </div>
 
       {/* Peringatan */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Peringatan & Notifikasi</h2>
+      <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-fg-secondary mb-4">Peringatan & Notifikasi</h2>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Batas Peringatan Kedaluarsa (hari)</label>
+          <label className="mb-1 block text-sm font-medium text-fg-secondary">Batas Peringatan Kedaluarsa (hari)</label>
           <div className="flex items-center gap-3">
             <input type="number" min="1" value={form.threshold_expired_hari} onChange={e => set('threshold_expired_hari', e.target.value)}
-              className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            <span className="text-sm text-gray-500">hari sebelum expired</span>
+              className="w-32 rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+            <span className="text-sm text-fg-muted">hari sebelum expired</span>
           </div>
-          <p className="mt-1 text-xs text-gray-500">Obat dengan expired dalam rentang ini tampil di peringatan dashboard dan laporan kedaluarsa</p>
+          <p className="mt-1 text-xs text-fg-muted">Obat dengan expired dalam rentang ini tampil di peringatan dashboard dan laporan kedaluarsa</p>
         </div>
       </div>
 
       {/* Simpan */}
       <div className="flex justify-end">
         <button type="submit" disabled={update.isPending}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-2.5 text-sm disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+          className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg px-6 py-2.5 text-sm disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
           <Save className="h-4 w-4" />
           {update.isPending ? 'Menyimpan...' : 'Simpan Pengaturan'}
         </button>

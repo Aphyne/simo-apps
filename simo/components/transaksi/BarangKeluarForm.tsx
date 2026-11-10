@@ -41,9 +41,9 @@ interface KeranjangItem {
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-sm font-medium text-gray-700 mb-1 block">
+    <label className="text-sm font-medium text-fg-secondary mb-1 block">
       {children}
-      {required && <span className="text-red-600 ml-0.5">*</span>}
+      {required && <span className="text-danger-600 ml-0.5">*</span>}
     </label>
   )
 }
@@ -53,7 +53,7 @@ function StokInfo({ obat, jumlah }: { obat?: Obat; jumlah: number }) {
   if (!obat) return null
   const stokSetelah = jumlah > 0 ? obat.stok - jumlah : null
   return (
-    <p className="text-xs text-gray-500">
+    <p className="text-xs text-fg-muted">
       Stok:{' '}
       <span className={obat.stok <= 0 ? 'text-red-600 font-medium' : 'text-gray-600'}>
         {obat.stok} {obat.satuan}
@@ -195,7 +195,7 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
         <div>
           <FieldLabel required>Tanggal</FieldLabel>
           <Input type="date" {...register('tanggal', { required: true })} />
-          {headerErrors.tanggal && <p className="text-xs text-red-600 mt-1">Wajib diisi</p>}
+          {headerErrors.tanggal && <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>}
         </div>
         <div>
           <FieldLabel required>Keterangan</FieldLabel>
@@ -216,13 +216,13 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
               </Select>
             )}
           />
-          {headerErrors.keterangan_str && <p className="text-xs text-red-600 mt-1">Wajib dipilih</p>}
+          {headerErrors.keterangan_str && <p className="text-xs text-danger-600 mt-1">Wajib dipilih</p>}
         </div>
       </div>
 
       {/* Form input item */}
-      <div className="rounded-lg border border-dashed border-gray-300 p-3 space-y-2 bg-gray-50/50">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div className="rounded-lg border border-dashed border-line-strong p-3 space-y-2 bg-surface-subtle/50">
+        <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
           {editingIndex !== null ? 'Edit Item' : 'Tambah Item ke Keranjang'}
         </p>
         <div className="flex items-start gap-2">
@@ -240,12 +240,12 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
           </div>
         </div>
         <StokInfo obat={selectedObat} jumlah={jumlah} />
-        {itemError && <p className="text-xs text-red-600">{itemError}</p>}
+        {itemError && <p className="text-xs text-danger-600">{itemError}</p>}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleMasukkanKeranjang}
-            className="flex-1 text-sm font-medium text-blue-600 hover:text-blue-700 border border-dashed border-blue-300 hover:border-blue-500 rounded-lg py-2 transition-colors"
+            className="flex-1 text-sm font-medium text-brand-600 hover:text-brand-700 border border-dashed border-brand-300 hover:border-brand-500 rounded-lg py-2 transition-colors"
           >
             {editingIndex !== null ? 'Simpan Perubahan' : '+ Masukkan ke Keranjang'}
           </button>
@@ -253,7 +253,7 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
             <button
               type="button"
               onClick={resetFormInput}
-              className="text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg px-4 py-2 transition-colors"
+              className="text-sm font-medium text-fg-muted hover:text-fg-secondary border border-line-strong rounded-lg px-4 py-2 transition-colors"
             >
               Batal
             </button>
@@ -262,46 +262,46 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
       </div>
 
       {/* Daftar keranjang */}
-      <div className="border-t border-gray-100 pt-1">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div className="border-t border-line-subtle pt-1">
+        <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
           Daftar Keranjang ({keranjang.length})
         </p>
       </div>
 
-      <div className="rounded-lg border border-gray-200 overflow-x-auto">
+      <div className="rounded-lg border border-line overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Obat</th>
-              <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Qty</th>
-              <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Harga Jual</th>
-              <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</th>
-              <th className="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
+            <tr className="bg-surface-subtle border-b border-line">
+              <th className="px-3 py-2 text-left text-xs font-semibold text-fg-muted uppercase tracking-wide">Obat</th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Qty</th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Harga Jual</th>
+              <th className="px-3 py-2 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Total</th>
+              <th className="px-3 py-2 text-center text-xs font-semibold text-fg-muted uppercase tracking-wide">Aksi</th>
             </tr>
           </thead>
           {keranjang.length === 0 ? (
             <tbody>
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-sm text-gray-500">Belum ada obat di keranjang</td>
+                <td colSpan={5} className="px-3 py-6 text-center text-sm text-fg-muted">Belum ada obat di keranjang</td>
               </tr>
             </tbody>
           ) : (
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {keranjang.map((item, index) => (
-                <tr key={`${item.obat_id}-${index}`} className={index === editingIndex ? 'bg-blue-50' : ''}>
+                <tr key={`${item.obat_id}-${index}`} className={index === editingIndex ? 'bg-brand-50' : ''}>
                   <td className="px-3 py-2">
-                    <div className="font-medium text-gray-900">{item.nama}</div>
-                    <div className="text-xs text-gray-500">{item.kode}</div>
+                    <div className="font-medium text-fg">{item.nama}</div>
+                    <div className="text-xs text-fg-muted">{item.kode}</div>
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-700">{item.jumlah} {item.satuan}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">{formatRupiah(item.harga_jual)}</td>
-                  <td className="px-3 py-2 text-right font-medium text-gray-900">{formatRupiah(item.harga_jual * item.jumlah)}</td>
+                  <td className="px-3 py-2 text-right text-fg-secondary">{item.jumlah} {item.satuan}</td>
+                  <td className="px-3 py-2 text-right text-fg-secondary">{formatRupiah(item.harga_jual)}</td>
+                  <td className="px-3 py-2 text-right font-medium text-fg">{formatRupiah(item.harga_jual * item.jumlah)}</td>
                   <td className="px-3 py-2">
                     <div className="flex items-center justify-center gap-1">
                       <button
                         type="button"
                         onClick={() => handleEditItem(index)}
-                        className="rounded-lg p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="rounded-lg p-1.5 text-fg-muted hover:text-brand-600 hover:bg-brand-50 transition-colors"
                         aria-label="Edit item"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -309,7 +309,7 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
                       <button
                         type="button"
                         onClick={() => handleHapusItem(index)}
-                        className="rounded-lg p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="rounded-lg p-1.5 text-fg-muted hover:text-danger-600 hover:bg-danger-50 transition-colors"
                         aria-label="Hapus item"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -322,9 +322,9 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
           )}
           {keranjang.length > 0 && (
             <tfoot>
-              <tr className="border-t-2 border-gray-200 bg-white">
-                <td colSpan={3} className="px-3 py-2.5 text-right text-sm font-semibold text-gray-700">Total Harga</td>
-                <td className="px-3 py-2.5 text-right text-sm font-bold text-gray-900">{formatRupiah(totalHarga)}</td>
+              <tr className="border-t-2 border-line bg-surface">
+                <td colSpan={3} className="px-3 py-2.5 text-right text-sm font-semibold text-fg-secondary">Total Harga</td>
+                <td className="px-3 py-2.5 text-right text-sm font-bold text-fg">{formatRupiah(totalHarga)}</td>
                 <td />
               </tr>
             </tfoot>
@@ -339,18 +339,18 @@ export default function BarangKeluarForm({ onSuccess }: Props) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-subtle">
         <Button
           type="button"
           variant="outline"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2 text-sm"
+          className="border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-4 py-2 text-sm"
           onClick={() => { resetHeader(); setKeranjang([]); resetFormInput(); onSuccess() }}
         >
           Batal
         </Button>
         <Button
           type="submit"
-          className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm"
+          className="bg-danger-600 hover:bg-danger-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm"
           disabled={bulkMutation.isPending}
         >
           {bulkMutation.isPending ? 'Menyimpan...' : 'Simpan Semua'}

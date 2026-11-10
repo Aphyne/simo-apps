@@ -26,7 +26,7 @@ export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
     .toUpperCase()
 
   return (
-    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between gap-2 px-4 sm:px-6 flex-shrink-0">
+    <header className="h-14 bg-surface border-b border-line flex items-center justify-between gap-2 px-4 sm:px-6 flex-shrink-0">
       {/* Kiri — tombol menu (HP/tablet) + nama apotek */}
       <div className="flex min-w-0 items-center gap-2">
         <button
@@ -36,11 +36,11 @@ export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
           aria-label="Buka menu"
           aria-expanded={menuOpen}
           aria-controls="sidebar-nav"
-          className="-ml-2 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+          className="-ml-2 rounded-lg p-2 text-fg-muted hover:bg-surface-muted hover:text-fg-secondary lg:hidden"
         >
           <Menu className="w-5 h-5" aria-hidden="true" />
         </button>
-        <p className="truncate text-sm font-medium text-gray-500">Apotek Rezky Medika</p>
+        <p className="truncate text-sm font-medium text-fg-muted">Apotek Rezky Medika</p>
       </div>
 
       {/* Kanan — alert + profil */}
@@ -51,28 +51,28 @@ export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-100 transition-colors focus:outline-none">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-muted transition-colors focus:outline-none">
+              <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-semibold flex-shrink-0">
                 {initials}
               </div>
-              <p className="hidden sm:block text-sm font-medium text-gray-900 leading-tight">
+              <p className="hidden sm:block text-sm font-medium text-fg leading-tight">
                 {user?.nama ?? '—'}
               </p>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-fg-subtle" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 p-3">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                 {initials}
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900 leading-tight">{user?.nama ?? '—'}</p>
-                <p className="text-xs text-gray-500 mt-0.5">@{user?.username}</p>
+                <p className="text-sm font-semibold text-fg leading-tight">{user?.nama ?? '—'}</p>
+                <p className="text-xs text-fg-muted mt-0.5">@{user?.username}</p>
               </div>
             </div>
-            <div className="border-t border-gray-100 pt-2">
-              <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${user?.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : user?.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+            <div className="border-t border-line-subtle pt-2">
+              <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${user?.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : user?.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-fg-tertiary'}`}>
                 {user?.role === 'superadmin' ? 'Peneliti' : user?.role === 'admin' ? 'Admin' : 'Staf'}
               </span>
             </div>
