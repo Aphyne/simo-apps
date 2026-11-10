@@ -16,6 +16,7 @@ import StatCard from '@/components/dashboard/StatCard'
 import StatusBadge from '@/components/ui/StatusBadge'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useObatList, useDeleteObat } from '@/hooks/useObat'
+import { useAuthStore } from '@/store/auth.store'
 import { formatAngka, formatTanggalPendek } from '@/lib/utils'
 import { KATEGORI_OBAT } from '@/lib/constants'
 import ObatKategoriChart from '@/components/obat/ObatKategoriChart'
@@ -85,6 +86,7 @@ function SkeletonRows() {
 }
 
 export default function ObatTable() {
+  const isAdmin = useAuthStore((s) => s.user?.role === 'admin')
   const [search, setSearch] = useState('')
   const [kategori, setKategori] = useState('')
   const [status, setStatus] = useState('')
@@ -160,12 +162,14 @@ export default function ObatTable() {
           </SelectContent>
         </Select>
 
-        <Link href="/obat/tambah" className="ml-auto">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm">
-            <Plus className="w-4 h-4 mr-1.5" />
-            Tambah Obat
-          </Button>
-        </Link>
+        {isAdmin && (
+          <Link href="/obat/tambah" className="ml-auto">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Tambah Obat
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* ── Tabel ─────────────────────────────────────────────────────────── */}
@@ -275,31 +279,35 @@ export default function ObatTable() {
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
-                        <Link href={`/obat/${obat.id}/edit`}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
-                            title="Edit"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                        </Link>
-                        <ConfirmDialog
-                          trigger={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          }
-                          title={`Hapus ${obat.nama}?`}
-                          description="Obat yang sudah memiliki riwayat transaksi tidak bisa dihapus."
-                          onConfirm={() => deleteMutation.mutate(obat.id)}
-                          loading={deleteMutation.isPending}
-                        />
+                        {isAdmin && (
+                          <>
+                            <Link href={`/obat/${obat.id}/edit`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                                title="Edit"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                            </Link>
+                            <ConfirmDialog
+                              trigger={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              }
+                              title={`Hapus ${obat.nama}?`}
+                              description="Obat yang sudah memiliki riwayat transaksi tidak bisa dihapus."
+                              onConfirm={() => deleteMutation.mutate(obat.id)}
+                              loading={deleteMutation.isPending}
+                            />
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

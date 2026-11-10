@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { periksaAngka, idValid } = require('../utils/validasi');
 const { kalkulasiLengkap } = require('../services/eoqService');
 
 // POST /api/simulasi/jalankan — hitung skenario, tidak simpan ke DB
@@ -6,6 +7,14 @@ async function jalankanSimulasi(req, res) {
   try {
     const { obat_id, demand_perubahan_pct, lead_time_baru, biaya_pesan_baru, biaya_simpan_baru } = req.body;
     if (!obat_id) return res.status(400).json({ success: false, message: 'obat_id wajib diisi' });
+    if (!idValid(obat_id)) return res.status(400).json({ success: false, message: 'obat_id tidak valid' });
+    const salahAngka = periksaAngka(req.body, {
+      demand_perubahan_pct: { min: -100, max: 1000, label: 'Perubahan demand (%)' },
+      lead_time_baru: { min: 1, max: 365, int: true, label: 'Lead time baru' },
+      biaya_pesan_baru: { max: 1e9, label: 'Biaya pesan baru' },
+      biaya_simpan_baru: { max: 1e9, label: 'Biaya simpan baru' },
+    });
+    if (salahAngka) return res.status(400).json({ success: false, message: salahAngka });
 
     const { rows } = await pool.query('SELECT * FROM obat WHERE id = $1', [obat_id]);
     if (rows.length === 0) return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });

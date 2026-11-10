@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { periksaAngka, idValid, tanggalValid } = require('../utils/validasi');
 const { kalkulasiLengkap, kalkulasiStepByStep } = require('../services/eoqService');
 const { hitungUlangObat } = require('../services/stokService');
 
@@ -129,6 +130,30 @@ function rapikanNama(nama) {
     .join(' ');
 }
 
+// Batas wajar input angka obat. Menolak NaN / Infinity / negatif / teks sebelum masuk database.
+const SPEC_OBAT = {
+  satuan_per_dus: { min: 1, max: 100000, int: true, label: 'Isi per dus' },
+  harga_beli: { max: 1e9, label: 'Harga beli' },
+  harga_jual: { max: 1e9, label: 'Harga jual' },
+  stok: { max: 1e9, int: true, label: 'Stok' },
+  demand_harian: { max: 1e8, label: 'Demand harian' },
+  demand_tahunan: { max: 1e10, label: 'Demand tahunan' },
+  std_dev_demand: { max: 1e8, label: 'Standar deviasi demand' },
+  biaya_pesan: { max: 1e9, label: 'Biaya pesan' },
+  biaya_simpan: { max: 1e9, label: 'Biaya simpan' },
+  lead_time: { min: 1, max: 365, int: true, label: 'Lead time' },
+  service_level: { min: 1, max: 100, label: 'Service level' },
+};
+
+// Mengembalikan pesan error untuk body obat, atau null kalau valid.
+function periksaBodyObat(body) {
+  const salahAngka = periksaAngka(body, SPEC_OBAT);
+  if (salahAngka) return salahAngka;
+  if (body.expired_terdekat && !tanggalValid(body.expired_terdekat)) return 'Format expired tidak valid (YYYY-MM-DD)';
+  if (body.supplier_id && !idValid(body.supplier_id)) return 'Supplier tidak valid';
+  return null;
+}
+
 async function create(req, res) {
   const {
     nama: namaMentah, kategori, satuan, satuan_per_dus,
@@ -141,6 +166,11 @@ async function create(req, res) {
 
   if (!nama || !kategori || !satuan) {
     return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
+  }
+
+  const salahBody = periksaBodyObat(req.body);
+  if (salahBody) {
+    return res.status(400).json({ success: false, message: salahBody });
   }
 
   const stok_awal = parseInt(stok) || 0;
@@ -196,7 +226,7 @@ async function create(req, res) {
       await pool.query(
         `INSERT INTO barang_masuk
            (tanggal, obat_id, jumlah_dus, jumlah_satuan, expired_batch, catatan, user_id, stok_sebelum, stok_sesudah)
-         VALUES (CURRENT_DATE, $1, $2, $3, $4, 'Stok Awal', $5, 0, $3)`,
+         VALUES ((NOW() AT TIME ZONE 'Asia/Jakarta')::date, $1, $2, $3, $4, 'Stok Awal', $5, 0, $3)`,
         [obatBaru.id, jumlah_dus, stok_awal, expired_terdekat || null, req.user?.id ?? null]
       );
       await pool.query(
@@ -217,23 +247,37 @@ async function create(req, res) {
 }
 
 async function update(req, res) {
-  const {
-    nama: namaMentah, kategori, satuan, satuan_per_dus,
-    stok,
-    demand_harian, demand_tahunan, std_dev_demand,
-    biaya_pesan, service_level, expired_terdekat, supplier_id,
-  } = req.body;
-  const nama = rapikanNama(namaMentah);
-
-  if (!nama || !kategori || !satuan) {
-    return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
-  }
+  const body = req.body || {};
 
   try {
-    let nama_supplier = null;
-    if (supplier_id) {
-      const { rows: supRows } = await pool.query('SELECT nama FROM supplier WHERE id = $1', [supplier_id]);
-      if (supRows.length) nama_supplier = supRows[0].nama;
+    // Update PARSIAL: field yang tidak dikirim tetap memakai nilai lama (bukan di-nol-kan).
+    const { rows: lama } = await pool.query('SELECT * FROM obat WHERE id = $1', [req.params.id]);
+    if (!lama.length) {
+      return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
+    }
+    const o = lama[0];
+    const pilih = (nilai, lamaVal) => (nilai === undefined ? lamaVal : nilai);
+    const salahBody = periksaBodyObat(body);
+    if (salahBody) {
+      return res.status(400).json({ success: false, message: salahBody });
+    }
+
+    const nama = body.nama === undefined ? o.nama : rapikanNama(body.nama);
+    const kategori = pilih(body.kategori, o.kategori);
+    const satuan = pilih(body.satuan, o.satuan);
+    if (!nama || !kategori || !satuan) {
+      return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
+    }
+
+    let supplier_id = o.supplier_id;
+    let nama_supplier = o.nama_supplier;
+    if (body.supplier_id !== undefined) {
+      supplier_id = body.supplier_id || null;
+      nama_supplier = null;
+      if (supplier_id) {
+        const { rows: supRows } = await pool.query('SELECT nama FROM supplier WHERE id = $1', [supplier_id]);
+        if (supRows.length) nama_supplier = supRows[0].nama;
+      }
     }
 
     const { rows } = await pool.query(
@@ -247,10 +291,15 @@ async function update(req, res) {
        RETURNING *`,
       [
         nama, kategori, satuan,
-        satuan_per_dus || 1, stok || 0,
-        demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
-        biaya_pesan || 0, service_level || 95, expired_terdekat || null,
-        supplier_id || null, nama_supplier, req.params.id,
+        pilih(body.satuan_per_dus, o.satuan_per_dus) || 1,
+        pilih(body.stok, o.stok) || 0,
+        pilih(body.demand_harian, o.demand_harian) || 0,
+        pilih(body.demand_tahunan, o.demand_tahunan) || 0,
+        pilih(body.std_dev_demand, o.std_dev_demand) || 0,
+        pilih(body.biaya_pesan, o.biaya_pesan) || 0,
+        pilih(body.service_level, o.service_level) || 95,
+        pilih(body.expired_terdekat, o.expired_terdekat) || null,
+        supplier_id, nama_supplier, req.params.id,
       ]
     );
     if (!rows.length) {
@@ -352,7 +401,7 @@ async function remove(req, res) {
   } catch (err) {
     console.error('obat.remove:', err);
     // Foreign key violation — obat masih ada di transaksi
-    if (err.code === '23503') {
+    if (err.code === '23503' || err.code === '23001') {
       return res.status(400).json({
         success: false,
         message: 'Obat tidak bisa dihapus karena masih memiliki riwayat transaksi',

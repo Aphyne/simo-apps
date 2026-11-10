@@ -131,19 +131,19 @@ async function getLaporanKedaluarsa(req, res) {
         SELECT DISTINCT ON (obat_id)
           obat_id, estimasi_sisa
         FROM batch_calc
-        WHERE expired_batch >= CURRENT_DATE AND estimasi_sisa > 0
+        WHERE expired_batch >= (NOW() AT TIME ZONE 'Asia/Jakarta')::date AND estimasi_sisa > 0
         ORDER BY obat_id, expired_batch ASC
       )
       SELECT
         o.id, o.kode, o.nama, o.kategori, o.satuan,
         COALESCE(nb.estimasi_sisa, o.stok) AS stok,
         o.expired_terdekat,
-        (o.expired_terdekat - CURRENT_DATE) AS sisa_hari
+        (o.expired_terdekat - (NOW() AT TIME ZONE 'Asia/Jakarta')::date) AS sisa_hari
       FROM obat o
       LEFT JOIN nearest_batch nb ON nb.obat_id = o.id
       WHERE o.expired_terdekat IS NOT NULL
-        AND o.expired_terdekat >= CURRENT_DATE
-        AND o.expired_terdekat <= CURRENT_DATE + ($1 || ' days')::INTERVAL
+        AND o.expired_terdekat >= (NOW() AT TIME ZONE 'Asia/Jakarta')::date
+        AND o.expired_terdekat <= (NOW() AT TIME ZONE 'Asia/Jakarta')::date + ($1 || ' days')::INTERVAL
         ${extraWhere}
       ORDER BY o.expired_terdekat ASC
     `, params);

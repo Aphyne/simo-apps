@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { periksaAngka, balasHttpError } = require('../utils/validasi');
 const { hitungUlangObat } = require('../services/stokService');
 
 async function getAll(req, res) {
@@ -46,6 +47,13 @@ async function getById(req, res) {
 
 async function create(req, res) {
   const { nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg, biaya_pesan } = req.body;
+  const salahAngka = periksaAngka(req.body, {
+    lead_time_avg: { min: 1, max: 365, int: true, label: 'Lead time' },
+    biaya_pesan: { max: 1e9, label: 'Biaya pesan' },
+  });
+  if (salahAngka) {
+    return res.status(400).json({ success: false, message: salahAngka });
+  }
 
   if (!nama) {
     return res.status(400).json({ success: false, message: 'Nama supplier wajib diisi' });
@@ -67,6 +75,13 @@ async function create(req, res) {
 
 async function update(req, res) {
   const { nama, alamat, telepon, whatsapp, jenis_obat, lead_time_avg, biaya_pesan } = req.body;
+  const salahAngka = periksaAngka(req.body, {
+    lead_time_avg: { min: 1, max: 365, int: true, label: 'Lead time' },
+    biaya_pesan: { max: 1e9, label: 'Biaya pesan' },
+  });
+  if (salahAngka) {
+    return res.status(400).json({ success: false, message: salahAngka });
+  }
 
   if (!nama) {
     return res.status(400).json({ success: false, message: 'Nama supplier wajib diisi' });
@@ -106,6 +121,7 @@ async function update(req, res) {
 
     res.json({ success: true, data: rows[0], message: 'Supplier berhasil diperbarui' });
   } catch (err) {
+    if (balasHttpError(err, res)) return;
     console.error('supplier.update:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -131,6 +147,7 @@ async function remove(req, res) {
     }
     res.json({ success: true, message: 'Supplier berhasil dihapus' });
   } catch (err) {
+    if (balasHttpError(err, res)) return;
     console.error('supplier.remove:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }

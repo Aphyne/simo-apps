@@ -16,17 +16,17 @@ async function getSummary(req, res) {
       // rop > 0: ROP=0 berarti belum ada histori demand (belum valid dihitung),
       // bukan ambang reorder di titik 0 unit — jangan ikut dihitung "perlu reorder".
       pool.query('SELECT COUNT(*) FROM obat WHERE rop IS NOT NULL AND rop > 0 AND stok <= rop'),
-      pool.query(`SELECT COALESCE(SUM(jumlah), 0) AS total FROM barang_keluar WHERE keterangan = 'Penjualan' AND tanggal = CURRENT_DATE`),
+      pool.query(`SELECT COALESCE(SUM(jumlah), 0) AS total FROM barang_keluar WHERE keterangan = 'Penjualan' AND tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date`),
       pool.query(`
         SELECT
-          (SELECT COUNT(*) FROM barang_masuk WHERE tanggal = CURRENT_DATE) +
-          (SELECT COUNT(*) FROM barang_keluar WHERE tanggal = CURRENT_DATE) AS total
+          (SELECT COUNT(*) FROM barang_masuk WHERE tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date) +
+          (SELECT COUNT(*) FROM barang_keluar WHERE tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date) AS total
       `),
       pool.query(`
         SELECT COUNT(*) FROM obat
         WHERE expired_terdekat IS NOT NULL
-          AND expired_terdekat >= CURRENT_DATE
-          AND expired_terdekat <= CURRENT_DATE + INTERVAL '90 days'
+          AND expired_terdekat >= (NOW() AT TIME ZONE 'Asia/Jakarta')::date
+          AND expired_terdekat <= (NOW() AT TIME ZONE 'Asia/Jakarta')::date + INTERVAL '90 days'
       `),
       pool.query(`
         SELECT id, kode, nama, satuan, stok, rop, eoq, safety_stock,
@@ -70,7 +70,7 @@ async function getSummary(req, res) {
           SELECT DISTINCT ON (obat_id)
             obat_id, expired_batch, estimasi_sisa
           FROM batch_calc
-          WHERE expired_batch >= CURRENT_DATE AND estimasi_sisa > 0
+          WHERE expired_batch >= (NOW() AT TIME ZONE 'Asia/Jakarta')::date AND estimasi_sisa > 0
           ORDER BY obat_id, expired_batch ASC
         )
         SELECT
@@ -82,9 +82,9 @@ async function getSummary(req, res) {
         LEFT JOIN nearest_batch nb ON nb.obat_id = o.id
         WHERE (
           nb.obat_id IS NOT NULL
-          OR (o.expired_terdekat IS NOT NULL AND o.expired_terdekat >= CURRENT_DATE)
+          OR (o.expired_terdekat IS NOT NULL AND o.expired_terdekat >= (NOW() AT TIME ZONE 'Asia/Jakarta')::date)
         )
-          AND COALESCE(nb.expired_batch, o.expired_terdekat) <= CURRENT_DATE + INTERVAL '90 days'
+          AND COALESCE(nb.expired_batch, o.expired_terdekat) <= (NOW() AT TIME ZONE 'Asia/Jakarta')::date + INTERVAL '90 days'
         ORDER BY COALESCE(nb.expired_batch, o.expired_terdekat) ASC
         LIMIT 5
       `),
@@ -128,7 +128,7 @@ async function getTrenPermintaan(req, res) {
         SUM(jumlah) AS total
       FROM barang_keluar
       WHERE keterangan = 'Penjualan'
-        AND tanggal >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '5 months'
+        AND tanggal >= DATE_TRUNC('month', (NOW() AT TIME ZONE 'Asia/Jakarta')::date) - INTERVAL '5 months'
       GROUP BY DATE_TRUNC('month', tanggal)
       ORDER BY bulan ASC
     `);

@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const { updateExpiredTerdekat, hitungUlangObat } = require('../services/stokService');
+const { HttpError, idValid, desimalPositif, nonNegatif, angkaDalamRentang, tanggalValid, balasHttpError } = require('../utils/validasi');
 
 // Error yang sengaja dilempar dari dalam transaksi createBulk — dibedakan dari
 // error tak terduga supaya bisa direspon sebagai 400 (kesalahan input), bukan 500.
@@ -128,50 +129,75 @@ async function create(req, res) {
   if (!supplier_id || !no_faktur || !no_batch || !expired_batch) {
     return res.status(400).json({ success: false, message: 'Supplier, No. Faktur, No. Batch, dan Expired Batch wajib diisi' });
   }
-  if (parseFloat(jumlah_dus) <= 0) {
-    return res.status(400).json({ success: false, message: 'Jumlah harus lebih dari 0' });
+  if (!desimalPositif(jumlah_dus, 1000000)) {
+    return res.status(400).json({ success: false, message: 'Jumlah dus harus angka lebih dari 0' });
+  }
+  if (!tanggalValid(tanggal) || !tanggalValid(expired_batch)) {
+    return res.status(400).json({ success: false, message: 'Format tanggal / expired tidak valid (YYYY-MM-DD)' });
+  }
+  if (!idValid(obat_id) || !idValid(supplier_id)) {
+    return res.status(400).json({ success: false, message: 'Obat atau supplier tidak valid' });
+  }
+  if ((harga_beli_dus && nonNegatif(harga_beli_dus) === null) || (harga_jual && nonNegatif(harga_jual) === null)) {
+    return res.status(400).json({ success: false, message: 'Harga harus angka tidak negatif' });
   }
   if (biayaSimpanPctInvalid(biaya_simpan_pct)) {
     return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
   }
 
   try {
-    const { rows: obatRows } = await pool.query('SELECT * FROM obat WHERE id = $1', [obat_id]);
-    if (!obatRows.length) {
-      return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
+    // Seluruh pembacaan stok → insert → update stok dalam SATU transaksi dengan kunci baris
+    // (FOR UPDATE). Sebelumnya tiap langkah memakai koneksi berbeda sehingga barang masuk
+    // paralel saling menimpa stok (stok 10 padahal seharusnya 100 — temuan QA BIZ-02).
+    let obat, rows, stok_sesudah, harga_beli_per_satuan, harga_jual_per_satuan, biaya_simpan;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows: obatRows } = await client.query('SELECT * FROM obat WHERE id = $1 FOR UPDATE', [obat_id]);
+      if (!obatRows.length) throw new HttpError(404, 'Obat tidak ditemukan');
+      obat = obatRows[0];
+
+      // Cegah catat ganda (mis. klik dua kali): faktur + obat + batch yang sama sudah ada.
+      const { rows: dup } = await client.query(
+        'SELECT 1 FROM barang_masuk WHERE no_faktur = $1 AND obat_id = $2 AND no_batch = $3 LIMIT 1',
+        [no_faktur, obat_id, no_batch]
+      );
+      if (dup.length) throw new HttpError(409, 'Barang masuk dengan No. Faktur, obat, dan No. Batch yang sama sudah tercatat');
+
+      const jumlah_satuan = Math.round(parseFloat(jumlah_dus) * obat.satuan_per_dus);
+      const stok_sebelum = obat.stok;
+      stok_sesudah = stok_sebelum + jumlah_satuan;
+
+      // Harga beli disimpan per satuan (input per dus → bagi isi per dus)
+      const spd = obat.satuan_per_dus || 1;
+      harga_beli_per_satuan = harga_beli_dus ? parseFloat((parseFloat(harga_beli_dus) / spd).toFixed(4)) : null;
+      harga_jual_per_satuan = harga_jual ? parseFloat(harga_jual) : null;
+      const pct = resolveBiayaSimpanPct(biaya_simpan_pct);
+      biaya_simpan = harga_beli_per_satuan !== null ? parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4)) : null;
+
+      const ins = await client.query(
+        `INSERT INTO barang_masuk
+           (tanggal, obat_id, jumlah_dus, jumlah_satuan, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli, harga_jual, user_id, stok_sebelum, stok_sesudah)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         RETURNING *`,
+        [
+          tanggal, obat_id, jumlah_dus, jumlah_satuan,
+          supplier_id || null, no_faktur || null,
+          no_batch || null, expired_batch || null,
+          catatan || null, harga_beli_per_satuan, harga_jual_per_satuan,
+          user_id, stok_sebelum, stok_sesudah,
+        ]
+      );
+      rows = ins.rows;
+
+      await client.query('UPDATE obat SET stok = $1, updated_at = NOW() WHERE id = $2', [stok_sesudah, obat_id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
     }
-    const obat = obatRows[0];
-
-    const jumlah_satuan = Math.round(parseFloat(jumlah_dus) * obat.satuan_per_dus);
-    const stok_sebelum = obat.stok;
-    const stok_sesudah = stok_sebelum + jumlah_satuan;
-
-    // Harga beli disimpan per satuan (input per dus → bagi isi per dus)
-    const spd = obat.satuan_per_dus || 1;
-    const harga_beli_per_satuan = harga_beli_dus ? parseFloat((parseFloat(harga_beli_dus) / spd).toFixed(4)) : null;
-    const harga_jual_per_satuan = harga_jual ? parseFloat(harga_jual) : null;
-    const pct = resolveBiayaSimpanPct(biaya_simpan_pct);
-    const biaya_simpan = harga_beli_per_satuan !== null ? parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4)) : null;
-
-    const { rows } = await pool.query(
-      `INSERT INTO barang_masuk
-         (tanggal, obat_id, jumlah_dus, jumlah_satuan, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli, harga_jual, user_id, stok_sebelum, stok_sesudah)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-       RETURNING *`,
-      [
-        tanggal, obat_id, jumlah_dus, jumlah_satuan,
-        supplier_id || null, no_faktur || null,
-        no_batch || null, expired_batch || null,
-        catatan || null, harga_beli_per_satuan, harga_jual_per_satuan,
-        user_id, stok_sebelum, stok_sesudah,
-      ]
-    );
-
-    // Update stok
-    await pool.query(
-      'UPDATE obat SET stok = $1, updated_at = NOW() WHERE id = $2',
-      [stok_sesudah, obat_id]
-    );
 
     await updateExpiredTerdekat(obat_id);
 
@@ -214,6 +240,7 @@ async function create(req, res) {
       message: 'Barang masuk berhasil dicatat',
     });
   } catch (err) {
+    if (balasHttpError(err, res)) return;
     console.error('barangMasuk.create:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -226,8 +253,15 @@ async function update(req, res) {
   const { id } = req.params;
   const { tanggal, jumlah_dus, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli_dus, harga_jual, biaya_simpan_pct, ppn_pct } = req.body;
 
-  if (!tanggal || !jumlah_dus || parseFloat(jumlah_dus) <= 0) {
-    return res.status(400).json({ success: false, message: 'Tanggal dan jumlah dus (lebih dari 0) wajib diisi' });
+  if (!tanggal || !jumlah_dus || !desimalPositif(jumlah_dus, 1000000)) {
+    return res.status(400).json({ success: false, message: 'Tanggal dan jumlah dus (angka lebih dari 0) wajib diisi' });
+  }
+  if (!tanggalValid(tanggal) || (expired_batch && !tanggalValid(expired_batch))) {
+    return res.status(400).json({ success: false, message: 'Format tanggal / expired tidak valid (YYYY-MM-DD)' });
+  }
+  if ((harga_beli_dus && nonNegatif(harga_beli_dus) === null) || (harga_jual && nonNegatif(harga_jual) === null)
+      || (ppn_pct && angkaDalamRentang(ppn_pct, 0, 100) === null)) {
+    return res.status(400).json({ success: false, message: 'Harga harus angka tidak negatif dan PPN 0–100' });
   }
   if (!supplier_id || !no_faktur || !no_batch || !expired_batch) {
     return res.status(400).json({ success: false, message: 'Supplier, No. Faktur, No. Batch, dan Expired Batch wajib diisi' });
@@ -236,7 +270,11 @@ async function update(req, res) {
     return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
   }
 
-  const client = await pool.connect();
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
   try {
     await client.query('BEGIN');
 
@@ -333,7 +371,11 @@ async function update(req, res) {
 async function remove(req, res) {
   const { id } = req.params;
 
-  const client = await pool.connect();
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
   try {
     await client.query('BEGIN');
 
@@ -401,9 +443,24 @@ async function createBulk(req, res) {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ success: false, message: 'Minimal 1 obat harus diisi' });
   }
+  if (!tanggalValid(tanggal) || !idValid(supplier_id)) {
+    return res.status(400).json({ success: false, message: 'Tanggal atau supplier tidak valid' });
+  }
+  if (ppn_pct && angkaDalamRentang(ppn_pct, 0, 100) === null) {
+    return res.status(400).json({ success: false, message: 'PPN harus antara 0 sampai 100' });
+  }
+  if (items.length > 200) {
+    return res.status(400).json({ success: false, message: 'Maksimal 200 baris per faktur' });
+  }
   for (const item of items) {
-    if (!item.obat_id || !item.jumlah_dus || parseFloat(item.jumlah_dus) <= 0) {
-      return res.status(400).json({ success: false, message: 'Setiap baris harus punya obat dan jumlah dus lebih dari 0' });
+    if (!item || !idValid(item.obat_id) || !desimalPositif(item.jumlah_dus, 1000000)) {
+      return res.status(400).json({ success: false, message: 'Setiap baris harus punya obat valid dan jumlah dus angka lebih dari 0' });
+    }
+    if (!tanggalValid(item.expired_batch)) {
+      return res.status(400).json({ success: false, message: 'Expired Batch tidak valid (YYYY-MM-DD)' });
+    }
+    if ((item.harga_beli_dus && nonNegatif(item.harga_beli_dus) === null) || (item.harga_jual && nonNegatif(item.harga_jual) === null)) {
+      return res.status(400).json({ success: false, message: 'Harga harus angka tidak negatif' });
     }
     if (!item.no_batch || !item.expired_batch) {
       return res.status(400).json({ success: false, message: 'Setiap baris wajib diisi No. Batch dan Expired Batch' });
@@ -418,10 +475,32 @@ async function createBulk(req, res) {
   // dihitung 1, bukan 2 (lihat hitungBiayaPesanPerObat).
   const jumlahObatUnikDiFaktur = new Set(items.map((it) => it.obat_id)).size;
 
-  const client = await pool.connect();
+  let client;
+  try { client = await pool.connect(); } catch (err) {
+    console.error('pool.connect:', err.message);
+    return res.status(503).json({ success: false, message: 'Database tidak tersedia, coba lagi sebentar' });
+  }
   let hasil = [];
   try {
     await client.query('BEGIN');
+
+    // Kunci semua obat yang terlibat dalam urutan id tetap (naik) — mencegah deadlock saat
+    // dua faktur dengan urutan item terbalik diproses bersamaan (temuan QA BIZ-04).
+    await client.query('SELECT id FROM obat WHERE id = ANY($1::int[]) ORDER BY id FOR UPDATE', [items.map((it) => Number(it.obat_id))]);
+
+    // Tolak baris ganda (faktur + obat + batch sama), baik di dalam request maupun yang sudah tercatat.
+    const kunciBaris = new Set();
+    for (const it of items) {
+      const kunci = it.obat_id + '|' + it.no_batch;
+      if (kunciBaris.has(kunci)) throw new HttpError(400, 'Ada baris dengan obat dan No. Batch yang sama dalam satu faktur');
+      kunciBaris.add(kunci);
+      const { rows: dup } = await client.query(
+        'SELECT 1 FROM barang_masuk WHERE no_faktur = $1 AND obat_id = $2 AND no_batch = $3 LIMIT 1',
+        [no_faktur, it.obat_id, it.no_batch]
+      );
+      if (dup.length) throw new HttpError(409, 'Faktur ini sudah tercatat untuk obat dan No. Batch yang sama');
+    }
+
     const biayaPesanPerObat = await hitungBiayaPesanPerObat(client, jumlahObatUnikDiFaktur);
 
     for (const item of items) {
@@ -488,11 +567,12 @@ async function createBulk(req, res) {
 
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     client.release();
     if (err instanceof BulkValidationError) {
       return res.status(400).json({ success: false, message: err.message });
     }
+    if (balasHttpError(err, res)) return;
     console.error('barangMasuk.createBulk:', err);
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }

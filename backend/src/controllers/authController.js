@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const pool = require('../db/pool');
 const { catat } = require('../services/aktivitasService');
+const { cabutTokenUser } = require('../middleware/authMiddleware');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -54,7 +55,8 @@ async function login(req, res) {
 }
 
 async function logout(req, res) {
-  // JWT stateless — token dihapus di sisi frontend
+  // Token yang dipakai sampai saat ini dicabut di server (selain dihapus di sisi frontend).
+  cabutTokenUser(req.user.id);
   await catat({ req, user: req.user, jenis: 'logout', deskripsi: 'Logout', status: 200 });
   return res.json({ success: true, message: 'Berhasil logout' });
 }

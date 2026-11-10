@@ -4,6 +4,7 @@ const { verifyToken } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleMiddleware');
 
 const router = Router();
+router.param('id', require('../middleware/validasiInput').paramId);
 router.use(verifyToken);
 
 router.get('/', getAll);

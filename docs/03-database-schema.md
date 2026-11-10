@@ -120,7 +120,7 @@ CREATE INDEX idx_obat_status ON obat(stok, rop);   -- untuk query status stok
 **Aturan status stok (computed, bukan kolom):**
 ```
 stok > rop                          → AMAN
-stok > rop AND stok <= rop * 1.2   → MENDEKATI ROP
+stok > rop AND stok <= rop * 1.5   → MENDEKATI ROP
 stok <= rop                         → HARUS REORDER
 ```
 

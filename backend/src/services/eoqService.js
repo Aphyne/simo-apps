@@ -1,10 +1,17 @@
 // EOQ Service — semua fungsi kalkulasi EOQ, Safety Stock, ROP, Total Cost
 // Model: Wilson (Economic Order Quantity)
 
-const Z_SCORE = { 90: 1.28, 95: 1.65, 97: 1.88, 99: 2.33 };
-
+// Nilai Z menurut docs/06-business-logic.md (aturan ">=" dari tabel service level):
+//   >= 99 → 2.33, >= 97 → 1.88, >= 95 → 1.65, selain itu 1.28 (acuan 90%).
+// Nilai kosong / bukan angka memakai default 95% (1.65), bukan nilai terendah.
 function getZ(service_level) {
-  return Z_SCORE[Number(service_level)] ?? 1.65;
+  if (service_level === null || service_level === undefined || service_level === '') return 1.65;
+  const sl = Number(service_level);
+  if (!Number.isFinite(sl)) return 1.65;
+  if (sl >= 99) return 2.33;
+  if (sl >= 97) return 1.88;
+  if (sl >= 95) return 1.65;
+  return 1.28;
 }
 
 // EOQ = √(2DS / H)
