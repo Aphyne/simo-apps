@@ -68,22 +68,6 @@ export function useSimulasiList() {
   })
 }
 
-export function useJalankanSimulasi() {
-  return useMutation({
-    mutationFn: async (payload: {
-      obat_id: number
-      demand_perubahan_pct: number
-      lead_time_baru: number
-      biaya_pesan_baru: number
-      biaya_simpan_baru: number
-    }) => {
-      const res = await api.post('/simulasi/jalankan', payload)
-      return res.data.data as HasilSimulasi
-    },
-    onError: () => toast.error('Gagal menjalankan simulasi'),
-  })
-}
-
 export function useSimpanSimulasi() {
   const qc = useQueryClient()
   return useMutation({

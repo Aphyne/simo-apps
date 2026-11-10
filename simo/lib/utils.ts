@@ -42,15 +42,3 @@ export function formatTanggalPendek(dateStr: string | null | undefined): string 
   }
 }
 
-export function formatTanggalInput(dateStr: string | null | undefined): string {
-  if (!dateStr) return ''
-  try {
-    return format(new Date(dateStr), 'yyyy-MM-dd')
-  } catch {
-    return ''
-  }
-}
-
-export function generateKodeObat(nomor: number): string {
-  return `OBT-${String(nomor).padStart(3, '0')}`
-}
