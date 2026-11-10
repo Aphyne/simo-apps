@@ -59,6 +59,9 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'SIMO API berjalan' });
 });
 
+// Health check database (publik, dibatasi laju, di-cache beberapa detik)
+app.use('/api/health', require('./routes/health'));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/aktivitas', aktivitasRoutes);
