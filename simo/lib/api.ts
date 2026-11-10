@@ -1,6 +1,8 @@
 import axios from 'axios'
 
 const api = axios.create({
+  // Tanpa timeout, request yang menggantung membuat halaman macet di skeleton selamanya.
+  timeout: 20000,
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
@@ -25,7 +27,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    // Gagal login (salah password) juga 401 — jangan muat ulang halaman, supaya pesan error tetap tampil.
+    const urlReq: string = error.config?.url ?? ''
+    const isLoginRequest = urlReq.includes('/auth/login')
+    if (error.response?.status === 401 && typeof window !== 'undefined' && !isLoginRequest) {
       sessionStorage.removeItem('simo_token')
       sessionStorage.removeItem('simo_user')
       document.cookie = 'simo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
