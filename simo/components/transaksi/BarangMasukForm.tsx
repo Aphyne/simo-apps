@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -94,7 +94,6 @@ export default function BarangMasukForm({ onSuccess }: Props) {
     register,
     control,
     handleSubmit,
-    watch,
     formState: { errors },
     reset,
   } = useForm<FormValues>({
@@ -109,8 +108,8 @@ export default function BarangMasukForm({ onSuccess }: Props) {
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
-  const watchedItems = watch('items')
-  const watchedPpn = watch('ppn_pct')
+  const watchedItems = useWatch({ control, name: 'items' })
+  const watchedPpn = useWatch({ control, name: 'ppn_pct' })
 
   async function onSubmit(values: FormValues) {
     if (!values.supplier_id_str) return

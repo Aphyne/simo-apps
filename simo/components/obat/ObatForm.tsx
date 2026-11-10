@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -84,7 +84,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<ObatFormData>({
     defaultValues: {
@@ -105,11 +105,12 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
     },
   })
 
-  const satuanValue = watch('satuan')
-  const kategoriValue = watch('kategori')
-  const serviceLevelValue = watch('service_level')
-  const demandHarian = watch('demand_harian')
-  const demandTahunan = watch('demand_tahunan')
+  const satuanValue = useWatch({ control, name: 'satuan' })
+  const kategoriValue = useWatch({ control, name: 'kategori' })
+  const serviceLevelValue = useWatch({ control, name: 'service_level' })
+  const demandHarian = useWatch({ control, name: 'demand_harian' })
+  const demandTahunan = useWatch({ control, name: 'demand_tahunan' })
+  const supplierIdValue = useWatch({ control, name: 'supplier_id' })
 
   // Auto-link demand harian → tahunan
   // demand_tahunan selalu bilangan bulat, demand_harian maks 2 desimal
@@ -425,7 +426,7 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
           <div className="space-y-1.5">
             <Label>Supplier</Label>
             <Select
-              value={watch('supplier_id') ? String(watch('supplier_id')) : '0'}
+              value={supplierIdValue ? String(supplierIdValue) : '0'}
               onValueChange={(v) => setValue('supplier_id', v && v !== '0' ? Number(v) : undefined)}
             >
               <SelectTrigger>
