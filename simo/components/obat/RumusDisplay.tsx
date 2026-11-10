@@ -228,7 +228,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       bgWarna: 'bg-emerald-100',
       judul: 'Safety Stock (SS) — Stok Pengaman',
       borderColor: 'border-l-emerald-500',
-      badgeColor: 'bg-emerald-100 text-emerald-600',
+      badgeColor: 'bg-emerald-100 text-emerald-700',
       langkah: langkah_safety_stock,
       definisi: 'Stok cadangan yang disimpan sebagai penyangga apabila permintaan tiba-tiba melonjak atau barang dari supplier terlambat datang. Semakin tinggi fluktuasi penjualan, semakin besar safety stock yang dibutuhkan.',
       params: [
@@ -246,7 +246,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
       bgWarna: 'bg-orange-100',
       judul: 'Reorder Point (ROP) — Titik Pemesanan Ulang',
       borderColor: 'border-l-orange-500',
-      badgeColor: 'bg-orange-100 text-orange-500',
+      badgeColor: 'bg-orange-100 text-orange-700',
       langkah: langkah_rop,
       definisi: 'Batas stok minimum. Ketika stok tersisa menyentuh angka ini, saatnya segera melakukan pemesanan ulang agar stok tidak habis sebelum barang baru tiba.',
       params: [

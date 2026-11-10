@@ -19,7 +19,7 @@ const JENIS_LABEL: Record<JenisAktivitas, { label: string; cls: string }> = {
   logout: { label: 'Logout', cls: 'bg-gray-100 text-gray-600' },
   halaman: { label: 'Halaman', cls: 'bg-blue-100 text-blue-700' },
   aksi: { label: 'Aksi Data', cls: 'bg-purple-100 text-purple-700' },
-  login_gagal: { label: 'Login Gagal', cls: 'bg-red-100 text-red-600' },
+  login_gagal: { label: 'Login Gagal', cls: 'bg-red-100 text-red-700' },
 }
 
 const inputCls =

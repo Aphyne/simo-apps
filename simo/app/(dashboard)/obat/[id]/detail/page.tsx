@@ -52,7 +52,7 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
           </button>
           <h1 className="text-xl font-bold text-gray-900">{obat.nama}</h1>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+            <span className="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
               {obat.kode}
             </span>
             <span className="text-sm text-gray-500">{obat.kategori}</span>

@@ -58,7 +58,7 @@ export default function AktivitasHariIni() {
         <ol className="space-y-2">
           {todayList.map((item, idx) => (
             <li key={item.nama} className="flex items-center gap-3 py-1.5 border-b border-gray-50 last:border-0">
-              <span className="text-xs font-bold text-gray-300 w-4 flex-shrink-0 text-center">
+              <span className="text-xs font-bold text-gray-500 w-4 flex-shrink-0 text-center">
                 {idx + 1}
               </span>
               <p className="flex-1 text-xs font-medium text-gray-800 truncate">{item.nama}</p>

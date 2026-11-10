@@ -260,7 +260,7 @@ export default function BarangMasukForm({ onSuccess }: Props) {
                 </div>
                 <div>
                   <FieldLabel>
-                    % Biaya Simpan <span className="text-gray-300 font-normal">(H)</span>
+                    % Biaya Simpan <span className="text-gray-500 font-normal">(H)</span>
                   </FieldLabel>
                   <div className="relative">
                     <Input type="number" min="0" max="100" step="0.5" className="pr-6"

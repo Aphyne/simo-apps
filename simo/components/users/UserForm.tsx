@@ -105,7 +105,7 @@ export default function UserForm({ initial, onClose }: Props) {
               <label className="text-sm font-medium text-gray-700">Status Akun</label>
               <button type="button" onClick={() => setIsActive(v => !v)}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                  isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
                 }`}>
                 {isActive ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                 {isActive ? 'Aktif' : 'Non-aktif'}

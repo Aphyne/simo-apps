@@ -171,7 +171,7 @@ export default function AnalisisDetailModal({ item, onClose }: Props) {
             <span className="text-sm font-semibold text-emerald-800">Penghematan per tahun</span>
             <div className="text-right">
               <div className="text-lg font-bold text-emerald-700">{formatRupiah(item.penghematan)}</div>
-              <div className="text-xs text-emerald-500">lebih hemat {item.persen_hemat}%</div>
+              <div className="text-xs text-emerald-700">lebih hemat {item.persen_hemat}%</div>
             </div>
           </div>
         </div>

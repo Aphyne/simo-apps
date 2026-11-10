@@ -155,7 +155,7 @@ export default function BarangMasukEditForm({ item, onSuccess }: Props) {
           {errors.jumlah_dus && <p className="text-xs text-red-600 mt-1">Harus &gt; 0</p>}
         </div>
         <div>
-          <FieldLabel>% Biaya Simpan <span className="text-gray-300 font-normal">(H)</span></FieldLabel>
+          <FieldLabel>% Biaya Simpan <span className="text-gray-500 font-normal">(H)</span></FieldLabel>
           <div className="relative">
             <Input type="number" min="0" max="100" step="0.5" className="pr-6"
               {...register('biaya_simpan_pct', { valueAsNumber: true, min: 0, max: 100 })} />

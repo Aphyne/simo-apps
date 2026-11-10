@@ -204,27 +204,27 @@ export default function PerhitunganTable() {
                       <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{obat.kode}</td>
                       <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{obat.nama}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-gray-700">
-                        {obat.demand_tahunan ? formatAngka(obat.demand_tahunan, 0) : <span className="text-gray-300">—</span>}
+                        {obat.demand_tahunan ? formatAngka(obat.demand_tahunan, 0) : <span className="text-gray-500">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.eoq != null
                           ? <span className="font-semibold text-blue-700">{formatAngka(obat.eoq, 1)}</span>
-                          : <span className="text-xs text-gray-300 italic">—</span>}
+                          : <span className="text-xs text-gray-500 italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.safety_stock != null
                           ? <span className="font-semibold text-emerald-700">{formatAngka(obat.safety_stock, 2)}</span>
-                          : <span className="text-xs text-gray-300 italic">—</span>}
+                          : <span className="text-xs text-gray-500 italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.rop != null
                           ? <span className="font-semibold text-orange-700">{formatAngka(obat.rop, 2)}</span>
-                          : <span className="text-xs text-gray-300 italic">—</span>}
+                          : <span className="text-xs text-gray-500 italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {obat.total_biaya != null
                           ? formatRupiah(obat.total_biaya)
-                          : <span className="text-xs text-gray-300 italic">—</span>}
+                          : <span className="text-xs text-gray-500 italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-center whitespace-nowrap">
                         <StatusBadge status={obat.status} />

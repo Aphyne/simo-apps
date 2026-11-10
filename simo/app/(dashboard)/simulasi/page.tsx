@@ -35,7 +35,7 @@ function calcTC(D: number, S: number, eoq: number | null, H: number): number | n
 
 // ── Helper UI ─────────────────────────────────────────────────────────────────
 function Selisih({ val, isRupiah = false }: { val: number | null; isRupiah?: boolean }) {
-  if (val === null) return <span className="text-gray-300">—</span>
+  if (val === null) return <span className="text-gray-500">—</span>
   if (Math.abs(val) < 0.01) return <span className="text-xs text-gray-500">tidak berubah</span>
   const plus = val > 0
   const label = isRupiah ? formatRupiah(Math.abs(val)) : Math.abs(val).toLocaleString('id-ID')

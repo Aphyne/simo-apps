@@ -178,7 +178,7 @@ Willow style: white bg, colored icon circle, dark value text. Semua card konsist
 "bg-orange-100 text-orange-700 text-xs font-medium px-2.5 py-0.5 rounded-full"
 
 // Kritis / Habis
-"bg-red-100 text-red-600 text-xs font-medium px-2.5 py-0.5 rounded-full"
+"bg-red-100 text-red-700 text-xs font-medium px-2.5 py-0.5 rounded-full"
 
 // Expired / Kadaluarsa
 "bg-gray-100 text-gray-500 text-xs font-medium px-2.5 py-0.5 rounded-full"
