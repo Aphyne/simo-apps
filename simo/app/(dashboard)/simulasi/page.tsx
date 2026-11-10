@@ -13,6 +13,7 @@ import {
 } from '@/hooks/useSimulasi'
 import { useObatList } from '@/hooks/useObat'
 import { formatRupiah, formatTanggal } from '@/lib/utils'
+import AdminOnly from '@/components/layout/AdminOnly'
 
 // ── Kalkulasi EOQ client-side (rumus sama persis dengan backend) ───────────────
 const Z_SCORE: Record<number, number> = { 90: 1.28, 95: 1.65, 97: 1.88, 99: 2.33 }
@@ -143,7 +144,7 @@ function RiwayatSimulasi() {
 }
 
 // ── Halaman utama ──────────────────────────────────────────────────────────────
-export default function SimulasiPage() {
+function IsiSimulasiPage() {
   const { data: obatData } = useObatList({ page: 1, limit: 500 })
   const obatList = obatData?.data ?? []
   const simpan = useSimpanSimulasi()
@@ -594,4 +595,8 @@ export default function SimulasiPage() {
 
     </div>
   )
+}
+
+export default function SimulasiPage() {
+  return (<AdminOnly><IsiSimulasiPage /></AdminOnly>)
 }

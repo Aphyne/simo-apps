@@ -37,7 +37,7 @@ export default function UserTable({ users, isLoading }: Props) {
     <>
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {/* Toolbar */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-gray-100">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input

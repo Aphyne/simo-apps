@@ -5,8 +5,9 @@ import { ChevronLeft } from 'lucide-react'
 import ObatForm from '@/components/obat/ObatForm'
 import { useCreateObat } from '@/hooks/useObat'
 import type { ObatFormData } from '@/types/obat'
+import AdminOnly from '@/components/layout/AdminOnly'
 
-export default function TambahObatPage() {
+function IsiTambahObatPage() {
   const router = useRouter()
   const createMutation = useCreateObat()
 
@@ -37,4 +38,8 @@ export default function TambahObatPage() {
       />
     </div>
   )
+}
+
+export default function TambahObatPage() {
+  return (<AdminOnly><IsiTambahObatPage /></AdminOnly>)
 }
