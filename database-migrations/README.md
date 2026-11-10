@@ -69,7 +69,7 @@ File diurutkan dan dijalankan secara berurutan berdasarkan prefix angka:
 | `005_create_barang_keluar.sql` | Migration | Tabel barang_keluar |
 | `006_create_simulasi_skenario.sql` | Migration | Tabel simulasi_skenario |
 | `007_create_pengaturan.sql` | Migration | Tabel pengaturan |
-| `008_seed_users.sql` | Seed | User admin & staf default |
+| `008_seed_users.sql` | Seed | User admin & staf default (password awal `password` — **wajib diganti** dengan `node backend/scripts/ganti-password.js` sebelum dipakai sungguhan) |
 | `009_seed_pengaturan.sql` | Seed | Pengaturan sistem default |
 | `010_seed_obat_contoh.sql` | Seed | 10 obat contoh + 3 supplier |
 
