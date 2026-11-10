@@ -73,12 +73,14 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
               Hitung Ulang
             </Button>
           )}
-          <Link href={`/obat/${id}/edit`}>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Pencil className="w-3.5 h-3.5 mr-1.5" />
-              Edit Data
-            </Button>
-          </Link>
+          {isAdmin && (
+            <Link href={`/obat/${id}/edit`}>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                Edit Data
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

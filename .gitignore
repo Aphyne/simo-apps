@@ -23,3 +23,6 @@ Thumbs.db
 
 # Claude Code skills (tooling lokal, bukan bagian aplikasi)
 .claude/
+
+# Berkas backup database (berisi data sensitif)
+backend/backups/

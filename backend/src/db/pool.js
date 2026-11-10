@@ -9,7 +9,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
   connectionTimeoutMillis: 30000,
   idleTimeoutMillis: 10000,
-  max: 3,
+  max: Number(process.env.DB_POOL_MAX) || 3, // naikkan lewat DB_POOL_MAX bila banyak pengguna bersamaan
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
 });

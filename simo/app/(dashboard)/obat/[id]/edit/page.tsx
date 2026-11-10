@@ -6,8 +6,9 @@ import { ChevronLeft } from 'lucide-react'
 import ObatForm from '@/components/obat/ObatForm'
 import { useObatById, useUpdateObat } from '@/hooks/useObat'
 import type { ObatFormData } from '@/types/obat'
+import AdminOnly from '@/components/layout/AdminOnly'
 
-export default function EditObatPage({ params }: { params: Promise<{ id: string }> }) {
+function IsiEditObatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const { data: obat, isLoading } = useObatById(id)
@@ -49,4 +50,8 @@ export default function EditObatPage({ params }: { params: Promise<{ id: string 
       />
     </div>
   )
+}
+
+export default function EditObatPage(props: { params: Promise<{ id: string }> }) {
+  return (<AdminOnly><IsiEditObatPage {...props} /></AdminOnly>)
 }

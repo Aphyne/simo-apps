@@ -1,0 +1,7 @@
+node_modules/
+pgenv/data/
+pgenv/pg.ready
+pgenv/pg.stop
+*.log
+*.out
+hasil/

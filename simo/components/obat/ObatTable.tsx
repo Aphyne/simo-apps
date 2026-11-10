@@ -113,7 +113,7 @@ export default function ObatTable() {
     <div className="space-y-4">
 
       {/* ── Summary Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon={Pill}          label="Total Obat"     value={totalObat}    sublabel="jenis terdaftar" warna="blue"   />
         <StatCard icon={AlertTriangle} label="Perlu Reorder"  value={perluReorder} sublabel="stok ≤ ROP"      warna="red"    />
         <StatCard icon={TrendingDown}  label="Mendekati ROP"  value={mendekatiROP} sublabel="perlu diawasi"   warna="orange" />

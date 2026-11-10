@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import AlertNotification from '@/components/ui/AlertNotification'
 import {
@@ -9,7 +9,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-export default function Header() {
+interface HeaderProps {
+  // Tombol menu hanya tampil di layar < lg (sidebar menjadi drawer)
+  menuOpen?: boolean
+  onMenuClick?: () => void
+}
+
+export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
   const { user } = useAuth()
 
   const initials = (user?.nama ?? '?')
@@ -20,12 +26,25 @@ export default function Header() {
     .toUpperCase()
 
   return (
-    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
-      {/* Kiri — nama apotek */}
-      <p className="text-sm font-medium text-gray-500">Apotek Rezky Medika</p>
+    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between gap-2 px-4 sm:px-6 flex-shrink-0">
+      {/* Kiri — tombol menu (HP/tablet) + nama apotek */}
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          id="tombol-menu"
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Buka menu"
+          aria-expanded={menuOpen}
+          aria-controls="sidebar-nav"
+          className="-ml-2 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+        >
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        </button>
+        <p className="truncate text-sm font-medium text-gray-500">Apotek Rezky Medika</p>
+      </div>
 
       {/* Kanan — alert + profil */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-shrink-0 items-center gap-3">
         <AlertNotification />
 
         <div className="w-px h-5 bg-gray-200" />
@@ -36,7 +55,7 @@ export default function Header() {
               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-semibold flex-shrink-0">
                 {initials}
               </div>
-              <p className="text-sm font-medium text-gray-900 leading-tight">
+              <p className="hidden sm:block text-sm font-medium text-gray-900 leading-tight">
                 {user?.nama ?? '—'}
               </p>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400" />

@@ -1,0 +1,15 @@
+{
+  "name": "simo-qa-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Skrip uji QA SIMO (Postgres lokal sementara, suite regresi, smoke produksi, beban). Bukan bagian aplikasi.",
+  "license": "ISC",
+  "dependencies": {
+    "autocannon": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "embedded-postgres": "^18.6.0-beta.19",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.0"
+  }
+}

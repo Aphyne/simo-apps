@@ -154,7 +154,7 @@ export default function BarangMasukTable() {
     <div className="space-y-4">
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {summaryLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
