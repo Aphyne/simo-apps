@@ -307,7 +307,7 @@ export default function RumusDisplay({ data }: { data: DetailPerhitungan }) {
 
       {/* ── Modal Detail Langkah ────────────────────────────────────────── */}
       <Dialog open={openModal !== null} onOpenChange={(open) => { if (!open) setOpenModal(null) }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold text-gray-800 pr-6">
               {activeCard?.judul}

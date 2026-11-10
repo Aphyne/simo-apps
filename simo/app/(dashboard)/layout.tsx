@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Sidebar from '@/components/layout/Sidebar'
 import Header from '@/components/layout/Header'
 import ActivityTracker from '@/components/layout/ActivityTracker'
@@ -13,6 +14,20 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { hydrate } = useAuth()
+  const pathname = usePathname()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [pathMenu, setPathMenu] = useState(pathname)
+
+  // Drawer menu (layar kecil) ikut tertutup saat pindah halaman
+  if (pathMenu !== pathname) {
+    setPathMenu(pathname)
+    setMenuOpen(false)
+  }
+
+  const tutupMenu = useCallback(() => {
+    setMenuOpen(false)
+    document.getElementById('tombol-menu')?.focus()
+  }, [])
 
   useEffect(() => {
     hydrate()
@@ -21,10 +36,10 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       <ActivityTracker />
-      <Sidebar />
+      <Sidebar open={menuOpen} onClose={tutupMenu} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-6 bg-gray-50 overflow-auto">
+        <Header menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
+        <main className="flex-1 p-4 sm:p-6 bg-gray-50 overflow-auto">
           <GlobalErrorBanner />
           {children}
         </main>

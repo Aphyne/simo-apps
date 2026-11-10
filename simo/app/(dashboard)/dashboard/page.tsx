@@ -53,14 +53,14 @@ export default function DashboardPage() {
 
       {/* ── Row 1: 5 Stat Cards ─────────────────────────────────────── */}
       {loadingSummary ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="rounded-xl bg-blue-400/60 h-24 animate-pulse" />
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-gray-200 bg-gray-100 h-24 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <StatCard label="Perlu Reorder"     value={cards?.obat_reorder ?? 0}      icon={AlertTriangle} warna="red"    sublabel="stok ≤ ROP"         featured />
           <StatCard label="Total Obat"         value={cards?.total_obat ?? 0}         icon={Pill}          warna="blue"   sublabel="jenis terdaftar" />
           <StatCard label="Penjualan Hari Ini" value={cards?.penjualan_hari_ini ?? 0} icon={ShoppingCart}  warna="green"  sublabel="unit terjual hari ini" />
@@ -139,7 +139,7 @@ export default function DashboardPage() {
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
 
       <Dialog open={openMasuk} onOpenChange={setOpenMasuk}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Catat Stok Masuk</DialogTitle>
           </DialogHeader>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
       </Dialog>
 
       <Dialog open={openKeluar} onOpenChange={setOpenKeluar}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Catat Stok Keluar</DialogTitle>
           </DialogHeader>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
       </Dialog>
 
       <Dialog open={openTambahObat} onOpenChange={setOpenTambahObat}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tambah Obat Baru</DialogTitle>
           </DialogHeader>

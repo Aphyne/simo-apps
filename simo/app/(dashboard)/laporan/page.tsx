@@ -1178,7 +1178,7 @@ function LaporanContent() {
     <div className="space-y-5">
 
       {/* Tab Navigation */}
-      <div className="flex p-1 bg-white border border-gray-200 rounded-xl">
+      <div className="flex p-1 bg-white border border-gray-200 rounded-xl overflow-x-auto">
         {TABS.map(tab => (
           <button
             key={tab.id}

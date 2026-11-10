@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth.store'
@@ -20,6 +21,7 @@ import {
   Activity,
   ShoppingCart,
   LogOut,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -51,7 +53,13 @@ const navItems: NavItem[] = [
   { label: 'Pemantauan', href: '/pemantauan', icon: Activity, superadminOnly: true },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  // Hanya dipakai di layar < lg: sidebar menjadi drawer. Di desktop sidebar tetap statis.
+  open?: boolean
+  onClose?: () => void
+}
+
+export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const { logout } = useAuth()
@@ -63,12 +71,71 @@ export default function Sidebar() {
       : !item.superadminOnly && (!item.adminOnly || user?.role === 'admin')
   )
 
+  const asideRef = useRef<HTMLElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  // Drawer terbuka: fokus ke tombol tutup, Esc menutup, Tab berputar di dalam drawer.
+  useEffect(() => {
+    if (!open) return
+    closeRef.current?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose?.()
+        return
+      }
+      if (e.key !== 'Tab' || !asideRef.current) return
+      const fokusable = asideRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+      if (fokusable.length === 0) return
+      const pertama = fokusable[0]
+      const terakhir = fokusable[fokusable.length - 1]
+      if (e.shiftKey && document.activeElement === pertama) {
+        e.preventDefault()
+        terakhir.focus()
+      } else if (!e.shiftKey && document.activeElement === terakhir) {
+        e.preventDefault()
+        pertama.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
   return (
-    <aside className="sticky top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <>
+      {/* Latar gelap drawer (hanya layar kecil) */}
+      <div
+        aria-hidden="true"
+        onClick={onClose}
+        className={cn(
+          'fixed inset-0 z-30 bg-gray-900/40 transition-opacity lg:hidden',
+          open ? 'opacity-100' : 'pointer-events-none opacity-0'
+        )}
+      />
+    <aside
+      id="sidebar-nav"
+      ref={asideRef}
+      aria-label="Menu utama"
+      className={cn(
+        'fixed inset-y-0 left-0 z-40 h-dvh w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0',
+        'lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 lg:visible',
+        open
+          ? 'translate-x-0 visible [transition:transform_200ms,visibility_0s]'
+          : '-translate-x-full invisible [transition:transform_200ms,visibility_0s_200ms]'
+      )}
+    >
       {/* Brand */}
       <div className="px-6 h-14 flex items-center gap-2 border-b border-gray-200">
         <Image src="/logo.png" alt="" width={40} height={40} className="flex-shrink-0" />
         <h1 className="text-xl font-bold text-gray-900 tracking-tight">SIMO</h1>
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          aria-label="Tutup menu"
+          className="ml-auto rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+        >
+          <X className="w-5 h-5" aria-hidden="true" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -81,6 +148,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isActive
@@ -107,5 +175,6 @@ export default function Sidebar() {
         <p className="text-xs text-gray-500">SIMO v1.0 · 2026</p>
       </div>
     </aside>
+    </>
   )
 }
