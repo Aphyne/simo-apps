@@ -30,7 +30,7 @@ Sistem ini mengimplementasikan metode:
 | [04-api-endpoints.md](04-api-endpoints.md) | Spesifikasi REST API (Express.js backend) |
 | [05-frontend-routes.md](05-frontend-routes.md) | Routing & komponen Next.js |
 | [06-business-logic.md](06-business-logic.md) | Rumus EOQ, ROP, SS, TC — logika kalkulasi |
-| [07-ui-guidelines.md](07-ui-guidelines.md) | Design system, warna, komponen UI |
+| [DESIGN.md](DESIGN.md) | Design system (sumber tunggal): token, aturan, progres |
 | [08-development-roadmap.md](08-development-roadmap.md) | Fase pengembangan bertahap |
 | [09-formula-deep-dive.md](09-formula-deep-dive.md) | Penjelasan mendalam rumus EOQ, ROP, SS, TC (mengapa ada angka 2, Z-score, dll.) |
 

@@ -235,6 +235,10 @@ Risiko dan penanganan:
 | Typo nama baru menghasilkan kelas tak dikenal (tampil tanpa gaya, tanpa error) | AC bukti CSS + AC screenshot; ditambah grep daftar kelas `(brand|danger|success|warning)-\d+` terhadap daftar skala yang didefinisikan. |
 | Mengubah token kelak (mis. `brand-600`) memengaruhi `border-brand-500` fokus, dll. | Disengaja; itu tujuan sumber tunggal. DESIGN.md menjelaskan skala mana dipakai untuk apa. |
 
+#### 3.5.1 Revisi v1.1 (10 Nov 2026, disetujui Sylpha)
+1. Daftar prefiks 3.5 butir 1 diperluas: `border-t/-l/-x`, `shadow-*`, dan `ring-offset-*` pada skala brand/status ikut dimigrasi (nilai identik; hanya memperluas prefiks, bukan kebutuhan baru). Kelas di 3.4 (gray-800, purple, green, yellow, black, transparent, white/NN, dll.) tetap tidak dimigrasi dan dicatat sebagai penyimpangan.
+2. Tahap B boleh dijalankan per kelompok berkas (b..g), bukan per jenis warna, asalkan tiap kelompok lolos tangkapan layar (AC-DS-1), bukti CSS identik, dan dapat dikembalikan sendiri.
+
 ### 3.6 Cara mengubah tampilan setelah migrasi (untuk DESIGN.md)
 Ubah satu baris di `globals.css`, misalnya `--color-brand-600: oklch(...)`, dan seluruh tombol primer/nav aktif/teks tautan berubah. Warna netral diubah lewat `--color-fg-muted`, `--color-line`, dst.
 
@@ -267,7 +271,7 @@ Setelah tugas ini, "sumber tunggal" berlaku untuk **kelas Tailwind**. Warna di R
 | Layout sidebar | `w-64`, brand title dst. | pohon menu ber-section (UTAMA/TRANSAKSI/...) | tidak lengkap | sidebar datar, tanpa section; menu Simulasi/Analisis/Perhitungan dinonaktifkan (dikomentari) | **07 usang**. FE-AGENT bagian 5 juga memuat halaman nonaktif; tandai. |
 | Halaman | 13 halaman + checklist; tidak ada Reorder, Pemantauan | tidak ada | n/a | Ada `/reorder`, `/pemantauan` (superadmin), `/login`, `not-found`, `error` | Checklist FE-AGENT kurang dua halaman. |
 | Checklist | Monitoring belum dicentang | tidak ada | tidak ada | `/monitoring` ada | Dipakai sebagai dasar "Progres penataan" (bagian 5.2). |
-| Gambar acuan | menyebut Willow/Medicare/Pharmo | tidak | menyebut Akuris di `docs/design-reference/` | 2 folder: `design-reference/` (17 gambar Akuris), `ui-design-reference/` (4: Satu.jpg, Dua.jpg, Tiga.jpg, Empat.png, isi tidak diperiksa Sylpha) | Gabung ke satu folder (K2), lihat 5.4. |
+| Gambar acuan | menyebut Willow/Medicare/Pharmo | tidak | menyebut Akuris di `docs/design-reference/` | 2 folder: `design-reference/` (17 gambar Akuris), `ui-design-reference/` (4 gambar; **SUDAH DIHAPUS** di commit 0fe317d, keputusan Boss 10 Nov 2026) | Satu folder: `docs/design-reference/` (K2), lihat 5.4. |
 
 Ringkas: **07-ui-guidelines.md dominan usang** (status kuning, nav biru muda, kartu `p-6`/`text-3xl`, tombol Success/Warning, pohon sidebar). Bagian yang masih layak dipindah: format angka/tanggal, daftar ikon Lucide, aturan loading/empty state (verifikasi), catatan Inter. FE-AGENT.md akurat untuk hampir semua kelas, kecuali bagian halaman nonaktif dan checklist.
 
@@ -346,7 +350,7 @@ Sumber tunggal Progres: DESIGN.md bagian 8 (di dokumen). Halaman /design menampi
 Bagian "Design references: Willow, Medicare, Pharmo" pindah ke Riwayat/Referensi di DESIGN.md.
 
 ### 5.4 Satu folder gambar acuan (K2)
-Rekomendasi: satu folder `docs/design-reference/` dengan subfolder `akuris/` (17 gambar WhatsApp, pindah) dan `simo-mockup/` (Satu/Dua/Tiga.jpg, Empat.png, pindah dari `docs/ui-design-reference/`), plus `README.md` satu paragraf per subfolder (apa isinya, kapan diambil). Folder `ui-design-reference/` dihapus setelah dipindah. Gambar tidak diubah isinya. `docs/design-reference/` sudah disebut komentar `app/design/layout.tsx` dan jalur itu dipertahankan. Isi 4 gambar `ui-design-reference` belum diperiksa Sylpha; Kiri memeriksa sebelum memindahkan dan melaporkan bila ada yang ternyata acuan UI aplikasi yang berbeda.
+**Putusan akhir (Boss, 10 Nov 2026):** satu folder `docs/design-reference/` berisi 17 gambar Akuris (Okt 2026) sebagai acuan redesign; tidak dipindah atau diubah (tanpa subfolder `akuris/` dan `simo-mockup/`, tanpa README). `docs/ui-design-reference/` (referensi lama Mei 2026) **sudah dihapus** (commit 0fe317d); pemulihan bila perlu: `git checkout 9938725 -- docs/ui-design-reference`. DESIGN.md bagian 7 menyebut folder ini. Rekomendasi awal Sylpha (memindahkan ke subfolder) tidak dilaksanakan.
 
 ---
 
@@ -444,7 +448,7 @@ Urutan wajib: T-D0 -> T-D1 -> T-D2 -> T-D3 (paralel dengan T-D4 bila berkas berb
 | Task | Isi | Berkas yang disentuh | Bergantung pada |
 |---|---|---|---|
 | **T-D0** Garis dasar | Jalankan pencacah regex (pola 3.5) dan simpan hasil; tangkapan layar "sebelum" (AC-DS-1); catat jumlah error lint, `tsc`, build. Tidak mengubah berkas proyek. | (tidak ada) | -- |
-| **T-D1** Dokumen | Tulis `docs/DESIGN.md` (struktur 4.2, nilai token sesuai 3.3, aturan 5.3, Progres 5.2, Motion 6.2, tabel konflik diputuskan dengan 4.1); verifikasi butir bertanda "perlu verifikasi" (responsif, helper format, px radius di browser). Ganti isi `docs/FE-AGENT.md` jadi penunjuk (<= 40 baris, memuat aturan 5.3 ringkas). Hapus `docs/07-ui-guidelines.md`. Perbarui rujukan: `docs/02-folder-structure.md`, `docs/README.md`, `docs/pm/PLAN.md`. Satukan folder gambar (5.4): pindah `docs/ui-design-reference/*` ke `docs/design-reference/simo-mockup/`, 17 gambar ke `docs/design-reference/akuris/`, tambahkan README singkat. | `docs/DESIGN.md` (baru), `docs/FE-AGENT.md`, `docs/07-ui-guidelines.md` (hapus), `docs/02-folder-structure.md`, `docs/README.md`, `docs/pm/PLAN.md`, `docs/design-reference/**`, `docs/ui-design-reference/**` (pindah/hapus) | T-D0 |
+| **T-D1** Dokumen | Tulis `docs/DESIGN.md` (struktur 4.2, nilai token sesuai 3.3, aturan 5.3, Progres 5.2, Motion 6.2, tabel konflik diputuskan dengan 4.1); verifikasi butir bertanda "perlu verifikasi" (responsif, helper format, px radius di browser). Ganti isi `docs/FE-AGENT.md` jadi penunjuk (<= 40 baris, memuat aturan 5.3 ringkas). Hapus `docs/07-ui-guidelines.md`. Perbarui rujukan: `docs/02-folder-structure.md`, `docs/README.md`, `docs/pm/PLAN.md`. Folder gambar (5.4): **tidak ada pemindahan**; `docs/ui-design-reference/` sudah dihapus, `docs/design-reference/` dibiarkan apa adanya. | `docs/DESIGN.md` (baru), `docs/FE-AGENT.md`, `docs/07-ui-guidelines.md` (hapus), `docs/02-folder-structure.md`, `docs/README.md`, `docs/pm/PLAN.md`, (`docs/design-reference/` tidak disentuh) | T-D0 |
 | **T-D2** Token | Tambah blok `@theme inline` (3.2) ke `globals.css` TANPA mengganti pemakaian apa pun; buktikan (a)(b) 3.2 (AC-DS-1b). Jangan menyentuh blok shadcn lama. Boleh menghapus blok `@layer base :root` HSL mati hanya bila terbukti tidak mengubah build (opsional; default: biarkan, catat di DESIGN.md). | `simo/app/globals.css` | T-D0 |
 | **T-D3** /design | (1) bagian Motion baru (`app/design/motion/section.tsx`), (2) bagian Progres (`app/design/progres/section.tsx` + `data.ts`), (3) grup menu "Workspace" + penanda versi + teks tautan DESIGN.md di `layout.tsx`/`page.tsx`, (4) koreksi konten usang (px radius, judul halaman, footer, swatch green/emerald), (5) bagian Warna menampilkan token tingkat 2. | `simo/app/design/layout.tsx`, `page.tsx`, `_components.tsx`, `warna/section.tsx`, `radius-elevasi/section.tsx`, `tipografi/section.tsx`, `motion/section.tsx` (baru), `progres/section.tsx` + `data.ts` (baru) | T-D1 (agar angka/teks selaras DESIGN.md), T-D2 (untuk Warna) |
 | **T-D4** Akses | `components/layout/SuperadminOnly.tsx` (baru), bungkus `app/design/layout.tsx` (bagian layout, bukan konten), ubah `middleware.ts` sesuai 6.5. | `simo/components/layout/SuperadminOnly.tsx` (baru), `simo/middleware.ts`, `simo/app/design/layout.tsx` | T-D3 (berbagi `layout.tsx`: kerjakan berurutan, bukan paralel) |
@@ -501,3 +505,4 @@ Surat Tugas tidak bernomor FR; dipetakan seperti berikut.
 | Versi | Tanggal | Perubahan | Disetujui |
 |---|---|---|---|
 | 1.0 | 2026-11-10 | Draf awal spesifikasi | Menunggu Niki/Boss |
+| 1.1 | 2026-11-10 | Tambah kelas border-t/-l/-x, shadow-*, ring-offset-*; Tahap B per kelompok berkas sah | Sylpha (dicatat sesi utama) |

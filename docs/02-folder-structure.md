@@ -23,8 +23,10 @@ docs/
 ├── 04-api-endpoints.md       ← spesifikasi REST API
 ├── 05-frontend-routes.md     ← routing & komponen Next.js
 ├── 06-business-logic.md      ← rumus EOQ, ROP, SS, TC
-├── 07-ui-guidelines.md       ← design system
-└── 08-development-roadmap.md ← fase pengembangan
+├── 08-development-roadmap.md ← fase pengembangan
+├── DESIGN.md                 ← design system (sumber tunggal)
+├── FE-AGENT.md               ← penunjuk ke DESIGN.md untuk agent
+└── design-reference/         ← gambar acuan redesign (Akuris)
 ```
 
 ---
