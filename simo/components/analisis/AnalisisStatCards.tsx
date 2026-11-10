@@ -74,7 +74,7 @@ export default function AnalisisStatCards({ ringkasan, isLoading }: Props) {
           <p className="text-lg font-bold leading-tight text-emerald-700">
             {ringkasan ? formatRupiah(ringkasan.total_penghematan) : '—'}
           </p>
-          <p className="text-xs text-emerald-500 mt-0.5">
+          <p className="text-xs text-emerald-700 mt-0.5">
             {ringkasan ? `${ringkasan.persen_hemat_total}% lebih hemat` : ''}
           </p>
         </div>

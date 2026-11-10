@@ -21,15 +21,26 @@ function hitungEOQ(D, S, H) {
   return Math.sqrt((2 * D * S) / H);
 }
 
-// SS = Z × σ × √LT
+// Lead time harus >= 1 hari. Nilai tidak valid (<= 0, NaN, kosong) diganti 1 hari (minimum)
+// supaya √LT tidak menghasilkan NaN. Penggantian dilaporkan lewat `lead_time_diganti`.
+const LEAD_TIME_MIN = 1;
+function normalisasiLeadTime(lead_time) {
+  const lt = parseInt(lead_time);
+  if (!Number.isFinite(lt) || lt < LEAD_TIME_MIN) return LEAD_TIME_MIN;
+  return lt;
+}
+
+// SS = Z × σ × √LT  (σ negatif dianggap 0 → SS tidak pernah negatif)
 function hitungSafetyStock(service_level, sigma, lead_time) {
   const Z = getZ(service_level);
-  return Z * (sigma || 0) * Math.sqrt(lead_time || 1);
+  const s = Number(sigma);
+  const sigmaAman = Number.isFinite(s) && s > 0 ? s : 0;
+  return Math.max(0, Z * sigmaAman * Math.sqrt(normalisasiLeadTime(lead_time)));
 }
 
 // ROP = (d × LT) + SS
 function hitungROP(demand_harian, lead_time, safety_stock) {
-  return (demand_harian || 0) * (lead_time || 1) + safety_stock;
+  return (demand_harian || 0) * normalisasiLeadTime(lead_time) + safety_stock;
 }
 
 // TC = (D/Q × S) + (Q/2 × H)
@@ -46,7 +57,7 @@ function kalkulasiLengkap(obat) {
   const H = parseFloat(obat.biaya_simpan) || 0;
   const d = parseFloat(obat.demand_harian) || 0;
   const sigma = parseFloat(obat.std_dev_demand) || 0;
-  const LT = parseInt(obat.lead_time) || 1;
+  const LT = normalisasiLeadTime(obat.lead_time);
   const sl = obat.service_level || 95;
 
   const eoq = hitungEOQ(D, S, H);
@@ -68,8 +79,9 @@ function kalkulasiStepByStep(obat) {
   const S = parseFloat(obat.biaya_pesan) || 0;
   const H = parseFloat(obat.biaya_simpan) || 0;
   const d = parseFloat(obat.demand_harian) || 0;
-  const sigma = parseFloat(obat.std_dev_demand) || 0;
-  const LT = parseInt(obat.lead_time) || 1;
+  const sigma = Math.max(0, parseFloat(obat.std_dev_demand) || 0);
+  const lead_time_diganti = parseInt(obat.lead_time) !== normalisasiLeadTime(obat.lead_time);
+  const LT = normalisasiLeadTime(obat.lead_time);
   const sl = obat.service_level || 95;
   const Z = getZ(sl);
 
@@ -143,6 +155,7 @@ function kalkulasiStepByStep(obat) {
   return {
     obat: { id: obat.id, nama: obat.nama, kode: obat.kode },
     input: { D, S, H, LT, Z, sigma, demand_harian: d },
+    ...(lead_time_diganti ? { catatan_lead_time: `Lead time tidak valid (${obat.lead_time}), dipakai nilai minimum ${LEAD_TIME_MIN} hari.` } : {}),
     langkah_eoq,
     langkah_safety_stock,
     langkah_rop,
@@ -150,4 +163,4 @@ function kalkulasiStepByStep(obat) {
   };
 }
 
-module.exports = { kalkulasiLengkap, kalkulasiStepByStep, getZ };
+module.exports = { kalkulasiLengkap, kalkulasiStepByStep, getZ, normalisasiLeadTime };

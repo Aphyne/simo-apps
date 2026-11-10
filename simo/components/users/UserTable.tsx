@@ -121,7 +121,7 @@ export default function UserTable({ users, isLoading }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      u.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                      u.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
                     }`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${u.is_active ? 'bg-emerald-500' : 'bg-gray-400'}`} />
                       {u.is_active ? 'Aktif' : 'Non-aktif'}

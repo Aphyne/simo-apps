@@ -49,7 +49,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov
 const KETERANGAN_WARNA: Record<string, string> = {
   Penjualan:  'bg-blue-100 text-blue-700',
   Retur:      'bg-yellow-100 text-yellow-700',
-  Rusak:      'bg-red-100 text-red-600',
+  Rusak:      'bg-red-100 text-red-700',
   Kedaluarsa: 'bg-orange-100 text-orange-700',
   Lainnya:    'bg-gray-100 text-gray-600',
 }
@@ -321,7 +321,7 @@ export default function BarangKeluarTable() {
                 ))}
                 <div className="col-span-2">
                   <p className="text-xs text-gray-500 mb-0.5">Catatan</p>
-                  <p className="text-sm text-gray-800">{selectedItem.catatan || <span className="text-gray-300">—</span>}</p>
+                  <p className="text-sm text-gray-800">{selectedItem.catatan || <span className="text-gray-500">—</span>}</p>
                 </div>
               </div>
             </div>
@@ -379,7 +379,7 @@ export default function BarangKeluarTable() {
                           Rp {(item.jumlah * Number(item.harga_jual)).toLocaleString('id-ID')}
                         </p>
                       ) : (
-                        <span className="text-gray-300 text-xs">—</span>
+                        <span className="text-gray-500 text-xs">—</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
@@ -401,7 +401,7 @@ export default function BarangKeluarTable() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-gray-300 text-xs">—</span>
+                        <span className="text-gray-500 text-xs">—</span>
                       )}
                     </td>
                     <td className="py-3 px-3">

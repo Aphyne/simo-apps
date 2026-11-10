@@ -396,13 +396,13 @@ export default function BarangMasukTable() {
                       <p className="text-xs text-gray-500">{Number(item.jumlah_dus)} dus</p>
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap text-xs text-gray-700">
-                      {item.nama_supplier ?? <span className="text-gray-300">—</span>}
+                      {item.nama_supplier ?? <span className="text-gray-500">—</span>}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap text-xs font-mono text-gray-600">
-                      {item.no_faktur ?? <span className="text-gray-300">—</span>}
+                      {item.no_faktur ?? <span className="text-gray-500">—</span>}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap text-xs font-mono text-gray-600">
-                      {item.no_batch ?? <span className="text-gray-300">—</span>}
+                      {item.no_batch ?? <span className="text-gray-500">—</span>}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
                       {item.expired_batch ? (
@@ -413,7 +413,7 @@ export default function BarangMasukTable() {
                           {formatTanggalPendek(item.expired_batch)}
                         </span>
                       ) : (
-                        <span className="text-gray-300 text-xs">—</span>
+                        <span className="text-gray-500 text-xs">—</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap text-xs text-gray-500">
@@ -424,7 +424,7 @@ export default function BarangMasukTable() {
                     <td className="py-3 px-4 text-right whitespace-nowrap text-xs text-gray-700">
                       {item.harga_beli != null
                         ? formatRupiah((item.harga_beli / (1 + (Number(item.ppn_pct) || 0) / 100)) * item.jumlah_satuan)
-                        : <span className="text-gray-300">—</span>}
+                        : <span className="text-gray-500">—</span>}
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-0.5">

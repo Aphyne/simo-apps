@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { TOKEN_KEY, USER_KEY } from '@/lib/constants'
+import { setTokenCookie, clearTokenCookie } from '@/lib/cookie'
 import type { AuthUser } from '@/types/user'
 
 interface AuthStore {
@@ -25,7 +26,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       sessionStorage.setItem(TOKEN_KEY, token)
       sessionStorage.setItem(USER_KEY, JSON.stringify(user))
       // Cookie diperlukan agar Next.js middleware bisa deteksi auth status
-      document.cookie = `simo_token=${token}; path=/; SameSite=Lax`
+      setTokenCookie(token)
     }
     set({ user, token })
   },
@@ -34,7 +35,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem(TOKEN_KEY)
       sessionStorage.removeItem(USER_KEY)
-      document.cookie = 'simo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      clearTokenCookie()
     }
     set({ user: null, token: null })
   },

@@ -104,7 +104,7 @@ export default function ReorderObatList({
                     </span>
                   </td>
                   <td className="py-3 px-3">
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${habis ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-700'}`}>
+                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${habis ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
                       {habis ? 'Habis' : 'Reorder'}
                     </span>
                   </td>

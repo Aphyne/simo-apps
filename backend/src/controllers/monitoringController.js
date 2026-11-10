@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { hitungEstimasiHabis } = require('../utils/estimasi');
 
 async function getMonitoring(req, res) {
   try {
@@ -26,7 +27,7 @@ async function getMonitoring(req, res) {
       const rop = o.rop !== null ? parseFloat(o.rop) : null;
       const ss = parseFloat(o.safety_stock) || 0;
       const demand = parseFloat(o.demand_harian);
-      const estimasi_habis_hari = Math.round(stok / demand);
+      const estimasi_habis_hari = hitungEstimasiHabis(stok, demand);
 
       let status_stok;
       if (rop === null) {

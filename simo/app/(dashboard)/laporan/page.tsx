@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Download, FileSpreadsheet, X, Eye, ChevronDown } from 'lucide-react'
 import {
@@ -196,7 +196,7 @@ function PreviewModal({ open, onClose, judul, keterangan, namaApotek = 'Apotek R
         </div>
 
         <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
           <div className="flex gap-2">
             <button onClick={onClose}
               className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -314,7 +314,7 @@ function KartuStokPreviewModal({ open, onClose, info, kolom, baris, onDownloadPD
         </div>
 
         <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{baris.length} data akan diekspor</span>
           <div className="flex gap-2">
             <button onClick={onClose}
               className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -415,7 +415,7 @@ function TabStok() {
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -540,7 +540,7 @@ function TabKartuStok() {
         )}
         {selectedObat && (
           <div className="ml-auto flex items-center gap-2">
-            <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} mutasi</span>
+            <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} mutasi</span>
             <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
           </div>
         )}
@@ -659,7 +659,7 @@ function TabBarangMasuk() {
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} transaksi</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} transaksi</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -720,7 +720,7 @@ const KETERANGAN_BADGE: Record<string, string> = {
   Penjualan:  'bg-blue-100 text-blue-700',
   Retur:      'bg-purple-100 text-purple-700',
   Rusak:      'bg-orange-100 text-orange-700',
-  Kedaluarsa: 'bg-red-100 text-red-600',
+  Kedaluarsa: 'bg-red-100 text-red-700',
   Lainnya:    'bg-gray-100 text-gray-600',
 }
 
@@ -800,7 +800,7 @@ function TabBarangKeluar() {
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} transaksi</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} transaksi</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -912,7 +912,7 @@ function TabKedaluarsa() {
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -1008,7 +1008,7 @@ function TabEoqRop() {
           </button>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
+          <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} obat</span>
           <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
         </div>
       </div>
@@ -1102,7 +1102,7 @@ function TabSimulasi() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <span className="h-9 flex items-center text-xs font-medium text-gray-500 bg-gray-100 px-2.5 rounded-lg">{rows.length} skenario tersimpan</span>
+        <span className="h-9 flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 rounded-lg">{rows.length} skenario tersimpan</span>
         <ActionBar onPreview={() => setPreview(true)} onExcel={handleExcel} onPDF={handlePDF} />
       </div>
 
@@ -1167,7 +1167,7 @@ function TabSimulasi() {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function LaporanPage() {
+function LaporanContent() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const tab = searchParams.get('tab')
@@ -1205,5 +1205,14 @@ export default function LaporanPage() {
         {activeTab === 'simulasi'      && <TabSimulasi />}
       </div>
     </div>
+  )
+}
+
+// useSearchParams() wajib dibungkus Suspense agar halaman bisa di-prerender saat build produksi.
+export default function LaporanPage() {
+  return (
+    <Suspense fallback={null}>
+      <LaporanContent />
+    </Suspense>
   )
 }

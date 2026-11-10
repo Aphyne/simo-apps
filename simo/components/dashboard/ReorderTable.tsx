@@ -15,7 +15,7 @@ interface ObatMendesak {
 function SeverityBadge({ selisih, rop }: { selisih: number; rop: number }) {
   const ratio = rop > 0 ? Math.abs(selisih) / rop : 0
   if (ratio >= 0.5) {
-    return <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full">Kritis</span>
+    return <span className="bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded-full">Kritis</span>
   }
   return <span className="bg-orange-100 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full">Reorder</span>
 }

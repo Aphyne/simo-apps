@@ -21,7 +21,7 @@ interface Props {
 
 function StatusBadge({ stok, rop }: { stok: number; rop: number }) {
   if (stok <= rop) {
-    return <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full">Kritis</span>
+    return <span className="bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded-full">Kritis</span>
   }
   return <span className="bg-orange-100 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full">Mendekati ROP</span>
 }
@@ -32,7 +32,7 @@ export default function StokMenipisCard({ data, isLoading }: Props) {
       <p className="text-sm font-semibold text-gray-700 mb-4">
         Stok Menipis
         {data.length > 0 && (
-          <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded-full">
+          <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
             {data.length}
           </span>
         )}

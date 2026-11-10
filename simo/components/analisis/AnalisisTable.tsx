@@ -61,7 +61,7 @@ export default function AnalisisTable({ detail, ringkasan, isLoading, onSelectIt
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       item.persen_hemat > 0
                         ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-red-100 text-red-600'
+                        : 'bg-red-100 text-red-700'
                     }`}>
                       {item.persen_hemat > 0 ? '+' : ''}{item.persen_hemat}%
                     </span>

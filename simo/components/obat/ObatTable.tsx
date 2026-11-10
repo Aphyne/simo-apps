@@ -24,7 +24,7 @@ import type { Obat } from '@/types/obat'
 
 // ─── Helper: estimasi hari habis ─────────────────────────────────────────────
 function EstimasiHabis({ hari }: { hari: number | null }) {
-  if (hari === null) return <span className="text-gray-300">—</span>
+  if (hari === null) return <span className="text-gray-500">—</span>
   if (hari <= 7)  return <span className="text-xs font-semibold text-red-600">{hari} hari</span>
   if (hari <= 30) return <span className="text-xs font-medium text-orange-700">{hari} hari</span>
   return <span className="text-xs text-gray-500">{hari} hari</span>
@@ -32,14 +32,14 @@ function EstimasiHabis({ hari }: { hari: number | null }) {
 
 // ─── Helper: tanggal expired ──────────────────────────────────────────────────
 function ExpiredCell({ tanggal }: { tanggal: string | null }) {
-  if (!tanggal) return <span className="text-gray-300">—</span>
+  if (!tanggal) return <span className="text-gray-500">—</span>
   const selisihHari = Math.floor(
     (new Date(tanggal).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   )
   const label = formatTanggalPendek(tanggal)
   if (selisihHari <= 90)
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-600 font-medium">
+      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 font-medium">
         {label}
       </span>
     )
@@ -51,7 +51,7 @@ function ExpiredCell({ tanggal }: { tanggal: string | null }) {
 // ─── Helper: nilai kalkulasi (abu-abu jika belum ada) ─────────────────────────
 function KalkulasiCell({ value, satuan }: { value: number | null; satuan?: string }) {
   if (value === null || value === undefined)
-    return <span className="text-gray-300 text-xs">—</span>
+    return <span className="text-gray-500 text-xs">—</span>
   return (
     <span className="text-sm text-gray-700">
       {formatAngka(value, 1)}
@@ -247,7 +247,7 @@ export default function ObatTable() {
                       {obat.eoq !== null && obat.eoq !== undefined ? (
                         <KalkulasiCell value={obat.eoq} satuan={obat.satuan} />
                       ) : (
-                        <span className="text-xs text-gray-300 italic">Belum dihitung</span>
+                        <span className="text-xs text-gray-500 italic">Belum dihitung</span>
                       )}
                     </td>
 
@@ -376,7 +376,7 @@ export default function ObatTable() {
           Est. habis 8–30 hari atau expired 3–6 bulan
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-gray-300 font-mono">—</span>
+          <span className="text-gray-500 font-mono">—</span>
           Data belum tersedia (perlu isi demand harian)
         </span>
       </div>

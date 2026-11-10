@@ -134,6 +134,7 @@ export function useObatBatchSummary(id: number | string | undefined) {
     queryKey: ['obat', id, 'batch-summary'],
     queryFn: async () => {
       const res = await api.get<ApiResponse<{
+        no_batch: string | null
         expired_batch: string
         total_masuk: number
         estimasi_sisa: number

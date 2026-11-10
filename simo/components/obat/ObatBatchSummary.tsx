@@ -11,8 +11,8 @@ interface Props {
 
 function getBadge(expiredBatch: string) {
   const hari = Math.floor((new Date(expiredBatch).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  if (hari < 0)   return { label: 'Sudah Expired',  cls: 'bg-gray-100 text-gray-500',    hari: null }
-  if (hari <= 30)  return { label: `${hari} hari lagi`, cls: 'bg-red-100 text-red-600',     hari }
+  if (hari < 0)   return { label: 'Sudah Expired',  cls: 'bg-gray-100 text-gray-600',    hari: null }
+  if (hari <= 30)  return { label: `${hari} hari lagi`, cls: 'bg-red-100 text-red-700',     hari }
   if (hari <= 90)  return { label: `${hari} hari lagi`, cls: 'bg-orange-100 text-orange-700', hari }
   return           { label: `${hari} hari lagi`, cls: 'bg-emerald-100 text-emerald-700',  hari }
 }
@@ -70,7 +70,7 @@ export default function ObatBatchSummary({ id }: Props) {
                 return (
                   <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-2 font-mono text-xs text-gray-700">
-                      {batch.no_batch ?? <span className="text-gray-300">—</span>}
+                      {batch.no_batch ?? <span className="text-gray-500">—</span>}
                     </td>
                     <td className="py-3 px-2 font-medium text-gray-900">
                       {formatTanggalPendek(batch.expired_batch)}

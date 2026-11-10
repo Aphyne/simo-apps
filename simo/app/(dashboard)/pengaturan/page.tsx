@@ -2,8 +2,9 @@
 
 import { usePengaturan } from '@/hooks/usePengaturan'
 import PengaturanForm from '@/components/pengaturan/PengaturanForm'
+import AdminOnly from '@/components/layout/AdminOnly'
 
-export default function PengaturanPage() {
+function IsiPengaturan() {
   const { data, isLoading } = usePengaturan()
 
   if (isLoading) {
@@ -23,4 +24,12 @@ export default function PengaturanPage() {
   if (!data) return null
 
   return <PengaturanForm data={data} />
+}
+
+export default function PengaturanPage() {
+  return (
+    <AdminOnly>
+      <IsiPengaturan />
+    </AdminOnly>
+  )
 }
