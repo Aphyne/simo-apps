@@ -121,8 +121,7 @@ simo/
 │   │
 │   ├── charts/                       ← komponen grafik
 │   │   ├── TrenPermintaanChart.tsx   ← line chart 6 bulan
-│   │   ├── PerbandinganBiayaChart.tsx ← bar chart sebelum vs sesudah EOQ
-│   │   └── SimulasiChart.tsx         ← bar chart simulasi vs aktual
+│   │   └── PerbandinganBiayaChart.tsx ← bar chart sebelum vs sesudah EOQ (SimulasiChart dihapus 10 Nov 2026)
 │   │
 │   ├── tables/                       ← komponen tabel reusable
 │   │   ├── DataTable.tsx             ← tabel generik dengan pagination
@@ -139,8 +138,7 @@ simo/
 │   │
 │   ├── dashboard/                    ← komponen khusus dashboard
 │   │   ├── StatCard.tsx              ← card ringkasan (total obat, dll)
-│   │   ├── ReorderTable.tsx          ← tabel 5 obat paling mendesak
-│   │   └── AlertNotification.tsx     ← alert popup ROP
+│   │   └── AlertNotification.tsx     ← alert popup ROP (ReorderTable dihapus 10 Nov 2026)
 │   │
 │   └── shared/                       ← komponen lintas fitur
 │       ├── StatusBadge.tsx           ← badge AMAN/MENDEKATI ROP/HARUS REORDER
@@ -164,8 +162,7 @@ simo/
 │   └── constants.ts                  ← konstanta (status stok, kategori, dll)
 │
 ├── store/                            ← Zustand stores
-│   ├── auth.store.ts                 ← user session state
-│   └── notification.store.ts         ← alert/notification state
+│   └── auth.store.ts                 ← user session state (notification.store dihapus 10 Nov 2026)
 │
 ├── types/                            ← TypeScript interfaces
 │   ├── obat.ts

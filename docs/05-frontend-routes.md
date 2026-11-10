@@ -139,7 +139,7 @@ Semua data dari API difetch menggunakan React Query:
 ### Dashboard
 ```
 useDashboard hook
-  → GET /api/dashboard/summary        → StatCard × 5 + ReorderTable
+  → GET /api/dashboard/summary        → StatCard × 5 (ReorderTable dihapus 10 Nov 2026)
   → GET /api/dashboard/tren-permintaan → TrenPermintaanChart
   → GET /api/dashboard/perbandingan-biaya → PerbandinganBiayaChart
 ```
@@ -166,7 +166,6 @@ Submit form:
   → onSuccess:
       if (response.reorder_alert === true):
         → tampilkan AlertNotification merah
-        → update Zustand notification store
       → invalidate React Query: ['barang-keluar'], ['obat'], ['dashboard']
       → reset form
 ```
@@ -181,7 +180,7 @@ Pilih obat:
 
 Submit simulasi:
   → POST /api/simulasi/jalankan (tidak simpan)
-  → tampilkan tabel perbandingan + SimulasiChart
+  → tampilkan tabel perbandingan (SimulasiChart dihapus 10 Nov 2026)
 
 Klik "Simpan Skenario":
   → POST /api/simulasi/simpan
@@ -274,13 +273,6 @@ interface NilaiEoq {
 - Y-axis: total biaya (Rp)
 - Grouped bar: sebelum EOQ vs sesudah EOQ
 - Format Y-axis: `Rp X.XXX.XXX`
-
-### `SimulasiChart.tsx`
-- Library: Recharts `BarChart`
-- X-axis: parameter (EOQ, SS, ROP, TC)
-- Y-axis: nilai
-- Grouped bar: kondisi sekarang vs skenario simulasi
-- Warna: biru (sekarang) vs oranye (simulasi)
 
 ---
 

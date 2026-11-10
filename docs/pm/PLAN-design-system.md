@@ -55,6 +55,7 @@ Dimulai setelah Fase C (C3) selesai. Berbeda dari Tahap B dan Fase C: Fase D BOL
 | 3 (build+lint Kiri) | lewat (10 Nov) | Review Kiri (1.056 hunk, 0 token non-kelas berubah); Tessa menjalankan tsc 0 error, eslint 16 error + 9 warning (baseline), next build sukses |
 | 4 (Tessa, AC-DS-2,10,11,12,14 + tampilan identik) | lewat (10 Nov) | D:\skripsi new\LAPORAN-QA-DESIGN-SYSTEM.md: AC-DS-1/15, 2, 10, 11, 12, 14 LOLOS; tidak ada bug. Tidak teruji: /design 390 untuk 14 bagian, disabled/dialog bahaya interaktif. Dikerjakan sebelum T-R1 (Reorder), yang belum diuji Tessa |
 | 5 (ringkasan ke Boss) | menunggu persetujuan Boss | Ringkasan disampaikan sesi utama, 10 Nov; belum ada commit/merge |
+| Fase C: pelaksanaan C0..C3 | selesai (10 Nov 2026, sesi utama langsung atas arahan Boss) | C0: 4 commit design system. C1: docs/pm/AUDIT-KODE-MATI.md. C2: Boss menyetujui kecuali PerbandinganBiayaChart (dipertahankan untuk skripsi). C3: hapus per kelompok, tsc dan lint tidak memburuk. C4 (backend/skrip) belum, usulan terpisah |
 | Fase C: persetujuan penambahan rencana | lewat | Boss menjawab YA, 2026-11-10 (via sesi utama). Pelaksanaan C0..C4 belum dimulai |
 | Fase D: persetujuan penambahan rencana | lewat | Boss menjawab YA, 2026-11-10 (via sesi utama). Pelaksanaan D1..D4 belum dimulai |
 
