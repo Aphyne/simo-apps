@@ -1,0 +1,13 @@
+const REPO = require('path').resolve(__dirname, '..', '..').split(require('path').sep).join('/');
+const B=REPO + '/backend/';
+const { hitungEstimasiHabis } = require(B+'src/utils/estimasi');
+const r=[]; let ok=true; const chk=(n,c)=>{r.push((c?'LULUS ':'GAGAL ')+n); if(!c) ok=false;};
+chk('stok 0 -> 0', hitungEstimasiHabis(0,5)===0);
+chk('25/10 -> 2 (floor)', hitungEstimasiHabis(25,10)===2);
+chk('demand 0 -> null', hitungEstimasiHabis(10,0)===null);
+chk('demand null/NaN/negatif -> null', [null,undefined,'abc',-1].every(d=>hitungEstimasiHabis(10,d)===null));
+chk('tidak pernah NaN/Infinity', [[0,0],[5,0],[0,'x'],[1e9,1e-9]].every(([s,d])=>{const v=hitungEstimasiHabis(s,d);return v===null||Number.isFinite(v);}));
+const fs=require('fs'); const src=['monitoringController','obatController'].map(f=>fs.readFileSync(B+'src/controllers/'+f+'.js','utf8'));
+chk('monitoring & obat memakai utils/estimasi', src.every(s=>s.includes("require('../utils/estimasi')")));
+chk('tidak ada pembulatan estimasi lokal', !/estimasi_habis_hari\s*=\s*Math\./.test(src[0]));
+console.log(r.join('\n')); process.exit(ok?0:1);

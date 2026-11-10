@@ -1,0 +1,24 @@
+const L = require('./lib');
+(async () => {
+  const port = 8007, base = `http://localhost:${port}`;
+  const srv = await L.startServer(port, 'srv-kill.log'); const c = (...a) => L.call(base, ...a);
+  const T = await L.login(base, 'admin'); const db = await L.db(); const killer = await L.db();
+  const mypids = [(await db.query('select pg_backend_pid() p')).rows[0].p, (await killer.query('select pg_backend_pid() p')).rows[0].p];
+  const tgl = new Date().toISOString().slice(0, 10);
+  const mk = async (stok) => (await c('POST', '/api/obat', { t: T, body: { nama: 'Kill ' + Math.random().toString(36).slice(2, 7), kategori: 'Uji', satuan: 'tablet', satuan_per_dus: 10, harga_beli: 1000, harga_jual: 1500, stok, biaya_pesan: 50000, biaya_simpan: 100, lead_time: 3, service_level: 95 } })).j.data.id;
+  const ids = []; for (let i = 0; i < 5; i++) ids.push(await mk(100000));
+  const before = (await db.query('select o.id,o.stok,(select count(*)::int from barang_keluar where obat_id=o.id) n from obat o where id=any($1)', [ids])).rows;
+  let stop = false, killed = 0;
+  const kl = (async () => { while (!stop) { const r = await killer.query("select pg_terminate_backend(pid) from pg_stat_activity where usename='qa' and datname='simo_qa' and pid<>all($1)", [mypids]); killed += r.rowCount; await new Promise(r => setTimeout(r, 250)); } })();
+  const N = 200; const stat = {}; let ok = 0;
+  const worker = async (w) => { for (let i = 0; i < N / 10; i++) { const r = await c('POST', '/api/barang-keluar', { t: T, body: { tanggal: tgl, obat_id: ids[(w + i) % 5], jumlah: 1, keterangan: 'Penjualan' }, timeout: 60000 }); const k = r.s || r.err; stat[k] = (stat[k] || 0) + 1; } };
+  await Promise.all(Array.from({ length: 10 }, (_, w) => worker(w)));
+  stop = true; await kl;
+  console.log('POST keluar single', N, 'req dengan koneksi DB dibunuh periodik (backend terminated', killed, 'kali):', JSON.stringify(stat), 'server hidup', !srv.exited);
+  const after = (await db.query(`select o.id,o.stok,(select count(*)::int from barang_keluar where obat_id=o.id) n,(coalesce((select sum(jumlah_satuan) from barang_masuk where obat_id=o.id),0)-coalesce((select sum(jumlah) from barang_keluar where obat_id=o.id),0))::int led from obat o where id=any($1)`, [ids])).rows;
+  const rows = after.reduce((s, x) => s + x.n, 0) - before.reduce((s, x) => s + x.n, 0);
+  const stokTurun = before.reduce((s, x) => s + x.stok, 0) - after.reduce((s, x) => s + x.stok, 0);
+  console.log('baris barang_keluar bertambah', rows, '; stok turun total', stokTurun, '; respon 201 =', stat['201'] || 0);
+  console.log('per obat (stok vs ledger):', JSON.stringify(after.map(x => [x.stok, x.led])));
+  await db.end(); await killer.end(); srv.kill();
+})().catch(e => { console.log('ERR', e); process.exit(1) });
