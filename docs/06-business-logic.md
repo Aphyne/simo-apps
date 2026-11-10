@@ -173,8 +173,8 @@ function hitungTotalBiaya(D, Q, S, H) {
 ```js
 function getStatusStok(stok, rop) {
   if (stok <= rop) return 'HARUS_REORDER';        // stok ≤ ROP
-  if (stok <= rop * 1.2) return 'MENDEKATI_ROP';  // stok antara ROP dan ROP × 1.2
-  return 'AMAN';                                   // stok > ROP × 1.2
+  if (stok <= rop * 1.5) return 'MENDEKATI_ROP';  // stok antara ROP dan ROP × 1.5
+  return 'AMAN';                                   // stok > ROP × 1.5
 }
 ```
 

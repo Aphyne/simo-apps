@@ -196,7 +196,7 @@ async function create(req, res) {
       await pool.query(
         `INSERT INTO barang_masuk
            (tanggal, obat_id, jumlah_dus, jumlah_satuan, expired_batch, catatan, user_id, stok_sebelum, stok_sesudah)
-         VALUES (CURRENT_DATE, $1, $2, $3, $4, 'Stok Awal', $5, 0, $3)`,
+         VALUES ((NOW() AT TIME ZONE 'Asia/Jakarta')::date, $1, $2, $3, $4, 'Stok Awal', $5, 0, $3)`,
         [obatBaru.id, jumlah_dus, stok_awal, expired_terdekat || null, req.user?.id ?? null]
       );
       await pool.query(
