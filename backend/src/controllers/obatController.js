@@ -2,6 +2,7 @@ const pool = require('../db/pool');
 const { periksaAngka, idValid, tanggalValid } = require('../utils/validasi');
 const { kalkulasiLengkap, kalkulasiStepByStep } = require('../services/eoqService');
 const { hitungUlangObat } = require('../services/stokService');
+const { hitungEstimasiHabis } = require('../utils/estimasi');
 
 // Ekspresi SQL yang HARUS persis sama logikanya dengan hitungStatus() di bawah —
 // dipakai di WHERE clause getAll() supaya filter status difilter di database
@@ -25,12 +26,6 @@ function hitungStatus(stok, rop) {
   if (stok <= ropNum) return 'HARUS_REORDER';
   if (stok <= ropNum * 1.5) return 'MENDEKATI_ROP';
   return 'AMAN';
-}
-
-function hitungEstimasiHabis(stok, demand_harian) {
-  const d = parseFloat(demand_harian);
-  if (!d || d <= 0) return null;
-  return Math.floor(stok / d);
 }
 
 function formatObat(row) {

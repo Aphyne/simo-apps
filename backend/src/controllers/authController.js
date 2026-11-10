@@ -5,6 +5,10 @@ const pool = require('../db/pool');
 const { catat } = require('../services/aktivitasService');
 const { cabutTokenUser } = require('../middleware/authMiddleware');
 
+// Hash tiruan (cost 10, sama dengan hash password asli) agar waktu respons login tetap sama
+// walaupun username tidak ditemukan.
+const HASH_TIRUAN = bcrypt.hashSync('tiruan-waktu-login', 10);
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 async function login(req, res) {
@@ -21,6 +25,7 @@ async function login(req, res) {
     );
 
     if (rows.length === 0) {
+      await bcrypt.compare(password, HASH_TIRUAN);
       await catat({ req, jenis: 'login_gagal', username, deskripsi: 'Login gagal (username tidak ditemukan/nonaktif)', status: 401 });
       return res.status(401).json({ success: false, message: 'Username atau password salah' });
     }
@@ -95,6 +100,12 @@ async function googleLogin(req, res) {
 
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email tidak ditemukan dari akun Google' });
+    }
+
+    // Email Google yang belum terverifikasi tidak boleh dipakai login (cegah pengambilalihan akun).
+    if (payload.email_verified !== true && payload.email_verified !== 'true') {
+      await catat({ req, jenis: 'login_gagal', username: email, deskripsi: 'Login Google gagal (email belum terverifikasi)', status: 401 });
+      return res.status(401).json({ success: false, message: 'Email Google belum terverifikasi' });
     }
 
     const { rows } = await pool.query(
