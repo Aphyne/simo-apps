@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { formatTanggalPendek } from '@/lib/utils'
+import { useNow } from '@/hooks/useNow'
 
 interface Item {
   nama: string
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function DaftarExpiredCard({ data, isLoading, totalUrgent }: Props) {
+  const sekarang = useNow().getTime()
   return (
     <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex flex-col">
       <p className="text-sm font-semibold text-fg-secondary mb-4">Daftar Akan Expired</p>
@@ -45,7 +47,7 @@ export default function DaftarExpiredCard({ data, isLoading, totalUrgent }: Prop
               <tbody className="divide-y divide-gray-50">
                 {data.map((item, i) => {
                   const selisihHari = Math.floor(
-                    (new Date(item.expired_terdekat).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                    (new Date(item.expired_terdekat).getTime() - sekarang) / (1000 * 60 * 60 * 24)
                   )
                   const isKritis = selisihHari <= 30
                   return (

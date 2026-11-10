@@ -30,7 +30,8 @@ export default function AnalisisDetailModal({ item, onClose }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const toggle = (key: string) => setExpanded(prev => {
     const next = new Set(prev)
-    next.has(key) ? next.delete(key) : next.add(key)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
     return next
   })
 

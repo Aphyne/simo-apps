@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Save } from 'lucide-react'
 import { useUpdatePengaturan } from '@/hooks/usePengaturan'
 import { SERVICE_LEVEL_OPTIONS } from '@/lib/constants'
@@ -24,40 +24,35 @@ interface Props {
   data: PengaturanData
 }
 
+function bentukForm(data: PengaturanData) {
+  return {
+    nama_apotek:            data.nama_apotek?.value            ?? '',
+    alamat_apotek:          data.alamat_apotek?.value          ?? '',
+    nama_apj:               data.nama_apj?.value               ?? '',
+    nomor_sia:              data.nomor_sia?.value              ?? '',
+    nomor_sipa_apj:         data.nomor_sipa_apj?.value         ?? '',
+    kota_apotek:            data.kota_apotek?.value            ?? '',
+    default_service_level:  data.default_service_level?.value  ?? '95',
+    default_lead_time:      data.default_lead_time?.value      ?? '1',
+    default_biaya_pesan:    data.default_biaya_pesan?.value    ?? '0',
+    biaya_pesan_per_faktur: data.biaya_pesan_per_faktur?.value ?? '5000',
+    threshold_expired_hari: data.threshold_expired_hari?.value ?? '90',
+    asumsi_dus_tradisional: data.asumsi_dus_tradisional?.value ?? '2',
+  }
+}
+
 export default function PengaturanForm({ data }: Props) {
   const update = useUpdatePengaturan()
 
-  const [form, setForm] = useState({
-    nama_apotek: '',
-    alamat_apotek: '',
-    nama_apj: '',
-    nomor_sia: '',
-    nomor_sipa_apj: '',
-    kota_apotek: '',
-    default_service_level: '95',
-    default_lead_time: '1',
-    default_biaya_pesan: '0',
-    biaya_pesan_per_faktur: '5000',
-    threshold_expired_hari: '90',
-    asumsi_dus_tradisional: '2',
-  })
+  const [form, setForm] = useState(() => bentukForm(data))
 
-  useEffect(() => {
-    setForm({
-      nama_apotek:            data.nama_apotek?.value            ?? '',
-      alamat_apotek:          data.alamat_apotek?.value          ?? '',
-      nama_apj:               data.nama_apj?.value               ?? '',
-      nomor_sia:              data.nomor_sia?.value              ?? '',
-      nomor_sipa_apj:         data.nomor_sipa_apj?.value         ?? '',
-      kota_apotek:            data.kota_apotek?.value            ?? '',
-      default_service_level:  data.default_service_level?.value  ?? '95',
-      default_lead_time:      data.default_lead_time?.value      ?? '1',
-      default_biaya_pesan:    data.default_biaya_pesan?.value    ?? '0',
-      biaya_pesan_per_faktur: data.biaya_pesan_per_faktur?.value  ?? '5000',
-      threshold_expired_hari: data.threshold_expired_hari?.value ?? '90',
-      asumsi_dus_tradisional: data.asumsi_dus_tradisional?.value ?? '2',
-    })
-  }, [data])
+  // Sinkronkan form saat data dari server berganti (setelah simpan atau refetch).
+  // Pola "setState saat render" yang dianjurkan React menggantikan useEffect.
+  const [dataSebelumnya, setDataSebelumnya] = useState(data)
+  if (data !== dataSebelumnya) {
+    setDataSebelumnya(data)
+    setForm(bentukForm(data))
+  }
 
   function set(key: string, value: string) {
     setForm(f => ({ ...f, [key]: value }))

@@ -15,6 +15,9 @@ export interface UserItem {
   jumlah_transaksi: number
 }
 
+// Bentuk galat dari axios yang dipakai untuk menampilkan pesan server.
+type ApiErrorLike = { response?: { data?: { message?: string } } }
+
 export function useUserList() {
   return useQuery({
     queryKey: ['users'],
@@ -36,7 +39,7 @@ export function useCreateUser() {
       qc.invalidateQueries({ queryKey: ['users'] })
       toast.success('User berhasil ditambahkan')
     },
-    onError: (err: any) => {
+    onError: (err: ApiErrorLike) => {
       toast.error(err?.response?.data?.message ?? 'Gagal menambahkan user')
     },
   })
@@ -53,7 +56,7 @@ export function useUpdateUser() {
       qc.invalidateQueries({ queryKey: ['users'] })
       toast.success('User berhasil diperbarui')
     },
-    onError: (err: any) => {
+    onError: (err: ApiErrorLike) => {
       toast.error(err?.response?.data?.message ?? 'Gagal memperbarui user')
     },
   })
@@ -65,7 +68,7 @@ export function useResetPassword() {
       await api.post(`/users/${id}/reset-password`, { password_baru })
     },
     onSuccess: () => toast.success('Password berhasil direset'),
-    onError: (err: any) => {
+    onError: (err: ApiErrorLike) => {
       toast.error(err?.response?.data?.message ?? 'Gagal mereset password')
     },
   })
@@ -82,7 +85,7 @@ export function useToggleAktif() {
       qc.invalidateQueries({ queryKey: ['users'] })
       toast.success(data.message)
     },
-    onError: (err: any) => {
+    onError: (err: ApiErrorLike) => {
       toast.error(err?.response?.data?.message ?? 'Gagal mengubah status user')
     },
   })
@@ -99,7 +102,7 @@ export function useDeleteUser() {
       qc.invalidateQueries({ queryKey: ['users'] })
       toast.success(data.message)
     },
-    onError: (err: any) => {
+    onError: (err: ApiErrorLike) => {
       toast.error(err?.response?.data?.message ?? 'Gagal menghapus user')
     },
   })

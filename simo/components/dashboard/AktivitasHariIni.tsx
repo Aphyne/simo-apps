@@ -7,7 +7,7 @@ import type { BarangKeluar } from '@/types/obat'
 
 export default function AktivitasHariIni() {
   const { data, isLoading } = useBarangKeluarList({ limit: 9999 })
-  const allList: BarangKeluar[] = data?.data ?? []
+  const allList: BarangKeluar[] = useMemo(() => data?.data ?? [], [data])
 
   const todayList = useMemo(() => {
     const now = new Date()

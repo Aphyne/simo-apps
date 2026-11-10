@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { BarangMasuk } from '@/types/obat'
+import { useNow } from '@/hooks/useNow'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
 
@@ -16,7 +17,7 @@ const formatRupiah = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
 
 export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
-  const now = new Date()
+  const now = useNow()
   const currentYear = now.getFullYear()
 
   const [mode, setMode] = useState<'mingguan' | 'bulanan'>('bulanan')
@@ -62,7 +63,7 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
       })
       return { label: MONTHS[i], ...sumItems(items) }
     })
-  }, [allList, mode, selectedYear])
+  }, [allList, mode, selectedYear, now])
 
   return (
     <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">

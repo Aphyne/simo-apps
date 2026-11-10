@@ -18,6 +18,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useObatList, useDeleteObat } from '@/hooks/useObat'
 import { useAuthStore } from '@/store/auth.store'
 import { formatAngka, formatTanggalPendek } from '@/lib/utils'
+import { useNow } from '@/hooks/useNow'
 import { KATEGORI_OBAT } from '@/lib/constants'
 import ObatKategoriChart from '@/components/obat/ObatKategoriChart'
 import type { Obat } from '@/types/obat'
@@ -32,9 +33,10 @@ function EstimasiHabis({ hari }: { hari: number | null }) {
 
 // ─── Helper: tanggal expired ──────────────────────────────────────────────────
 function ExpiredCell({ tanggal }: { tanggal: string | null }) {
+  const sekarang = useNow().getTime()
   if (!tanggal) return <span className="text-fg-muted">—</span>
   const selisihHari = Math.floor(
-    (new Date(tanggal).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    (new Date(tanggal).getTime() - sekarang) / (1000 * 60 * 60 * 24)
   )
   const label = formatTanggalPendek(tanggal)
   if (selisihHari <= 90)
@@ -86,6 +88,7 @@ function SkeletonRows() {
 }
 
 export default function ObatTable() {
+  const sekarang = useNow().getTime()
   const isAdmin = useAuthStore((s) => s.user?.role === 'admin')
   const [search, setSearch] = useState('')
   const [kategori, setKategori] = useState('')
@@ -105,7 +108,7 @@ export default function ObatTable() {
   const mendekatiROP  = allObat.filter(o => o.status === 'MENDEKATI_ROP').length
   const akanExpired   = allObat.filter(o => {
     if (!o.expired_terdekat) return false
-    const selisih = Math.floor((new Date(o.expired_terdekat).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    const selisih = Math.floor((new Date(o.expired_terdekat).getTime() - sekarang) / (1000 * 60 * 60 * 24))
     return selisih >= 0 && selisih <= 90
   }).length
 

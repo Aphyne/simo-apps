@@ -16,6 +16,7 @@ import BarangMasukForm from '@/components/transaksi/BarangMasukForm'
 import BarangMasukEditForm from '@/components/transaksi/BarangMasukEditForm'
 import { useBarangMasukList, useDeleteBarangMasuk } from '@/hooks/useBarangMasuk'
 import { formatTanggalPendek, formatRupiah } from '@/lib/utils'
+import { useNow } from '@/hooks/useNow'
 import BarangMasukTrendChart from '@/components/transaksi/BarangMasukTrendChart'
 import BarangMasukPerObatChart from '@/components/transaksi/BarangMasukPerObatChart'
 import { useAuthStore } from '@/store/auth.store'
@@ -59,6 +60,7 @@ function daysAgoYMD(n: number): string {
 }
 
 export default function BarangMasukTable() {
+  const sekarang = useNow().getTime()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [date, setDate] = useState('')        // date picker asli — pilih 1 hari bebas
@@ -407,7 +409,7 @@ export default function BarangMasukTable() {
                     <td className="py-3 px-4 whitespace-nowrap">
                       {item.expired_batch ? (
                         <span className={`text-xs font-medium ${
-                          Math.floor((new Date(item.expired_batch).getTime() - Date.now()) / (1000*60*60*24)) <= 90
+                          Math.floor((new Date(item.expired_batch).getTime() - sekarang) / (1000*60*60*24)) <= 90
                             ? 'text-red-600' : 'text-gray-600'
                         }`}>
                           {formatTanggalPendek(item.expired_batch)}

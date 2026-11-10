@@ -292,7 +292,7 @@ export default function PerhitunganTable() {
       </div>
 
       <p className="text-xs text-fg-muted">
-        Klik baris untuk expand detail kalkulasi • Klik "Halaman Penuh" untuk tampilan lebih lengkap
+        Klik baris untuk expand detail kalkulasi • Klik &quot;Halaman Penuh&quot; untuk tampilan lebih lengkap
       </p>
     </div>
   )

@@ -11,9 +11,6 @@ import {
   Pill,
   PackagePlus,
   PackageMinus,
-  Calculator,
-  FlaskConical,
-  TrendingUp,
   FileText,
   Truck,
   Users,
@@ -40,6 +37,7 @@ const navItems: NavItem[] = [
   { label: 'Stok Keluar', href: '/barang-keluar', icon: PackageMinus },
   { label: 'Reorder', href: '/reorder', icon: ShoppingCart, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/simulasi/page.tsx
+  // (saat diaktifkan kembali, impor ikon FlaskConical, TrendingUp, dan Calculator dari lucide-react)
   // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/analisis/page.tsx
   // { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, adminOnly: true },
