@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PUBLIC_PATHS = ['/login']
-// Halaman mandiri (style guide komponen) — tidak perlu login, dan tetap
-// bisa dibuka meski sudah login (beda dari /login yang redirect ke dashboard).
-const STANDALONE_PATHS = ['/design']
+// Halaman mandiri (style guide komponen) — tetap bisa dibuka meski sudah login
+// (beda dari /login yang redirect ke dashboard). Hanya di mode pengembangan
+// terbuka tanpa login; di produksi /design wajib cookie login, lalu pembatasan
+// ke superadmin dilakukan komponen SuperadminOnly di app/design/layout.tsx.
+const STANDALONE_PATHS = process.env.NODE_ENV === 'production' ? [] : ['/design']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

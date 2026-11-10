@@ -1,45 +1,91 @@
-import { PageHeader, Section, Swatch } from '../_components'
+import { PageHeader, Section } from '../_components'
+import { Swatch } from '../_swatch'
+
+// Kelas ditulis utuh (bukan dirangkai) supaya terdeteksi Tailwind.
+const SKALA = [
+  { fam: 'brand', peran: 'Aksen utama: tombol primer, nav aktif, cincin fokus, tautan. 600 = isi pekat, 500 = fokus input, 700 = hover, 50/100 = tint.',
+    langkah: [
+      ['50', 'bg-brand-50'], ['100', 'bg-brand-100'], ['200', 'bg-brand-200'], ['300', 'bg-brand-300'], ['400', 'bg-brand-400'],
+      ['500', 'bg-brand-500'], ['600', 'bg-brand-600'], ['700', 'bg-brand-700'], ['800', 'bg-brand-800'], ['900', 'bg-brand-900'],
+    ] },
+  { fam: 'danger', peran: 'Error, stok kritis, hapus. 600 untuk teks error, 100 untuk badge.',
+    langkah: [
+      ['50', 'bg-danger-50'], ['100', 'bg-danger-100'], ['200', 'bg-danger-200'], ['300', 'bg-danger-300'], ['400', 'bg-danger-400'],
+      ['500', 'bg-danger-500'], ['600', 'bg-danger-600'], ['700', 'bg-danger-700'], ['800', 'bg-danger-800'], ['900', 'bg-danger-900'],
+    ] },
+  { fam: 'success', peran: 'Aman, sukses. 700 untuk teks data hijau, 100 untuk badge.',
+    langkah: [
+      ['50', 'bg-success-50'], ['100', 'bg-success-100'], ['200', 'bg-success-200'], ['300', 'bg-success-300'], ['400', 'bg-success-400'],
+      ['500', 'bg-success-500'], ['600', 'bg-success-600'], ['700', 'bg-success-700'], ['800', 'bg-success-800'], ['900', 'bg-success-900'],
+    ] },
+  { fam: 'warning', peran: 'Mendekati ROP/kedaluwarsa, peringatan. 700 untuk teks, 100 untuk badge.',
+    langkah: [
+      ['50', 'bg-warning-50'], ['100', 'bg-warning-100'], ['200', 'bg-warning-200'], ['300', 'bg-warning-300'], ['400', 'bg-warning-400'],
+      ['500', 'bg-warning-500'], ['600', 'bg-warning-600'], ['700', 'bg-warning-700'], ['800', 'bg-warning-800'], ['900', 'bg-warning-900'],
+    ] },
+] as const
 
 export function WarnaSection() {
   return (
     <section id="warna">
-      <PageHeader title="Warna" desc="Blue 600 sebagai accent utama (dipakai di logo, tombol primer, header laporan PDF). Warna semantik dipakai konsisten untuk status stok dan keterangan transaksi — tidak pernah dipakai sebagai warna dekoratif." />
+      <PageHeader title="Warna" desc="Warna diberi nama lewat token di simo/app/globals.css. Blok di bawah memakai kelas token itu sendiri dan nilainya dibaca dari CSS di browser, jadi mengubah token di globals.css langsung terlihat di sini. Warna semantik dipakai konsisten untuk status stok dan keterangan transaksi, dan selalu disertai teks, bukan hanya warna." />
 
-      <Section title="Accent & Netral" meta="bg-{color}-{shade}">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-          <Swatch name="Blue 600 (primer)" className="bg-blue-600" hex="#2563eb" />
-          <Swatch name="Gray 900 (teks utama)" className="bg-gray-900" hex="#111827" />
-          <Swatch name="Gray 700 (judul section)" className="bg-gray-700" hex="#374151" />
-          <Swatch name="Gray 500 (teks data/caption)" className="bg-gray-500" hex="#6b7280" />
-          <Swatch name="Gray 200 (border)" className="bg-gray-200" hex="#e5e7eb" />
-          <Swatch name="Gray 50 (bg halaman)" className="bg-gray-50 border border-gray-200" hex="#f9fafb" />
+      {SKALA.map((s) => (
+        <Section key={s.fam} title={`${s.fam} (50 sampai 900)`} desc={s.peran} meta={`bg-${s.fam}-{50..900}`}>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            {s.langkah.map(([n, kelas]) => (
+              <Swatch key={kelas} compact name={`${s.fam}-${n}`} token={kelas} className={kelas} />
+            ))}
+          </div>
+        </Section>
+      ))}
+
+      <Section title="Teks" desc="fg-subtle hanya untuk ikon dan elemen non-teks (tidak lolos AA untuk teks)." meta="text-{fg, fg-secondary, ...}">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Swatch name="Judul, angka utama" token="fg" className="bg-fg" />
+          <Swatch name="Label form, sel tabel" token="fg-secondary" className="bg-fg-secondary" />
+          <Swatch name="Teks isi" token="fg-tertiary" className="bg-fg-tertiary" />
+          <Swatch name="Sublabel, caption" token="fg-muted" className="bg-fg-muted" />
+          <Swatch name="Hanya ikon" token="fg-subtle" className="bg-fg-subtle" />
+          <Swatch name="Teks di atas warna pekat" token="fg-inverse" className="bg-fg-inverse" />
         </div>
       </Section>
 
-      <Section title="Semantik — Status Stok" desc="AMAN / MENDEKATI_ROP / HARUS_REORDER — selalu disertai label teks, tidak pernah hanya warna.">
+      <Section title="Permukaan dan garis" meta="bg-surface* · border-line*">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Swatch name="Kartu, panel, input" token="surface" className="bg-surface" />
+          <Swatch name="Latar halaman, header tabel" token="surface-subtle" className="bg-surface-subtle" />
+          <Swatch name="Hover netral, skeleton, chip" token="surface-muted" className="bg-surface-muted" />
+          <Swatch name="Border kartu, tabel" token="line" className="bg-line" />
+          <Swatch name="Pemisah baris halus" token="line-subtle" className="bg-line-subtle" />
+          <Swatch name="Border input, tombol sekunder" token="line-strong" className="bg-line-strong" />
+        </div>
+      </Section>
+
+      <Section title="Semantik: Status Stok" desc="AMAN / MENDEKATI_ROP / HARUS_REORDER, selalu disertai label teks, tidak pernah hanya warna.">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Swatch name="Emerald 700 — Aman" token="text-emerald-700 / bg-green-100" className="bg-emerald-700" hex="#047857" />
-          <Swatch name="Orange 700 — Mendekati ROP" token="text-orange-700 / bg-orange-100" className="bg-orange-700" hex="#c2410c" />
-          <Swatch name="Red 600 — Harus Reorder" token="text-red-600 / bg-red-100" className="bg-red-600" hex="#dc2626" />
+          <Swatch name="Aman" token="success-700 (teks) · success-100 (badge)" className="bg-success-700" note="StatusBadge saat ini memakai green, bukan success (lihat docs/DESIGN.md bagian 5)." />
+          <Swatch name="Mendekati ROP" token="warning-700 (teks) · warning-100 (badge)" className="bg-warning-700" />
+          <Swatch name="Harus Reorder" token="danger-600 (teks) · danger-100 (badge)" className="bg-danger-600" />
         </div>
       </Section>
 
-      <Section title="Semantik — Keterangan Transaksi &amp; Role">
+      <Section title="Semantik: Keterangan Transaksi dan Role">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Swatch name="Blue — Penjualan / Admin" className="bg-blue-600" hex="#2563eb" />
-          <Swatch name="Purple — Retur" className="bg-purple-600" hex="#9333ea" />
-          <Swatch name="Orange — Rusak" className="bg-orange-600" hex="#ea580c" />
-          <Swatch name="Red — Kedaluarsa" className="bg-red-500" hex="#ef4444" />
-          <Swatch name="Gray — Lainnya / Staf" className="bg-gray-500" hex="#6b7280" />
+          <Swatch name="Penjualan / Admin" token="brand-600" className="bg-brand-600" />
+          <Swatch name="Retur" token="purple-600" className="bg-purple-600" note="Tanpa token (belum ada nama peran)." />
+          <Swatch name="Rusak" token="warning-600" className="bg-warning-600" />
+          <Swatch name="Kedaluarsa" token="danger-500" className="bg-danger-500" />
+          <Swatch name="Lainnya / Staf" token="fg-muted" className="bg-fg-muted" />
         </div>
       </Section>
 
-      <Section title="Kartu Rumus (border-l accent)" desc="RumusDisplay.tsx — tiap kartu langkah kalkulasi EOQ/SS/ROP/TC punya warna border-l berbeda.">
+      <Section title="Kartu Rumus (border-l accent)" desc="RumusDisplay.tsx: tiap kartu langkah kalkulasi EOQ/SS/ROP/TC punya warna border-l berbeda.">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Swatch name="EOQ" token="border-l-blue-500" className="bg-blue-500" hex="#3b82f6" />
-          <Swatch name="Safety Stock" token="border-l-emerald-500" className="bg-emerald-500" hex="#10b981" />
-          <Swatch name="ROP" token="border-l-orange-500" className="bg-orange-500" hex="#f97316" />
-          <Swatch name="Total Cost" token="border-l-purple-500" className="bg-purple-500" hex="#a855f7" />
+          <Swatch name="EOQ" token="brand-500" className="bg-brand-500" />
+          <Swatch name="Safety Stock" token="success-500" className="bg-success-500" />
+          <Swatch name="ROP" token="warning-500" className="bg-warning-500" />
+          <Swatch name="Total Cost" token="purple-500" className="bg-purple-500" note="Tanpa token." />
         </div>
       </Section>
     </section>
