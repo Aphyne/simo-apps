@@ -23,3 +23,28 @@ Prasyarat: Node 18+, `npm install` sudah dijalankan di `backend/` dan `simo/` (s
 - **INJ-08**: dulu menguji kunci pertama (`alamat_apotek`, teks bebas) dengan nilai "NaN", yang sah untuk teks. Kini memakai kunci numerik `default_lead_time`, yang memang ditolak.
 
 Keluaran uji (`*.log`, `*.out`), `node_modules/`, dan data Postgres (`pgenv/data/`) di-gitignore. Memulai dari nol: hentikan Postgres, hapus `pgenv/data/`.
+
+## Uji browser (Playwright)
+
+Playwright (`@playwright/test`) memakai **Chrome yang sudah terpasang** (`channel: 'chrome'`), jadi tidak ada browser yang diunduh. Konfigurasi: `playwright.config.js` (dua ukuran layar: `desktop-1366` dan `hp-390`, satu worker, tangkapan layar tanpa toleransi piksel). Uji ditaruh di `e2e/`.
+
+Cara menjalankan (satu perintah, dari folder `qa-tools`):
+
+```
+npm install
+node jalankan-e2e.js --build                 # build frontend (alamat API uji tertanam) + stack + semua uji
+node jalankan-e2e.js                         # pakai build yang sudah ada (simo/simo/.next)
+node jalankan-e2e.js -- --update-snapshots   # perbarui tangkapan acuan (hanya bila perubahan tampilan DISENGAJA)
+node jalankan-e2e.js -- --project=hp-390     # argumen setelah "--" diteruskan ke playwright test
+```
+
+`jalankan-e2e.js` menyalakan Postgres lokal sementara (port 54329, dibuat bersih tiap run), akun uji (admin, staf1, peneliti; password `password`, hanya di DB lokal), backend uji (8032) dan `next start` (3010, mode produksi), menjalankan uji, lalu mematikan semuanya. Tidak menyentuh Neon/production. Jangan menjalankan `npx playwright test` langsung kecuali stack sudah menyala (alamat lain lewat `SIMO_FE_URL` dan `SIMO_BE_URL`).
+
+Uji di `e2e/` (62 uji = 31 uji x 2 ukuran layar):
+- `00-cek-playwright.spec.js`: Playwright + Chrome berjalan (tanpa aplikasi).
+- `01-login.spec.js`: pesan error login tidak hilang dan tanpa reload, atribut cookie (Lax, tanpa Secure di http, sekitar 7 hari), halaman diproteksi.
+- `02-hak-akses.spec.js`: staf dialihkan dari halaman khusus admin dan tidak melihat tombol Tambah/Edit; admin boleh.
+- `03-design-akses.spec.js`: `/design` di produksi hanya untuk superadmin (peneliti).
+- `04-tampilan.spec.js`: 10 halaman utama tanpa scroll horizontal dan tangkapan layar sama dengan acuan (waktu browser dibekukan agar stabil), plus halaman 404.
+
+Tangkapan acuan ada di `e2e/__tangkapan__/` (di-commit, sekitar 2 MB); hasil uji sementara di `hasil/` dan `test-results/` (diabaikan git). Bila uji tampilan gagal setelah perubahan UI, lihat selisihnya di `hasil/playwright/`; bila perubahan memang disengaja, perbarui acuan dengan `--update-snapshots` lalu commit.

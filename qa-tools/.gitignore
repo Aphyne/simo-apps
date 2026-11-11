@@ -5,3 +5,8 @@ pgenv/pg.stop
 *.log
 *.out
 hasil/
+
+# Playwright
+test-results/
+playwright-report/
+e2e/__tangkapan__/**/*-actual.png
