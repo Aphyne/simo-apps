@@ -25,7 +25,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
       whatsapp: defaultValues?.whatsapp ?? '',
       jenis_obat: defaultValues?.jenis_obat ?? '',
       lead_time_avg: defaultValues?.lead_time_avg ?? 1,
-      biaya_pesan: defaultValues?.biaya_pesan ?? 0,
+      biaya_pesan: defaultValues?.biaya_pesan ?? 5000,
     },
   })
 
@@ -131,7 +131,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
         </div>
         <div>
           <label htmlFor="biaya_pesan" className="text-sm font-medium text-fg-secondary mb-1 block">
-            Biaya Pesan per Order (S) <span className="text-danger-600">*</span>
+            Biaya Pesan per Faktur (S) <span className="text-danger-600">*</span>
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">Rp</span>
@@ -144,7 +144,7 @@ export default function SupplierForm({ defaultValues, onSubmit, isLoading, submi
               {...register('biaya_pesan', { valueAsNumber: true, min: 0 })}
             />
           </div>
-          <p className="text-xs text-fg-muted mt-1">Biaya admin/ongkir per sekali pesan</p>
+          <p className="text-xs text-fg-muted mt-1">Biaya sekali pesan ke supplier ini; dibagi rata ke obat dalam satu faktur</p>
         </div>
       </div>
 

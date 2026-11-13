@@ -97,6 +97,8 @@ async function update(req, res) {
     }
     const lamaLeadTime = before[0].lead_time_avg;
     const lamaBiayaPesan = Number(before[0].biaya_pesan);
+    // Form tidak lagi mengirim biaya_pesan (S memakai pengaturan per faktur): pertahankan nilai lama, jangan ditimpa 0
+    const biayaPesanBaru = biaya_pesan == null ? lamaBiayaPesan : (biaya_pesan || 0);
 
     const { rows } = await pool.query(
       `UPDATE supplier
@@ -104,7 +106,7 @@ async function update(req, res) {
            jenis_obat = $5, lead_time_avg = $6, biaya_pesan = $7, updated_at = NOW()
        WHERE id = $8
        RETURNING *`,
-      [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1, biaya_pesan || 0, req.params.id]
+      [nama, alamat || null, telepon || null, whatsapp || null, jenis_obat || null, lead_time_avg || 1, biayaPesanBaru, req.params.id]
     );
 
     const baruLeadTime = rows[0].lead_time_avg;

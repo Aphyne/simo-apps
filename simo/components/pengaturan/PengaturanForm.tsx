@@ -14,7 +14,6 @@ interface PengaturanData {
   kota_apotek?: { value: string }
   default_service_level?: { value: string }
   default_lead_time?: { value: string }
-  default_biaya_pesan?: { value: string }
   biaya_pesan_per_faktur?: { value: string }
   threshold_expired_hari?: { value: string }
   asumsi_dus_tradisional?: { value: string }
@@ -34,7 +33,6 @@ function bentukForm(data: PengaturanData) {
     kota_apotek:            data.kota_apotek?.value            ?? '',
     default_service_level:  data.default_service_level?.value  ?? '95',
     default_lead_time:      data.default_lead_time?.value      ?? '1',
-    default_biaya_pesan:    data.default_biaya_pesan?.value    ?? '0',
     biaya_pesan_per_faktur: data.biaya_pesan_per_faktur?.value ?? '5000',
     threshold_expired_hari: data.threshold_expired_hari?.value ?? '90',
     asumsi_dus_tradisional: data.asumsi_dus_tradisional?.value ?? '2',
@@ -114,7 +112,7 @@ export default function PengaturanForm({ data }: Props) {
       {/* Default Kalkulasi EOQ */}
       <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-fg-secondary mb-1">Default Kalkulasi EOQ</h2>
-        <p className="text-xs text-fg-muted mb-4">Nilai ini dipakai saat obat baru ditambahkan dan belum diisi manual. Bisa diubah per obat di halaman Edit Obat.</p>
+        <p className="text-xs text-fg-muted mb-4">Nilai ini otomatis dipakai untuk obat yang baru ditambahkan lewat Tambah Obat. Permintaan (demand) tidak perlu diisi karena dihitung otomatis dari penjualan 30 hari terakhir.</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-fg-secondary">Service Level Default</label>
@@ -133,17 +131,11 @@ export default function PengaturanForm({ data }: Props) {
             <p className="mt-1 text-xs text-fg-muted">Berapa hari barang datang setelah dipesan</p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-fg-secondary">Biaya Pesan Default (Rp)</label>
-            <input type="number" min="0" value={form.default_biaya_pesan} onChange={e => set('default_biaya_pesan', e.target.value)}
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
-            <p className="mt-1 text-xs text-fg-muted">Nilai awal saat obat baru ditambahkan manual lewat Tambah Obat</p>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-fg-secondary">Biaya Pesan per Faktur (Rp)</label>
+            <label className="mb-1 block text-sm font-medium text-fg-secondary">Biaya Pesan per Faktur, Cadangan (Rp)</label>
             <input type="number" min="0" value={form.biaya_pesan_per_faktur} onChange={e => set('biaya_pesan_per_faktur', e.target.value)}
               className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
             <p className="mt-1 text-xs text-fg-muted">
-              Ongkos kirim/admin per sekali pesan (1 faktur) — dibagi rata ke tiap obat berbeda dalam faktur yang sama saat Stok Masuk dicatat, supaya biaya pesan tidak dihitung dobel per obat.
+              Dipakai hanya bila Biaya Pesan supplier belum diisi (0). Biaya pesan normalnya diisi per supplier di halaman Supplier, lalu dibagi rata ke tiap obat berbeda dalam satu faktur saat Stok Masuk dicatat. Obat baru dari Tambah Obat memulai dari 0 sampai ada faktur pertama.
             </p>
           </div>
         </div>
