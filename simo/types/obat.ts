@@ -41,14 +41,6 @@ export interface ObatFormData {
   kategori: string
   satuan: string
   satuan_per_dus: number
-  stok: number
-  demand_harian: number
-  demand_tahunan: number
-  std_dev_demand: number
-  biaya_pesan: number
-  service_level: number
-  expired_terdekat?: string
-  supplier_id?: number
 }
 
 export interface BarangMasuk {

@@ -12,20 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { KATEGORI_OBAT, SATUAN_OBAT, SERVICE_LEVEL_OPTIONS } from '@/lib/constants'
-import { useSupplierDropdown } from '@/hooks/useSupplier'
+import { KATEGORI_OBAT, SATUAN_OBAT } from '@/lib/constants'
 import type { ObatFormData } from '@/types/obat'
 import type { Obat } from '@/types/obat'
-import { Info, ChevronDown, ChevronUp, Calculator } from 'lucide-react'
-
-// ─── Helper: hitung standar deviasi sampel ────────────────────────────────────
-function hitungDariRiwayat(values: number[]): { mean: number; stdDev: number } {
-  const valid = values.filter((v) => !isNaN(v) && v >= 0)
-  if (valid.length < 2) return { mean: valid[0] ?? 0, stdDev: 0 }
-  const mean = valid.reduce((a, b) => a + b, 0) / valid.length
-  const variance = valid.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (valid.length - 1)
-  return { mean: parseFloat(mean.toFixed(4)), stdDev: parseFloat(Math.sqrt(variance).toFixed(4)) }
-}
+import { Info } from 'lucide-react'
 
 // ─── Tooltip kecil ────────────────────────────────────────────────────────────
 function Info_({text}: { text: string }) {
@@ -73,13 +63,6 @@ interface Props {
 }
 
 export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLabel = 'Simpan' }: Props) {
-  const { data: suppliers = [] } = useSupplierDropdown()
-
-  // UI state
-  const [showBantuHitung, setShowBantuHitung] = useState(false)
-  const [riwayatHarian, setRiwayatHarian] = useState(['', '', '', '', ''])
-  const [isDemandFromTahunan, setIsDemandFromTahunan] = useState(false)
-
   const {
     register,
     handleSubmit,
@@ -92,56 +75,11 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
       kategori: defaultValues?.kategori ?? '',
       satuan: defaultValues?.satuan ?? '',
       satuan_per_dus: defaultValues?.satuan_per_dus ?? 1,
-      stok: defaultValues?.stok ?? 0,
-      demand_harian: defaultValues?.demand_harian ?? 0,
-      demand_tahunan: defaultValues?.demand_tahunan ?? 0,
-      std_dev_demand: defaultValues?.std_dev_demand ?? 0,
-      biaya_pesan: defaultValues?.biaya_pesan ?? 0,
-      service_level: defaultValues?.service_level ?? 95,
-      expired_terdekat: defaultValues?.expired_terdekat
-        ? defaultValues.expired_terdekat.slice(0, 10)
-        : undefined,
-      supplier_id: defaultValues?.supplier_id ?? undefined,
     },
   })
 
   const satuanValue = useWatch({ control, name: 'satuan' })
   const kategoriValue = useWatch({ control, name: 'kategori' })
-  const serviceLevelValue = useWatch({ control, name: 'service_level' })
-  const demandHarian = useWatch({ control, name: 'demand_harian' })
-  const demandTahunan = useWatch({ control, name: 'demand_tahunan' })
-  const supplierIdValue = useWatch({ control, name: 'supplier_id' })
-
-  // Auto-link demand harian → tahunan
-  // demand_tahunan selalu bilangan bulat, demand_harian maks 2 desimal
-  function handleDemandHarianChange(val: number) {
-    const harian = parseFloat(val.toFixed(2))
-    setValue('demand_harian', harian)
-    if (!isDemandFromTahunan) {
-      setValue('demand_tahunan', Math.round(harian * 365))
-    }
-    setIsDemandFromTahunan(false)
-  }
-
-  // Auto-link demand tahunan → harian
-  function handleDemandTahunanChange(val: number) {
-    const tahunan = Math.round(val)
-    setValue('demand_tahunan', tahunan)
-    setIsDemandFromTahunan(true)
-    setValue('demand_harian', parseFloat((tahunan / 365).toFixed(2)))
-  }
-
-  // Bantu hitung standar deviasi dari riwayat penjualan harian
-  function terapkanBantuHitung() {
-    const angka = riwayatHarian.map((v) => parseFloat(v)).filter((v) => !isNaN(v))
-    if (angka.length < 2) return
-    const { mean, stdDev } = hitungDariRiwayat(angka)
-    const harian = parseFloat(mean.toFixed(2))
-    setValue('demand_harian', harian)
-    setValue('demand_tahunan', Math.round(harian * 365))
-    setValue('std_dev_demand', stdDev)
-    setShowBantuHitung(false)
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -195,250 +133,6 @@ export default function ObatForm({ defaultValues, onSubmit, isLoading, submitLab
             <Input id="satuan_per_dus" type="number" min={1}
               {...register('satuan_per_dus', { valueAsNumber: true, min: { value: 1, message: 'Isi per dus minimal 1' }, required: 'Isi per dus wajib diisi' })} />
             {errors.satuan_per_dus && <p className="text-xs text-danger-600">{errors.satuan_per_dus.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="stok">
-              Stok Awal <span className="text-danger-600">*</span>
-              <Info_ text={`Jumlah stok saat ini dalam satuan terkecil (${satuanValue || 'satuan'}), bukan dus. Isi 0 jika obat belum tersedia.`} />
-            </Label>
-            <Input id="stok" type="number" min={0}
-              {...register('stok', { valueAsNumber: true, min: { value: 0, message: 'Stok tidak boleh negatif' } })} />
-            {errors.stok && <p className="text-xs text-danger-600">{errors.stok.message}</p>}
-          </div>
-
-
-        </div>
-      </div>
-
-      {/* ── SEKSI 2: DATA PERMINTAAN ─────────────────────────────────────── */}
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-        <SectionTitle num={2}>Data Permintaan (Demand)</SectionTitle>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* Demand Harian */}
-          <div className="space-y-1.5">
-            <Label htmlFor="demand_harian">
-              Permintaan Harian (rata-rata)
-              <Info_ text="Rata-rata jumlah obat yang terjual atau keluar per hari. Contoh: Paracetamol terjual sekitar 11 tablet per hari → isi 11. Nilai ini otomatis mengisi permintaan per tahun." />
-            </Label>
-            <div className="relative">
-              <Input
-                id="demand_harian"
-                type="number"
-                min={0}
-                step={0.01}
-                value={demandHarian ?? 0}
-                onChange={(e) => handleDemandHarianChange(parseFloat(e.target.value) || 0)}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">
-                {satuanValue || 'unit'}/hari
-              </span>
-            </div>
-            <input type="hidden" {...register('demand_harian', { valueAsNumber: true })} />
-          </div>
-
-          {/* Demand Tahunan */}
-          <div className="space-y-1.5">
-            <Label htmlFor="demand_tahunan">
-              Permintaan per Tahun (D)
-              <Info_ text="Total permintaan dalam 1 tahun. Otomatis dihitung dari permintaan harian × 365. Bisa juga diisi langsung — permintaan harian akan menyesuaikan." />
-            </Label>
-            <div className="relative">
-              <Input
-                id="demand_tahunan"
-                type="number"
-                min={0}
-                step={1}
-                value={Math.round(demandTahunan ?? 0)}
-                onChange={(e) => handleDemandTahunanChange(parseFloat(e.target.value) || 0)}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">
-                {satuanValue || 'unit'}/tahun
-              </span>
-            </div>
-            <input type="hidden" {...register('demand_tahunan', { valueAsNumber: true })} />
-          </div>
-        </div>
-
-        {/* Standar Deviasi */}
-        <div className="mt-4 space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="std_dev_demand">
-              Standar Deviasi Permintaan Harian (σ)
-              <Info_ text="Ukuran seberapa tidak menentu penjualan harian. Nilai besar = penjualan sangat fluktuatif. Contoh: rata-rata 10 tablet/hari, kadang 5 kadang 15 → std dev sekitar 3–4. Gunakan tombol 'Bantu Hitung' jika tidak tahu nilainya." />
-            </Label>
-            <button
-              type="button"
-              onClick={() => setShowBantuHitung(!showBantuHitung)}
-              className="flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-700 font-medium"
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              Bantu Hitung dari Riwayat Penjualan
-              {showBantuHitung ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-
-          <div className="relative max-w-xs">
-            <Input
-              id="std_dev_demand"
-              type="number"
-              min={0}
-              step="any"
-              {...register('std_dev_demand', { valueAsNumber: true, min: 0 })}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">
-              {satuanValue || 'unit'}/hari
-            </span>
-          </div>
-
-          {/* Panel Bantu Hitung */}
-          {showBantuHitung && (
-            <div className="mt-3 bg-brand-50 border border-brand-200 rounded-lg p-4 space-y-3">
-              <div>
-                <p className="text-sm font-medium text-brand-800">
-                  Masukkan data penjualan harian selama beberapa hari terakhir
-                </p>
-                <p className="text-xs text-brand-600 mt-0.5">
-                  Minimal 2 hari. Semakin banyak data, semakin akurat hasilnya.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {riwayatHarian.map((val, i) => (
-                  <div key={i} className="space-y-1">
-                    <p className="text-xs text-fg-muted text-center">Hari {i + 1}</p>
-                    <Input
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={val}
-                      onChange={(e) => {
-                        const updated = [...riwayatHarian]
-                        updated[i] = e.target.value
-                        setRiwayatHarian(updated)
-                      }}
-                      className="w-20 text-center"
-                      placeholder="0"
-                    />
-                  </div>
-                ))}
-                {/* Tombol tambah hari */}
-                {riwayatHarian.length < 30 && (
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={() => setRiwayatHarian([...riwayatHarian, ''])}
-                      className="h-9 w-9 rounded-md border border-dashed border-brand-300 text-brand-400 hover:border-brand-500 hover:text-brand-600 text-lg flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Preview hasil */}
-              {(() => {
-                const angka = riwayatHarian.map((v) => parseFloat(v)).filter((v) => !isNaN(v) && v >= 0)
-                if (angka.length < 2) return null
-                const { mean, stdDev } = hitungDariRiwayat(angka)
-                return (
-                  <div className="bg-surface rounded-md border border-brand-200 px-4 py-3 text-sm">
-                    <p className="text-fg-tertiary">
-                      Dari <strong>{angka.length} hari</strong> data:
-                    </p>
-                    <div className="flex gap-6 mt-1">
-                      <span>Rata-rata harian: <strong className="text-brand-700">{mean} {satuanValue || 'unit'}/hari</strong></span>
-                      <span>Standar deviasi: <strong className="text-brand-700">{stdDev}</strong></span>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              <Button
-                type="button"
-                size="sm"
-                onClick={terapkanBantuHitung}
-                className="bg-brand-600 hover:bg-brand-700 text-fg-inverse"
-              >
-                Terapkan ke Form
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── SEKSI 3: PARAMETER EOQ ───────────────────────────────────────── */}
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-        <SectionTitle num={3}>Parameter Kalkulasi EOQ/ROP</SectionTitle>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* Biaya Pesan */}
-          <div className="space-y-1.5">
-            <Label htmlFor="biaya_pesan">
-              Biaya Pesan / Order (S) <span className="text-danger-600">*</span>
-              <Info_ text="Biaya yang dikeluarkan setiap kali memesan obat ini, misalnya alokasi ongkos kirim atau biaya admin. Isi 0 jika tidak ada biaya pemesanan." />
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-fg-muted">Rp</span>
-              <Input id="biaya_pesan" type="number" min={0} step={100} className="pl-9"
-                {...register('biaya_pesan', { valueAsNumber: true, min: 0 })} />
-            </div>
-            <p className="text-xs text-fg-muted">Isi 0 jika tidak ada biaya pemesanan</p>
-          </div>
-
-          {/* Service Level */}
-          <div className="space-y-1.5">
-            <Label>
-              Service Level (Z)
-              <Info_ text="Tingkat kepercayaan bahwa stok tidak akan habis sebelum pemesanan berikutnya tiba. 95% adalah standar umum. Semakin tinggi, semakin besar safety stock yang dibutuhkan." />
-            </Label>
-            <Select
-              value={String(serviceLevelValue)}
-              onValueChange={(v) => setValue('service_level', Number(v))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih service level" />
-              </SelectTrigger>
-              <SelectContent>
-                {SERVICE_LEVEL_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <input type="hidden" {...register('service_level', { valueAsNumber: true })} />
-          </div>
-
-        </div>
-      </div>
-
-      {/* ── SEKSI 4: INFO TAMBAHAN ───────────────────────────────────────── */}
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-        <SectionTitle num={4}>Informasi Tambahan</SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <div className="space-y-1.5">
-            <Label htmlFor="expired_terdekat">Tanggal Kedaluarsa Terdekat</Label>
-            <Input id="expired_terdekat" type="date" {...register('expired_terdekat')} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Supplier</Label>
-            <Select
-              value={supplierIdValue ? String(supplierIdValue) : '0'}
-              onValueChange={(v) => setValue('supplier_id', v && v !== '0' ? Number(v) : undefined)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih supplier (opsional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">— Tanpa supplier —</SelectItem>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>{s.nama}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
         </div>

@@ -95,7 +95,12 @@ async function getAll(req, res) {
 
 async function getById(req, res) {
   try {
-    const { rows } = await pool.query('SELECT * FROM obat WHERE id = $1', [req.params.id]);
+    const { rows } = await pool.query(
+      `SELECT o.*, COALESCE(s.lead_time_avg, o.lead_time) AS lead_time
+       FROM obat o LEFT JOIN supplier s ON s.id = o.supplier_id
+       WHERE o.id = $1`,
+      [req.params.id]
+    );
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
     }
@@ -149,6 +154,11 @@ function periksaBodyObat(body) {
   return null;
 }
 
+// true bila field dikirim dan berisi nilai (bukan undefined/null/string kosong)
+function body_ada(v) {
+  return v !== undefined && v !== null && v !== '';
+}
+
 async function create(req, res) {
   const {
     nama: namaMentah, kategori, satuan, satuan_per_dus,
@@ -181,6 +191,17 @@ async function create(req, res) {
     }
     const kode = `OBT-${String(nextNum).padStart(3, '0')}`;
 
+    // Service level dan lead time yang tidak dikirim form diambil dari Pengaturan.
+    // Biaya pesan obat baru = 0 (tidak ada di Pengaturan): nilainya baru terisi saat Stok Masuk (faktur)
+    // dicatat, dari biaya pesan supplier dibagi rata ke obat dalam faktur itu.
+    const { rows: setRows } = await pool.query(
+      `SELECT key, value FROM pengaturan WHERE key IN ('default_service_level','default_lead_time')`
+    );
+    const def = Object.fromEntries(setRows.map((r) => [r.key, parseFloat(r.value)]));
+    const slDefault = body_ada(service_level) ? service_level : (def.default_service_level || 95);
+    const bpDefault = body_ada(biaya_pesan) ? biaya_pesan : 0;
+    const ltDefault = body_ada(lead_time) ? lead_time : (def.default_lead_time || 1);
+
     // Ambil nama supplier jika supplier_id diisi
     let nama_supplier = null;
     if (supplier_id) {
@@ -203,8 +224,8 @@ async function create(req, res) {
         kode, nama, kategori, satuan,
         satuan_per_dus || 1, harga_beli || 0, harga_jual || 0, 0,
         demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
-        biaya_pesan || 0, biaya_simpan || 0,
-        lead_time || 1, service_level || 95,
+        bpDefault, biaya_simpan || 0,
+        ltDefault, slDefault,
         expired_terdekat || null,
         supplier_id || null, nama_supplier,
       ]
@@ -364,7 +385,13 @@ async function getReorderAlert(req, res) {
 
 async function getPerhitungan(req, res) {
   try {
-    const { rows } = await pool.query('SELECT * FROM obat WHERE id = $1', [req.params.id]);
+    // Lead time memakai aturan yang sama dengan hitungUlangObat: lead time supplier bila ada
+    const { rows } = await pool.query(
+      `SELECT o.*, COALESCE(s.lead_time_avg, o.lead_time) AS lead_time
+       FROM obat o LEFT JOIN supplier s ON s.id = o.supplier_id
+       WHERE o.id = $1`,
+      [req.params.id]
+    );
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'Obat tidak ditemukan' });
     }

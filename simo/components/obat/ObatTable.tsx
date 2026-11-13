@@ -380,7 +380,7 @@ export default function ObatTable() {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="text-fg-muted font-mono">—</span>
-          Data belum tersedia (perlu isi demand harian)
+          Data belum tersedia (menunggu riwayat penjualan)
         </span>
       </div>
 

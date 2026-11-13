@@ -119,7 +119,7 @@ export default function ReorderObatList({
                   </td>
                   <td className="py-3 px-3 text-right">
                     {tanpaSupplier ? (
-                      <span className="text-xs text-warning-700 font-medium">Atur supplier dulu</span>
+                      <span className="text-xs text-warning-700 font-medium">Catat Stok Masuk dulu</span>
                     ) : (
                       <button
                         onClick={() => onToggle(it)}
