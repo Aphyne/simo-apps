@@ -20,6 +20,7 @@ async function masuk(page, username) {
 // Tunggu halaman selesai memuat data dan animasi grafik berhenti.
 async function tenang(page) {
   await page.waitForLoadState('networkidle');
+  await page.evaluate(() => document.fonts.ready); // font web (Figtree) harus sudah terpasang sebelum tangkapan layar
   await page.waitForTimeout(900);
 }
 

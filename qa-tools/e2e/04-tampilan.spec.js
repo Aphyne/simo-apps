@@ -32,7 +32,8 @@ for (const [nama, rute] of HALAMAN) {
       cw: document.documentElement.clientWidth,
     }));
     expect(sw, `scrollWidth ${sw} > clientWidth ${cw}`).toBeLessThanOrEqual(cw);
-    await expect(page).toHaveScreenshot(`${nama}.png`, { fullPage: true });
+    // Teks di dalam <select> bawaan browser kadang berbeda antialiasing antar-run (kedipan render); ditutup mask.
+    await expect(page).toHaveScreenshot(`${nama}.png`, { fullPage: true, mask: [page.locator('select')] });
   });
 }
 
