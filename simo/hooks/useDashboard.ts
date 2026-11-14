@@ -15,6 +15,11 @@ export function useDashboardSummary() {
           penjualan_hari_ini: number
           transaksi_hari_ini: number
           obat_expiring: number
+          // Tambahan baru; opsional sampai backend dijalankan ulang
+          masuk_hari_ini?: number
+          keluar_hari_ini?: number
+          pendapatan_hari_ini?: number
+          penjualan_tanpa_harga?: number
         }
         obat_mendesak: {
           id: number

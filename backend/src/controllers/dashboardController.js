@@ -7,6 +7,7 @@ async function getSummary(req, res) {
       obatReorder,
       nilaiStok,
       transaksiHariIni,
+      pendapatanHariIni,
       obatExpiring,
       obatMendesak,
       daftarExpired,
@@ -19,8 +20,16 @@ async function getSummary(req, res) {
       pool.query(`SELECT COALESCE(SUM(jumlah), 0) AS total FROM barang_keluar WHERE keterangan = 'Penjualan' AND tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date`),
       pool.query(`
         SELECT
-          (SELECT COUNT(*) FROM barang_masuk WHERE tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date) +
-          (SELECT COUNT(*) FROM barang_keluar WHERE tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date) AS total
+          (SELECT COUNT(*) FROM barang_masuk WHERE tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date) AS masuk,
+          (SELECT COUNT(*) FROM barang_keluar WHERE tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date) AS keluar
+      `),
+      // Pendapatan = jumlah x harga_jual yang tercatat saat penjualan. Baris tanpa harga (data lama)
+      // dihitung terpisah supaya tampilan tidak menyiratkan Rp 0 yang keliru.
+      pool.query(`
+        SELECT COALESCE(SUM(jumlah * harga_jual), 0) AS total,
+               COUNT(*) FILTER (WHERE harga_jual IS NULL OR harga_jual = 0) AS tanpa_harga
+        FROM barang_keluar
+        WHERE keterangan = 'Penjualan' AND tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date
       `),
       pool.query(`
         SELECT COUNT(*) FROM obat
@@ -105,7 +114,11 @@ async function getSummary(req, res) {
           total_obat: parseInt(totalObat.rows[0].count),
           obat_reorder: parseInt(obatReorder.rows[0].count),
           penjualan_hari_ini: parseInt(nilaiStok.rows[0].total),
-          transaksi_hari_ini: parseInt(transaksiHariIni.rows[0].total),
+          transaksi_hari_ini: parseInt(transaksiHariIni.rows[0].masuk) + parseInt(transaksiHariIni.rows[0].keluar),
+          masuk_hari_ini: parseInt(transaksiHariIni.rows[0].masuk),
+          keluar_hari_ini: parseInt(transaksiHariIni.rows[0].keluar),
+          pendapatan_hari_ini: Math.round(parseFloat(pendapatanHariIni.rows[0].total)),
+          penjualan_tanpa_harga: parseInt(pendapatanHariIni.rows[0].tanpa_harga),
           obat_expiring: parseInt(obatExpiring.rows[0].count),
         },
         obat_mendesak: obatMendesak.rows,
