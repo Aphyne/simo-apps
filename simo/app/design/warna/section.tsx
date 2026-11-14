@@ -1,93 +1,57 @@
 import { PageHeader, Section } from '../_components'
 import { Swatch } from '../_swatch'
 
-// Kelas ditulis utuh (bukan dirangkai) supaya terdeteksi Tailwind.
-const SKALA = [
-  { fam: 'brand', peran: 'Aksen utama: tombol primer, nav aktif, cincin fokus, tautan. 600 = isi pekat, 500 = fokus input, 700 = hover, 50/100 = tint.',
-    langkah: [
-      ['50', 'bg-brand-50'], ['100', 'bg-brand-100'], ['200', 'bg-brand-200'], ['300', 'bg-brand-300'], ['400', 'bg-brand-400'],
-      ['500', 'bg-brand-500'], ['600', 'bg-brand-600'], ['700', 'bg-brand-700'], ['800', 'bg-brand-800'], ['900', 'bg-brand-900'],
-    ] },
-  { fam: 'danger', peran: 'Error, stok kritis, hapus. 600 untuk teks error, 100 untuk badge.',
-    langkah: [
-      ['50', 'bg-danger-50'], ['100', 'bg-danger-100'], ['200', 'bg-danger-200'], ['300', 'bg-danger-300'], ['400', 'bg-danger-400'],
-      ['500', 'bg-danger-500'], ['600', 'bg-danger-600'], ['700', 'bg-danger-700'], ['800', 'bg-danger-800'], ['900', 'bg-danger-900'],
-    ] },
-  { fam: 'success', peran: 'Aman, sukses. 700 untuk teks data hijau, 100 untuk badge.',
-    langkah: [
-      ['50', 'bg-success-50'], ['100', 'bg-success-100'], ['200', 'bg-success-200'], ['300', 'bg-success-300'], ['400', 'bg-success-400'],
-      ['500', 'bg-success-500'], ['600', 'bg-success-600'], ['700', 'bg-success-700'], ['800', 'bg-success-800'], ['900', 'bg-success-900'],
-    ] },
-  { fam: 'warning', peran: 'Mendekati ROP/kedaluwarsa, peringatan. 700 untuk teks, 100 untuk badge.',
-    langkah: [
-      ['50', 'bg-warning-50'], ['100', 'bg-warning-100'], ['200', 'bg-warning-200'], ['300', 'bg-warning-300'], ['400', 'bg-warning-400'],
-      ['500', 'bg-warning-500'], ['600', 'bg-warning-600'], ['700', 'bg-warning-700'], ['800', 'bg-warning-800'], ['900', 'bg-warning-900'],
-    ] },
-] as const
-
 export function WarnaSection() {
   return (
     <section id="warna">
-      <PageHeader title="Warna" desc="Warna diberi nama lewat token di simo/app/globals.css. Blok di bawah memakai kelas token itu sendiri dan nilainya dibaca dari CSS di browser, jadi mengubah token di globals.css langsung terlihat di sini. Warna semantik dipakai konsisten untuk status stok dan keterangan transaksi, dan selalu disertai teks, bukan hanya warna." />
+      <PageHeader
+        title="Warna"
+        desc="Dua keluarga: biru untuk aksi, pilihan aktif, dan data utama; slate untuk teks, garis, dan permukaan. Tanpa gradasi. Merah dan oranye hanya muncul sebagai status stok, selalu bersama teks. Semua nilai di bawah dibaca dari globals.css."
+      />
 
-      {SKALA.map((s) => (
-        <Section key={s.fam} title={`${s.fam} (50 sampai 900)`} desc={s.peran} meta={`bg-${s.fam}-{50..900}`}>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {s.langkah.map(([n, kelas]) => (
-              <Swatch key={kelas} compact name={`${s.fam}-${n}`} token={kelas} className={kelas} />
-            ))}
-          </div>
-        </Section>
-      ))}
-
-      <Section title="Teks" desc="fg-subtle hanya untuk ikon dan elemen non-teks (tidak lolos AA untuk teks)." meta="text-{fg, fg-secondary, ...}">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Swatch name="Judul, angka utama" token="fg" className="bg-fg" />
-          <Swatch name="Label form, sel tabel" token="fg-secondary" className="bg-fg-secondary" />
-          <Swatch name="Teks isi" token="fg-tertiary" className="bg-fg-tertiary" />
-          <Swatch name="Sublabel, caption" token="fg-muted" className="bg-fg-muted" />
-          <Swatch name="Hanya ikon" token="fg-subtle" className="bg-fg-subtle" />
-          <Swatch name="Teks di atas warna pekat" token="fg-inverse" className="bg-fg-inverse" />
+      <Section title="Biru" desc="Satu-satunya warna aksen. Tombol utama, tautan, cincin fokus, dan garis data utama." meta="bg-primary · bg-accent · bg-chart-1">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Swatch name="Primer" token="primary" className="bg-primary" note="Tombol utama, tautan, angka yang ditekankan." />
+          <Swatch name="Primer, teks di atasnya" token="primary-foreground" className="bg-primary-foreground" />
+          <Swatch name="Aksen lembut" token="accent" className="bg-accent" note="Hover menu dan baris terpilih." />
+          <Swatch name="Aksen, teks" token="accent-foreground" className="bg-accent-foreground" />
         </div>
       </Section>
 
-      <Section title="Permukaan dan garis" meta="bg-surface* · border-line*">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Swatch name="Kartu, panel, input" token="surface" className="bg-surface" />
-          <Swatch name="Latar halaman, header tabel" token="surface-subtle" className="bg-surface-subtle" />
-          <Swatch name="Hover netral, skeleton, chip" token="surface-muted" className="bg-surface-muted" />
-          <Swatch name="Border kartu, tabel" token="line" className="bg-line" />
-          <Swatch name="Pemisah baris halus" token="line-subtle" className="bg-line-subtle" />
-          <Swatch name="Border input, tombol sekunder" token="line-strong" className="bg-line-strong" />
+      <Section title="Slate" desc="Netral bersuhu dingin. Teks, garis, dan permukaan." meta="bg-background · bg-card · bg-muted · border">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <Swatch name="Latar halaman" token="background" className="bg-background" />
+          <Swatch name="Panel dan kartu" token="card" className="bg-card" />
+          <Swatch name="Permukaan redup" token="muted" className="bg-muted" note="Skeleton, chip, jalur progres." />
+          <Swatch name="Sekunder" token="secondary" className="bg-secondary" />
+          <Swatch name="Teks utama" token="foreground" className="bg-foreground" />
+          <Swatch name="Teks pendukung" token="muted-foreground" className="bg-muted-foreground" note="Label, keterangan, sumbu grafik." />
+          <Swatch name="Garis" token="border" className="bg-border" note="Panel, pemisah baris." />
+          <Swatch name="Garis kontrol" token="input" className="bg-input" note="Tepi input dan tombol outline." />
         </div>
       </Section>
 
-      <Section title="Semantik: Status Stok" desc="AMAN / MENDEKATI_ROP / HARUS_REORDER, selalu disertai label teks, tidak pernah hanya warna.">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Swatch name="Aman" token="success-700 (teks) · success-100 (badge)" className="bg-success-700" note="StatusBadge saat ini memakai green, bukan success (lihat docs/DESIGN.md bagian 5)." />
-          <Swatch name="Mendekati ROP" token="warning-700 (teks) · warning-100 (badge)" className="bg-warning-700" />
-          <Swatch name="Harus Reorder" token="danger-600 (teks) · danger-100 (badge)" className="bg-danger-600" />
+      <Section title="Status stok" desc="Dua keadaan yang memang butuh warna. Kritis memakai merah, mendekati ROP memakai oranye. Aman tidak diberi warna." meta="danger-* · warning-*">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <Swatch name="Kritis" token="destructive" className="bg-destructive" note="Badge, angka, garis level stok di bawah ROP." />
+          <Swatch name="Mendekati ROP" token="warning-700 (teks) · warning-50 (latar)" className="bg-warning-700" />
+          <Swatch name="Aman" token="foreground" className="bg-foreground" note="Teks biasa, tanpa warna khusus." />
         </div>
       </Section>
 
-      <Section title="Semantik: Keterangan Transaksi dan Role">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Swatch name="Penjualan / Admin" token="brand-600" className="bg-brand-600" />
-          <Swatch name="Retur" token="purple-600" className="bg-purple-600" note="Tanpa token (belum ada nama peran)." />
-          <Swatch name="Rusak" token="warning-600" className="bg-warning-600" />
-          <Swatch name="Kedaluarsa" token="danger-500" className="bg-danger-500" />
-          <Swatch name="Lainnya / Staf" token="fg-muted" className="bg-fg-muted" />
+      <Section title="Warna grafik" desc="Urutan pemakaian: chart-1 untuk data utama, chart-2 untuk pembanding atau baseline. Sisanya hanya bila perlu lebih dari dua seri." meta="var(--chart-1) … var(--chart-5)">
+        <div className="grid grid-cols-5 gap-4">
+          <Swatch compact name="chart-1" token="data utama" className="bg-chart-1" />
+          <Swatch compact name="chart-2" token="pembanding" className="bg-chart-2" />
+          <Swatch compact name="chart-3" token="seri ketiga" className="bg-chart-3" />
+          <Swatch compact name="chart-4" token="seri keempat" className="bg-chart-4" />
+          <Swatch compact name="chart-5" token="seri kelima" className="bg-chart-5" />
         </div>
       </Section>
 
-      <Section title="Kartu Rumus (border-l accent)" desc="RumusDisplay.tsx: tiap kartu langkah kalkulasi EOQ/SS/ROP/TC punya warna border-l berbeda.">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Swatch name="EOQ" token="brand-500" className="bg-brand-500" />
-          <Swatch name="Safety Stock" token="success-500" className="bg-success-500" />
-          <Swatch name="ROP" token="warning-500" className="bg-warning-500" />
-          <Swatch name="Total Cost" token="purple-500" className="bg-purple-500" note="Tanpa token." />
-        </div>
-      </Section>
+      <p className="mt-6 max-w-2xl text-sm text-muted-foreground">
+        Token lama (brand, fg, surface, line, danger, warning) masih dipakai halaman lain dan belum dimigrasikan. Sudah memakai sistem ini: Dashboard, Design, serta sidebar, header, latar, dan huruf di semua halaman. Isi halaman lain belum.
+      </p>
     </section>
   )
 }

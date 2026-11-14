@@ -1,69 +1,81 @@
+'use client'
+
+import { CalendarX, PackageOpen, Pill, TriangleAlert } from 'lucide-react'
+import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { StatTile } from '@/components/dashboard/StatTile'
+import { StatusBadge } from '@/components/dashboard/StokMenipisCard'
 import { PageHeader, Section } from '../_components'
 
 export function FeedbackSection() {
   return (
     <section id="feedback">
-      <PageHeader title="Feedback" desc="Badge untuk status singkat, alert untuk peringatan inline, toast untuk notifikasi reorder, progress untuk proses berjalan." />
+      <PageHeader
+        title="Umpan balik"
+        desc="Badge untuk status singkat, alert untuk peringatan di tempat, toast untuk hasil sebuah aksi, progress untuk proses berjalan. Status selalu ditulis dengan kata, tidak hanya warna."
+      />
 
-      <Section title="Badge — Status Stok" meta="StatusBadge.tsx">
+      <Section title="Badge status stok" desc="Empat tingkat, dari yang paling mendesak: Habis (stok 0), Kritis (di bawah ROP), Mendekati ROP, Aman. Dua yang pertama memakai merah, dan teks Kritis memakai danger-700 agar kontrasnya 5,4:1." meta="StatusBadge (dipakai di Dashboard)">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge stok={0} rop={1} />
+          <StatusBadge stok={2} rop={9} />
+          <StatusBadge stok={120} rop={110} />
+          <Badge variant="outline">Aman</Badge>
+        </div>
+      </Section>
+
+      <Section title="Badge lain" desc="Netral untuk keterangan biasa, biru untuk yang aktif atau terpilih.">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge>Admin</Badge>
+          <Badge variant="secondary">Staf</Badge>
+          <Badge variant="secondary">Penjualan</Badge>
+          <Badge variant="secondary">Retur</Badge>
+          <Badge variant="secondary">Rusak</Badge>
+        </div>
+      </Section>
+
+      <Section title="Alert di tempat" desc="Satu panel dengan garis tipis, ikon di kiri. Pesan menyebut jumlah dan apa yang bisa dilakukan.">
+        <div role="status" className="flex max-w-md items-start gap-3 rounded-lg border bg-muted/50 p-4">
+          <CalendarX className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div className="text-sm">
+            <p className="font-medium text-foreground">2 obat akan expired dalam 90 hari</p>
+            <p className="mt-0.5 text-muted-foreground">Buka Monitoring untuk melihat daftarnya.</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Toast" desc="Hasil sebuah aksi. Kata kerja yang sama dengan tombolnya: Simpan berakhir dengan Tersimpan." meta="sonner">
         <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">Aman</span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-warning-200 bg-warning-100 px-2.5 py-0.5 text-xs font-medium text-warning-700">Mendekati ROP</span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-danger-200 bg-danger-100 px-2.5 py-0.5 text-xs font-medium text-danger-700">Harus Reorder</span>
+          <Button variant="outline" onClick={() => toast.success('Obat tersimpan')}>Contoh sukses</Button>
+          <Button variant="outline" onClick={() => toast.error('Obat gagal disimpan. Periksa kolom stok awal.')}>Contoh gagal</Button>
         </div>
       </Section>
 
-      <Section title="Badge — Keterangan Transaksi &amp; Role">
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-100 text-brand-700">Penjualan</span>
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Retur</span>
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-warning-100 text-warning-700">Rusak</span>
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-danger-100 text-danger-600">Kedaluarsa</span>
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-surface-muted text-fg-tertiary">Lainnya</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-100 text-brand-700">Admin</span>
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-surface-muted text-fg-tertiary">Staf</span>
-        </div>
-      </Section>
-
-      <Section title="Alert inline">
-        <div className="max-w-sm rounded-lg bg-warning-50 border border-warning-200 p-3">
-          <p className="text-xs font-semibold text-warning-700">2 obat akan expired dalam 90 hari</p>
-          <p className="text-xs text-warning-700 mt-1">Lihat di Monitoring →</p>
-        </div>
-      </Section>
-
-      <Section title="Reorder Alert (bell dropdown)" meta="AlertNotification.tsx">
-        <div className="w-72 rounded-xl border border-line bg-surface shadow-xl overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-line-subtle">
-            <p className="text-sm font-semibold text-fg">Reorder Alert</p>
-            <span className="bg-danger-100 text-danger-600 text-xs font-semibold px-1.5 py-0.5 rounded-full">1</span>
-          </div>
-          <div className="p-2">
-            <div className="rounded-xl border border-line-subtle bg-surface p-3 space-y-1.5 shadow-sm">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full bg-danger-100 text-danger-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-danger-500" />STOK HABIS
-              </span>
-              <p className="text-sm font-semibold text-fg">Obh Combi Anak</p>
-              <p className="text-xs text-fg-muted">Stok sisa <span className="font-semibold text-danger-600">2</span> botol · ROP 9</p>
-            </div>
+      <Section title="Data gagal dimuat" desc="Angka tidak boleh tampil 0 atau 'aman' saat server tidak menjawab. Angka diganti '-', dan tiap panel menjelaskan bahwa ini bukan berarti stok aman." meta="StatTile value={null}" bare>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <StatTile label="Total obat" value={null} sublabel="jenis terdaftar" icon={Pill} />
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card px-5 py-8 text-center">
+            <TriangleAlert className="size-6 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">Data stok belum bisa dimuat</p>
+            <p className="text-sm text-muted-foreground">Ini bukan berarti semua stok aman. Coba lagi lewat tombol di atas.</p>
           </div>
         </div>
       </Section>
 
-      <Section title="Progress bar">
-        <div className="max-w-xs space-y-3">
-          <div className="h-1.5 w-full rounded-full bg-surface-muted overflow-hidden">
-            <div className="h-full bg-brand-600" style={{ width: '65%' }} />
-          </div>
-          <p className="text-xs text-fg-muted">Menghitung ulang 13 / 20 obat...</p>
+      <Section title="Progress" meta="Progress">
+        <div className="max-w-xs space-y-2">
+          <Progress value={65} aria-label="Menghitung ulang obat" />
+          <p className="text-sm tabular-nums text-muted-foreground">Menghitung ulang 13 dari 20 obat</p>
         </div>
       </Section>
 
-      <Section title="Empty state" desc="Pola konsisten di semua tabel/daftar saat data kosong.">
-        <div className="flex flex-col items-center justify-center py-10 text-center text-fg-muted">
-          <p className="text-sm">Belum ada barang keluar hari ini</p>
+      <Section title="Keadaan kosong" desc="Ikon kecil, satu kalimat yang menjelaskan apa yang belum ada, dan bila bisa satu aksi.">
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <PackageOpen className="size-6 text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">Belum ada barang keluar hari ini</p>
+          <p className="text-sm text-muted-foreground">Catatan akan muncul di sini setelah stok keluar dicatat.</p>
         </div>
       </Section>
     </section>

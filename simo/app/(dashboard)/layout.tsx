@@ -34,12 +34,12 @@ export default function DashboardLayout({
   }, [hydrate])
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <ActivityTracker />
       <Sidebar open={menuOpen} onClose={tutupMenu} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 bg-surface-subtle overflow-auto">
+        <main className="flex-1 px-4 pb-8 pt-2 sm:px-8 bg-background overflow-auto">
           <GlobalErrorBanner />
           {children}
         </main>

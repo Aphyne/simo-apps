@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Figtree } from 'next/font/google'
 import './globals.css'
 import Providers from './providers'
 import { Toaster } from '@/components/ui/sonner'
 import { cn } from "@/lib/utils";
 
-const inter = Inter({
+const figtree = Figtree({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-figtree',
 })
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="id" className={cn("h-full", "antialiased", inter.variable, "font-sans")}>
+    <html lang="id" className={cn("h-full", "antialiased", figtree.variable, "font-sans")}>
       <body className="min-h-full bg-surface-subtle">
         <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />

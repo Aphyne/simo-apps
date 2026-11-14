@@ -1,50 +1,59 @@
+'use client'
+
 import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PageHeader, Section } from '../_components'
 
 export function FormSection() {
   return (
     <section id="form">
-      <PageHeader title="Form" desc="Border line-strong, cincin fokus brand-500 2px. Label di atas field, asterisk merah untuk wajib, pesan error di bawah field." />
+      <PageHeader
+        title="Form"
+        desc="Input, Select, dan Label shadcn. Label selalu terlihat di atas field. Cincin fokus biru. Pesan error ditulis di bawah field dan menjelaskan apa yang harus diperbaiki."
+      />
 
-      <Section title="Input &amp; Select">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl">
-          <div>
-            <label className="text-sm font-medium text-fg-secondary mb-1 block">Nama Obat <span className="text-danger-600">*</span></label>
-            <input placeholder="cth. Paracetamol 500mg" className="border border-line-strong rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" readOnly />
+      <Section title="Input dan select" meta="Input, Select">
+        <div className="grid max-w-2xl grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="ds-nama">Nama obat</Label>
+            <Input id="ds-nama" placeholder="Contoh: Paracetamol 500 mg" />
           </div>
-          <div>
-            <label className="text-sm font-medium text-fg-secondary mb-1 block">Kategori</label>
-            <select className="border border-line-strong rounded-lg px-3 py-2 text-sm w-full text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-              <option>Analgesik</option>
-            </select>
-          </div>
-          <div className="sm:col-span-2">
-            <label className="text-sm font-medium text-fg-secondary mb-1 block">Catatan (opsional)</label>
-            <textarea rows={2} placeholder="Catatan tambahan..." className="border border-line-strong rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none" readOnly />
+          <div className="space-y-1.5">
+            <Label htmlFor="ds-kategori">Kategori</Label>
+            <Select defaultValue="analgesik">
+              <SelectTrigger id="ds-kategori" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="analgesik">Analgesik</SelectItem>
+                <SelectItem value="antibiotik">Antibiotik</SelectItem>
+                <SelectItem value="vitamin">Vitamin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </Section>
 
-      <Section title="Dengan ikon" desc="Combobox pencarian — ikon di kiri, padding-left disesuaikan.">
+      <Section title="Dengan ikon" desc="Pencarian: ikon di kiri, padding kiri disesuaikan.">
         <div className="relative max-w-xs">
-          <Search className="w-3.5 h-3.5 text-fg-subtle absolute left-3 top-1/2 -translate-y-1/2" />
-          <input placeholder="Cari nama atau kode obat..." className="h-9 w-full border border-line-strong rounded-lg pl-8 pr-3 text-sm" readOnly />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input aria-label="Cari obat" placeholder="Cari nama atau kode obat" className="pl-8" />
         </div>
       </Section>
 
-      <Section title="State error">
-        <div className="max-w-sm">
-          <label className="text-sm font-medium text-fg-secondary mb-1 block">Field dengan error</label>
-          <input className="border border-danger-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-danger-500" readOnly />
-          <p className="text-xs text-danger-600 mt-1">Wajib diisi</p>
-        </div>
-      </Section>
-
-      <Section title="Prefix/suffix satuan" desc="Rp di kiri, satuan (botol/tablet) di kanan — padding disesuaikan supaya teks tidak tertimpa.">
-        <div className="flex gap-4 max-w-sm">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-fg-muted">Rp</span>
-            <input className="border border-line-strong rounded-lg pl-8 pr-3 py-2 text-sm w-full" readOnly />
+      <Section title="Keadaan" desc="Error memakai aria-invalid dan pesan di bawah field. Field nonaktif dikurangi kontrasnya.">
+        <div className="grid max-w-2xl grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="ds-stok">Stok awal</Label>
+            <Input id="ds-stok" defaultValue="-5" aria-invalid aria-describedby="ds-stok-err" />
+            <p id="ds-stok-err" className="text-sm text-destructive">Stok tidak boleh negatif.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ds-kode">Kode obat</Label>
+            <Input id="ds-kode" defaultValue="OBT-011" disabled />
+            <p className="text-sm text-muted-foreground">Dibuat otomatis, tidak bisa diubah.</p>
           </div>
         </div>
       </Section>

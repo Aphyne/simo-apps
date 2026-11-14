@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { CalendarCheck } from 'lucide-react'
 import { formatTanggalPendek } from '@/lib/utils'
 import { useNow } from '@/hooks/useNow'
+import { cn } from '@/lib/utils'
+import Panel, { SkeletonRows } from './Panel'
 
 interface Item {
   nama: string
@@ -14,75 +17,76 @@ interface Item {
 interface Props {
   data: Item[]
   isLoading: boolean
+  isError?: boolean
   totalUrgent: number
+  className?: string
 }
 
-export default function DaftarExpiredCard({ data, isLoading, totalUrgent }: Props) {
+function sisaHariLabel(hari: number) {
+  if (hari < 0) return 'Sudah lewat'
+  if (hari === 0) return 'Hari ini'
+  return `${hari} hari lagi`
+}
+
+export default function DaftarExpiredCard({ data, isLoading, isError, totalUrgent, className }: Props) {
   const sekarang = useNow().getTime()
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex flex-col">
-      <p className="text-sm font-semibold text-fg-secondary mb-4">Daftar Akan Expired</p>
-
+    <Panel
+      title="Akan expired"
+      action={
+        <Link href="/monitoring" className="text-primary hover:underline focus-visible:underline">
+          Monitoring
+        </Link>
+      }
+      className={className}
+      bodyClassName="flex flex-col"
+    >
       {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-8 animate-pulse bg-surface-muted rounded-lg" />
-          ))}
-        </div>
+        <SkeletonRows rows={4} />
+      ) : isError ? (
+        <p className="flex-1 py-8 text-center text-sm text-muted-foreground">Daftar expired belum bisa dimuat. Coba lagi lewat tombol di atas.</p>
       ) : data.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center py-6">
-          <p className="text-sm text-fg-muted">Tidak ada obat urgent expired dalam 90 hari</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+          <CalendarCheck className="size-6 text-primary" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">Tidak ada obat urgent expired dalam 90 hari</p>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line-subtle">
-                  <th className="text-left py-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Nama Obat</th>
-                  <th className="text-right py-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Sisa</th>
-                  <th className="text-right py-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Expired</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {data.map((item, i) => {
-                  const selisihHari = Math.floor(
-                    (new Date(item.expired_terdekat).getTime() - sekarang) / (1000 * 60 * 60 * 24)
-                  )
-                  const isKritis = selisihHari <= 30
-                  return (
-                    <tr key={i} className="hover:bg-surface-subtle transition-colors">
-                      <td className="py-2.5 pr-2">
-                        <p className="text-xs font-medium text-gray-800 truncate max-w-[120px]">{item.nama}</p>
-                      </td>
-                      <td className="py-2.5 text-right whitespace-nowrap">
-                        <span className="text-xs text-fg-tertiary">{item.stok} {item.satuan}</span>
-                      </td>
-                      <td className="py-2.5 text-right whitespace-nowrap">
-                        <span className={`text-xs font-medium ${isKritis ? 'text-red-600' : 'text-orange-700'}`}>
-                          {formatTanggalPendek(item.expired_terdekat)}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="-my-1 divide-y">
+            {data.map((item, i) => {
+              const selisihHari = Math.floor(
+                (new Date(item.expired_terdekat).getTime() - sekarang) / (1000 * 60 * 60 * 24)
+              )
+              const kritis = selisihHari <= 30
+              return (
+                <li key={i} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{item.nama}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                      Sisa {item.stok} {item.satuan}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className={cn('text-sm font-medium tabular-nums', kritis ? 'text-danger-600' : 'text-foreground')}>
+                      {formatTanggalPendek(item.expired_terdekat)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{sisaHariLabel(selisihHari)}</p>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
 
           {totalUrgent > 5 && (
-            <div className="mt-3 pt-3 border-t border-line-subtle">
-              <Link
-                href="/laporan?tab=kedaluarsa"
-                className="flex items-center justify-between text-xs text-danger-600 hover:text-danger-700 font-medium group"
-              >
-                <span>+ {totalUrgent - 5} obat lainnya akan expired</span>
-                <span className="group-hover:underline">Lihat Semua →</span>
-              </Link>
-            </div>
+            <Link
+              href="/laporan?tab=kedaluarsa"
+              className="mt-auto border-t pt-3 text-sm text-primary hover:underline focus-visible:underline"
+            >
+              Lihat {totalUrgent - 5} obat lainnya
+            </Link>
           )}
         </>
       )}
-    </div>
+    </Panel>
   )
 }

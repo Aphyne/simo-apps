@@ -1,32 +1,39 @@
-// Komponen bantu bersama untuk halaman style guide (/design/*). Prefix _
+// Komponen bantu bersama untuk halaman style guide (/design). Prefix _
 // supaya Next.js tidak menganggapnya sebagai route.
 
-// Ubah bersamaan dengan bagian Riwayat dokumen di docs/DESIGN.md.
-export const VERSI_DESIGN = 'Design System v1.0 · 2026-11-10'
+import { Card } from '@/components/ui/card'
+
+// Ubah bersamaan dengan Riwayat dokumen bila panduan tertulis diperbarui.
+export const VERSI_DESIGN = 'Design System v2.0, 13 November 2026'
 export const PANDUAN_PATH = 'docs/DESIGN.md'
 
+// Judul satu section: ditulis sebagai h2 supaya urutan judul halaman benar.
 export function PageHeader({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="mb-8">
-      <h1 className="text-2xl font-bold text-fg">{title}</h1>
-      <p className="text-sm text-fg-muted mt-1 max-w-2xl">{desc}</p>
-    </div>
+    <header className="mb-6 max-w-2xl">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+    </header>
   )
 }
 
-export function Section({ title, desc, meta, children }: { title: string; desc?: string; meta?: string; children: React.ReactNode }) {
+// Satu blok contoh: judul kecil, keterangan opsional, lalu isi dalam satu panel.
+// Nama token atau berkas (meta) ditulis monospace karena memang kode.
+// flush: isi menempel ke tepi panel (tabel). bare: tanpa panel sama sekali, untuk isi
+// yang sudah berupa panel sendiri supaya tidak ada kartu di dalam kartu.
+export function Section({
+  title, desc, meta, flush, bare, children,
+}: { title: string; desc?: string; meta?: string; flush?: boolean; bare?: boolean; children: React.ReactNode }) {
   return (
-    <section className="mb-10">
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div>
-          <h2 className="text-base font-bold text-fg">{title}</h2>
-          {desc && <p className="text-sm text-fg-muted mt-0.5">{desc}</p>}
+    <section className="mb-8 last:mb-0">
+      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          {desc && <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{desc}</p>}
         </div>
-        {meta && <code className="text-[10px] text-fg-muted bg-surface-muted px-2 py-1 rounded-md flex-shrink-0 whitespace-nowrap">{meta}</code>}
+        {meta && <code className="shrink-0 font-mono text-xs text-muted-foreground">{meta}</code>}
       </div>
-      <div className="rounded-xl border border-line bg-surface p-6">
-        {children}
-      </div>
+      {bare ? children : <Card className={flush ? 'gap-0 overflow-hidden rounded-2xl py-0 ring-0' : 'gap-0 rounded-2xl p-5 ring-0'}>{children}</Card>}
     </section>
   )
 }

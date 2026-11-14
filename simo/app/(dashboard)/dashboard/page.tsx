@@ -1,9 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Pill, AlertTriangle, ShoppingCart, ArrowLeftRight, CalendarX, PackagePlus, PackageMinus, PlusCircle } from 'lucide-react'
-import StatCard from '@/components/dashboard/StatCard'
+import { format } from 'date-fns'
+import { id as localeId } from 'date-fns/locale'
+import { Pill, ShoppingCart, ArrowLeftRight, CalendarX, PackagePlus, PackageMinus, Plus } from 'lucide-react'
+import { StatTile, ReorderTile } from '@/components/dashboard/StatTile'
+import Panel from '@/components/dashboard/Panel'
+import { Button } from '@/components/ui/button'
+import { useNow } from '@/hooks/useNow'
+import { formatRupiah } from '@/lib/utils'
+import { useAuthStore } from '@/store/auth.store'
 import TrenPermintaanChart from '@/components/dashboard/TrenPermintaanChart'
 import DaftarExpiredCard from '@/components/dashboard/DaftarExpiredCard'
 import StokMenipisCard from '@/components/dashboard/StokMenipisCard'
@@ -16,11 +24,20 @@ import AktivitasHariIni from '@/components/dashboard/AktivitasHariIni'
 import { useCreateObat } from '@/hooks/useObat'
 import type { ObatFormData } from '@/types/obat'
 
+function sapaan(jam: number) {
+  if (jam < 11) return 'Selamat pagi'
+  if (jam < 15) return 'Selamat siang'
+  if (jam < 19) return 'Selamat sore'
+  return 'Selamat malam'
+}
+
 export default function DashboardPage() {
   const router = useRouter()
+  const sekarang = useNow()
+  const user = useAuthStore((s) => s.user)
 
-  const { data: summary, isLoading: loadingSummary } = useDashboardSummary()
-  const { data: tren, isLoading: loadingTren } = useTrenPermintaan()
+  const { data: summary, isLoading: loadingSummary, isError: gagalSummary } = useDashboardSummary()
+  const { data: tren, isLoading: loadingTren, isError: gagalTren } = useTrenPermintaan()
   const createObatMutation = useCreateObat()
 
   const cards = summary?.cards
@@ -48,93 +65,107 @@ export default function DashboardPage() {
     router.push('/obat')
   }
 
+  // Data gagal dimuat tidak boleh terbaca sebagai nol atau "aman": angka jadi null dan kalimat jujur.
+  const dataGagal = gagalSummary || (!loadingSummary && !cards)
+  const reorder = cards?.obat_reorder ?? 0
+  const expiring = cards?.obat_expiring ?? 0
+  // Dua baris catatan: aktivitas hari ini, lalu hal yang butuh perhatian. Hanya angka yang ada di data.
+  const masuk = cards?.masuk_hari_ini
+  const keluar = cards?.keluar_hari_ini
+  const pendapatan = cards?.pendapatan_hari_ini
+  const sebagianTanpaHarga = (cards?.penjualan_tanpa_harga ?? 0) > 0
+  const catatanHariIni = [
+    masuk !== undefined ? `${masuk} transaksi masuk` : null,
+    keluar !== undefined ? `${keluar} transaksi keluar` : null,
+    pendapatan !== undefined ? `pendapatan ${formatRupiah(pendapatan)}${sebagianTanpaHarga ? ' (sebagian penjualan belum ber-harga)' : ''}` : null,
+  ].filter(Boolean)
+  const catatanPerhatian =
+    reorder === 0 && expiring === 0
+      ? 'semua stok aman dan tidak ada obat yang akan expired dalam 90 hari'
+      : [
+          reorder > 0 ? `${reorder} obat perlu dipesan ulang` : 'tidak ada obat yang perlu dipesan ulang',
+          expiring > 0 ? `${expiring} obat akan expired dalam 90 hari` : 'tidak ada yang akan expired dalam 90 hari',
+        ].join(', ')
+
   return (
-    <div className="space-y-6">
+    <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4">
 
-      {/* ── Row 1: 5 Stat Cards ─────────────────────────────────────── */}
-      {loadingSummary ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="rounded-xl bg-brand-400/60 h-24 animate-pulse" />
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-line bg-surface-muted h-24 animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Perlu Reorder"     value={cards?.obat_reorder ?? 0}      icon={AlertTriangle} warna="red"    sublabel="stok ≤ ROP"         featured />
-          <StatCard label="Total Obat"         value={cards?.total_obat ?? 0}         icon={Pill}          warna="blue"   sublabel="jenis terdaftar" />
-          <StatCard label="Penjualan Hari Ini" value={cards?.penjualan_hari_ini ?? 0} icon={ShoppingCart}  warna="green"  sublabel="unit terjual hari ini" />
-          <StatCard label="Transaksi Hari Ini" value={cards?.transaksi_hari_ini ?? 0} icon={ArrowLeftRight} warna="purple" sublabel="masuk + keluar" />
-          <StatCard label="Akan Expired"       value={cards?.obat_expiring ?? 0}      icon={CalendarX}     warna="orange" sublabel="dalam 90 hari" />
-        </div>
-      )}
-
-      {/* ── Row 2: Daftar Expired + Stok Menipis + Aksi Cepat ───────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        <StokMenipisCard data={stokMenipis} isLoading={loadingSummary} />
-        <DaftarExpiredCard data={daftarExpired} isLoading={loadingSummary} totalUrgent={totalUrgent} />
-
-        {/* Aksi Cepat */}
-        <div className="bg-surface rounded-xl border border-line shadow-sm p-5 flex flex-col gap-4">
-          <h2 className="text-sm font-semibold text-fg-secondary">Aksi Cepat</h2>
-
-          <div className="space-y-2">
-            <button
-              onClick={() => setOpenMasuk(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-sm font-medium transition-colors text-left"
-            >
-              <PackagePlus className="w-4 h-4 flex-shrink-0" />
-              Catat Stok Masuk
-            </button>
-
-            <button
-              onClick={() => setOpenKeluar(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-warning-50 hover:bg-warning-100 text-warning-700 text-sm font-medium transition-colors text-left"
-            >
-              <PackageMinus className="w-4 h-4 flex-shrink-0" />
-              Catat Stok Keluar
-            </button>
-
-            <button
-              onClick={() => setOpenTambahObat(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-success-50 hover:bg-success-100 text-success-700 text-sm font-medium transition-colors text-left"
-            >
-              <PlusCircle className="w-4 h-4 flex-shrink-0" />
-              Tambah Obat Baru
-            </button>
-          </div>
-
-          {(cards?.obat_expiring ?? 0) > 0 && (
-            <div className="mt-auto p-3 rounded-lg bg-warning-50 border border-warning-200">
-              <p className="text-xs font-semibold text-warning-700">
-                {cards?.obat_expiring} obat akan expired dalam 90 hari
-              </p>
-              <button
-                onClick={() => router.push('/monitoring')}
-                className="text-xs text-warning-700 hover:underline mt-1 block"
-              >
-                Lihat di Monitoring →
-              </button>
+      {/* ── Sapaan + aksi utama ──────────────────────────────────────── */}
+      <section className="col-span-12 flex flex-col justify-between gap-4 rounded-2xl bg-card p-5 lg:col-span-8">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">
+            {format(sekarang, 'EEEE, d MMMM yyyy', { locale: localeId })}
+          </p>
+          <h1 className="mt-1.5 text-3xl font-semibold tracking-tight text-foreground">
+            {sapaan(sekarang.getHours())}{user?.nama ? `, ${user.nama.split(' ')[0]}` : ''}
+          </h1>
+          {loadingSummary ? (
+            <p className="mt-2 text-[15px] text-muted-foreground">Memuat ringkasan stok</p>
+          ) : dataGagal ? (
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+              Data stok belum bisa dimuat, jadi ringkasannya belum bisa dipercaya. Coba lagi lewat tombol di atas.
+            </p>
+          ) : (
+            <div className="mt-2 space-y-1 text-[15px] leading-relaxed text-muted-foreground">
+              {catatanHariIni.length > 0 && (
+                <p><span className="font-medium text-foreground">Hari ini:</span> {catatanHariIni.join(', ')}.</p>
+              )}
+              <p><span className="font-medium text-foreground">Perlu perhatian:</span> {catatanPerhatian}.</p>
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Row 3: Tren Permintaan + Aktivitas Hari Ini ─────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 bg-surface rounded-xl border border-line shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-fg-secondary mb-4">
-            Tren Permintaan — 6 Bulan Terakhir
-          </h2>
-          {loadingTren ? (
-            <div className="h-52 bg-surface-muted animate-pulse rounded-lg" />
-          ) : (
-            <TrenPermintaanChart data={tren ?? []} />
-          )}
+        <div className="flex flex-wrap gap-2">
+          <Button size="lg" className="h-10 rounded-xl px-4" onClick={() => setOpenMasuk(true)}>
+            <PackagePlus data-icon="inline-start" />
+            Catat stok masuk
+          </Button>
+          <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenKeluar(true)}>
+            <PackageMinus data-icon="inline-start" />
+            Catat stok keluar
+          </Button>
+          <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenTambahObat(true)}>
+            <Plus data-icon="inline-start" />
+            Tambah obat
+          </Button>
         </div>
-        <AktivitasHariIni />
-      </div>
+      </section>
+
+      <ReorderTile
+        className="col-span-12 lg:col-span-4"
+        value={dataGagal ? null : reorder}
+        total={dataGagal ? null : (cards?.total_obat ?? 0)}
+        isLoading={loadingSummary}
+        action={
+          <Link
+            href="/reorder"
+            className="inline-flex h-10 items-center justify-center rounded-xl bg-primary-foreground px-4 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-foreground/90 focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+          >
+            Lihat daftar reorder
+          </Link>
+        }
+      />
+
+      {/* ── Empat angka ──────────────────────────────────────────────── */}
+      <StatTile className="col-span-6 lg:col-span-3" label="Total obat" value={dataGagal ? null : (cards?.total_obat ?? 0)} sublabel="jenis terdaftar" icon={Pill} isLoading={loadingSummary} />
+      <StatTile className="col-span-6 lg:col-span-3" label="Penjualan hari ini" value={dataGagal ? null : (cards?.penjualan_hari_ini ?? 0)} sublabel="unit terjual" icon={ShoppingCart} isLoading={loadingSummary} />
+      <StatTile className="col-span-6 lg:col-span-3" label="Transaksi hari ini" value={dataGagal ? null : (cards?.transaksi_hari_ini ?? 0)} sublabel="masuk dan keluar" icon={ArrowLeftRight} isLoading={loadingSummary} />
+      <StatTile className="col-span-6 lg:col-span-3" label="Akan expired" value={dataGagal ? null : expiring} sublabel="dalam 90 hari" icon={CalendarX} isLoading={loadingSummary} />
+
+      {/* ── Stok menipis + akan expired ──────────────────────────────── */}
+      <StokMenipisCard className="col-span-12 lg:col-span-7" data={stokMenipis} isLoading={loadingSummary} isError={dataGagal} totalReorder={cards?.obat_reorder} />
+      <DaftarExpiredCard className="col-span-12 lg:col-span-5" data={daftarExpired} isLoading={loadingSummary} isError={dataGagal} totalUrgent={totalUrgent} />
+
+      {/* ── Tren permintaan + keluar hari ini ────────────────────────── */}
+      <Panel title="Tren permintaan, 6 bulan terakhir" className="col-span-12 lg:col-span-8">
+        {loadingTren ? (
+          <div className="h-60 rounded-xl bg-muted motion-safe:animate-pulse" aria-hidden="true" />
+        ) : gagalTren ? (
+          <p className="py-16 text-center text-sm text-muted-foreground">Grafik belum bisa dimuat. Coba lagi lewat tombol di atas.</p>
+        ) : (
+          <TrenPermintaanChart data={tren ?? []} />
+        )}
+      </Panel>
+      <AktivitasHariIni className="col-span-12 lg:col-span-4" />
 
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
 

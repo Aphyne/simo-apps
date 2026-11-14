@@ -1,103 +1,66 @@
-import { AlertTriangle, Pill, ShoppingCart, ArrowLeftRight, CalendarX } from 'lucide-react'
+import { Pill, ShoppingCart } from 'lucide-react'
+import { StatTile, ReorderTile } from '@/components/dashboard/StatTile'
+import TrenPermintaanChart from '@/components/dashboard/TrenPermintaanChart'
 import { PageHeader, Section } from '../_components'
+
+// Data contoh bentuk sama dengan respons API tren permintaan.
+const CONTOH_TREN = [
+  { bulan: '2026-05-01', total: '310' },
+  { bulan: '2026-06-01', total: '420' },
+  { bulan: '2026-07-01', total: '390' },
+  { bulan: '2026-08-01', total: '510' },
+  { bulan: '2026-09-01', total: '470' },
+  { bulan: '2026-10-01', total: '560' },
+]
 
 export function ChartSection() {
   return (
     <section id="chart">
-      <PageHeader title="Chart" desc="Library: Recharts. Biru (setara brand-600) sebagai warna data utama, abu-abu untuk pembanding/baseline. Warna grafik masih literal hex di kode Recharts dan belum ikut token (lihat docs/DESIGN.md bagian 5)." />
+      <PageHeader
+        title="Chart"
+        desc="Recharts dengan warna dari token (var(--chart-1) dan seterusnya), tanpa hex di kode. Satu warna biru untuk data utama, slate untuk pembanding. Isian di bawah garis datar dan transparan, tanpa gradasi. Hanya garis bantu horizontal."
+      />
 
-      <Section title="Stat Card" meta="StatCard.tsx">
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="rounded-xl bg-brand-600 p-5 shadow-md flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-6 h-6 text-fg-inverse" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-brand-100 font-medium truncate">Featured</p>
-              <p className="text-2xl font-bold leading-tight text-fg-inverse">1</p>
-              <p className="text-xs text-brand-200 mt-0.5">stok ≤ ROP</p>
-            </div>
-          </div>
-          {[
-            { bg: 'bg-brand-100', color: 'text-brand-600', label: 'Blue', Icon: Pill },
-            { bg: 'bg-success-100', color: 'text-success-600', label: 'Green', Icon: ShoppingCart },
-            { bg: 'bg-purple-100', color: 'text-purple-600', label: 'Purple', Icon: ArrowLeftRight },
-            { bg: 'bg-warning-100', color: 'text-warning-500', label: 'Orange', Icon: CalendarX },
-          ].map((c) => (
-            <div key={c.label} className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${c.bg}`}>
-                <c.Icon className={`w-5 h-5 ${c.color}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-fg-muted font-medium truncate">{c.label} variant</p>
-                <p className="text-2xl font-bold leading-tight text-fg">12</p>
-                <p className="text-xs text-fg-muted mt-0.5">sublabel</p>
-              </div>
-            </div>
-          ))}
+      <Section title="Ubin angka" desc="Satu ubin biru pekat untuk hal yang paling perlu dikerjakan, sisanya putih datar. Tanpa kotak ikon dan tanpa warna latar per angka." meta="StatTile.tsx" bare>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <ReorderTile value={3} total={20} action={null} />
+          <StatTile label="Total obat" value={20} sublabel="jenis terdaftar" icon={Pill} />
+          <StatTile label="Penjualan hari ini" value={48} sublabel="unit terjual" icon={ShoppingCart} />
         </div>
       </Section>
 
-      <Section title="Line — Tren Permintaan" meta="TrenPermintaanChart.tsx">
-        <svg viewBox="0 0 640 180" width="100%" height="180" role="img" aria-label="Contoh grafik garis tren naik lalu turun">
-          <line x1="40" y1="10" x2="40" y2="150" stroke="#f0f0f0" strokeWidth="1" />
-          <line x1="40" y1="150" x2="620" y2="150" stroke="#f0f0f0" strokeWidth="1" />
-          <polyline points="60,110 180,45 300,55 420,140 540,148 600,148" fill="none" stroke="#2563eb" strokeWidth="2.5" />
-          <circle cx="180" cy="45" r="4" fill="#2563eb" />
-          <circle cx="420" cy="140" r="4" fill="#2563eb" />
-        </svg>
+      <Section title="Garis: tren permintaan" desc="Data contoh." meta="TrenPermintaanChart.tsx">
+        <TrenPermintaanChart data={CONTOH_TREN} />
       </Section>
 
-      <Section title="Bar — Perbandingan Biaya" meta="PerbandinganBiayaChart.tsx">
-        <svg viewBox="0 0 640 180" width="100%" height="180" role="img" aria-label="Contoh grafik batang berpasangan, abu-abu dan biru">
-          <line x1="40" y1="150" x2="620" y2="150" stroke="#f0f0f0" strokeWidth="1" />
+      <Section title="Batang: perbandingan" desc="Pembanding memakai chart-2 (slate), data utama chart-1 (biru). Legenda selalu ditulis.">
+        <svg viewBox="0 0 640 180" width="100%" height="180" role="img" aria-label="Contoh grafik batang berpasangan, slate dan biru">
+          <line x1="40" y1="150" x2="620" y2="150" stroke="var(--border)" strokeWidth="1" />
           {[{ x: 80, g: 90, b: 50 }, { x: 250, g: 70, b: 40 }, { x: 420, g: 110, b: 65 }].map((d, i) => (
             <g key={i}>
-              <rect x={d.x} y={150 - d.g} width="24" height={d.g} rx="4" fill="#d1d5db" />
-              <rect x={d.x + 30} y={150 - d.b} width="24" height={d.b} rx="4" fill="#2563eb" />
+              <rect x={d.x} y={150 - d.g} width="24" height={d.g} rx="3" fill="var(--chart-2)" />
+              <rect x={d.x + 30} y={150 - d.b} width="24" height={d.b} rx="3" fill="var(--chart-1)" />
             </g>
           ))}
         </svg>
-        <div className="flex items-center gap-3 mt-2 text-xs text-fg-muted">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300" />Tanpa EOQ</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-brand-600" />Dengan EOQ</span>
+        <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-chart-2" />Tanpa EOQ</span>
+          <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-chart-1" />Dengan EOQ</span>
         </div>
       </Section>
 
-      <Section title="Donut — Distribusi Kategori" meta="ObatKategoriChart.tsx">
-        <div className="flex items-center gap-6">
-          <svg viewBox="0 0 100 100" width="110" height="110" role="img" aria-label="Contoh grafik donat distribusi kategori obat">
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#2563eb" strokeWidth="16" strokeDasharray="95 240" strokeDashoffset="0" />
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" strokeWidth="16" strokeDasharray="60 240" strokeDashoffset="-95" />
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#f97316" strokeWidth="16" strokeDasharray="85 240" strokeDashoffset="-155" />
+      <Section title="Donat: distribusi kategori" desc="Hanya dua sampai tiga bagian. Selalu disertai daftar tertulis.">
+        <div className="flex flex-wrap items-center gap-8">
+          <svg viewBox="0 0 100 100" width="112" height="112" role="img" aria-label="Contoh donat distribusi kategori obat">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--chart-1)" strokeWidth="14" strokeDasharray="105 240" strokeDashoffset="0" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--chart-2)" strokeWidth="14" strokeDasharray="70 240" strokeDashoffset="-105" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--chart-3)" strokeWidth="14" strokeDasharray="60 240" strokeDashoffset="-175" />
           </svg>
-          <ol className="space-y-1.5 text-sm">
-            <li className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-brand-600" />Analgesik</li>
-            <li className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-success-500" />Antibiotik</li>
-            <li className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-warning-500" />Vitamin</li>
-          </ol>
-        </div>
-      </Section>
-
-      <Section title="Rumus Display — Kalkulasi EOQ/ROP" meta="RumusDisplay.tsx">
-        <div className="rounded-xl border border-line border-l-4 border-l-brand-500 bg-surface p-4 max-w-xl">
-          <div className="flex items-start gap-3">
-            <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-brand-100 text-brand-600 text-xs font-bold flex items-center justify-center">1</span>
-            <div className="flex-1 space-y-2 min-w-0">
-              <p className="font-semibold text-gray-800 text-sm">Economic Order Quantity (EOQ)</p>
-              <div className="bg-surface-subtle rounded-lg px-3 py-1.5 font-mono text-sm text-fg-secondary border border-line-subtle">
-                EOQ = √(2 × D × S / H)
-              </div>
-              <div className="text-sm text-fg-tertiary">
-                <span className="text-xs text-fg-muted uppercase tracking-wide mr-2">Substitusi:</span>
-                <span className="font-mono">EOQ = √(2 × 1.200 × 50.000 / 250)</span>
-              </div>
-              <div className="flex items-center gap-2 pt-1 border-t border-line-subtle">
-                <span className="text-xs text-fg-muted">Hasil:</span>
-                <span className="text-sm font-bold text-brand-700">693 unit</span>
-              </div>
-            </div>
-          </div>
+          <ul className="space-y-1.5 text-sm">
+            <li className="flex items-center gap-2"><span className="size-2.5 rounded-sm bg-chart-1" />Analgesik</li>
+            <li className="flex items-center gap-2"><span className="size-2.5 rounded-sm bg-chart-2" />Antibiotik</li>
+            <li className="flex items-center gap-2"><span className="size-2.5 rounded-sm bg-chart-3" />Vitamin</li>
+          </ul>
         </div>
       </Section>
     </section>

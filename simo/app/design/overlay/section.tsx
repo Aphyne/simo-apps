@@ -1,46 +1,83 @@
-import { X } from 'lucide-react'
+'use client'
+
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { PageHeader, Section } from '../_components'
 
 export function OverlaySection() {
   return (
     <section id="overlay">
-      <PageHeader title="Overlay" desc="Dialog untuk form/konfirmasi yang butuh fokus. Backdrop hitam 50% opacity, modal putih rounded-xl." />
+      <PageHeader
+        title="Overlay"
+        desc="Dialog untuk form yang butuh fokus, AlertDialog untuk konfirmasi aksi yang menghapus. Pakai dialog hanya bila isian di tempat atau panel terbuka tidak cukup."
+      />
 
-      <Section title="Modal form" meta="ResetPasswordModal.tsx">
-        <div className="bg-surface-muted rounded-xl p-8 flex items-center justify-center">
-          <div className="w-full max-w-sm rounded-xl bg-surface shadow-2xl">
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
-              <h2 className="text-sm font-semibold text-fg">Reset Password</h2>
-              <button className="rounded-lg p-1.5 text-fg-subtle">
-                <X className="w-4 h-4" />
-              </button>
+      <Section title="Dialog form" desc="Klik untuk membuka. Judul menyebut aksinya, tombol utama memakai kata kerja yang sama." meta="Dialog">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Reset password</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Reset password</DialogTitle>
+              <DialogDescription>Atur password baru untuk Staf Apotek.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-1.5">
+              <Label htmlFor="ds-pw">Password baru</Label>
+              <Input id="ds-pw" type="password" placeholder="Minimal 6 karakter" />
             </div>
-            <div className="p-5 space-y-4">
-              <p className="text-sm text-fg-muted">Reset password untuk <span className="font-semibold text-fg-secondary">Staf Apotek</span></p>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-fg-secondary">Password Baru</label>
-                <input className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm" placeholder="Minimal 6 karakter" readOnly />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button className="border border-line-strong text-fg-secondary rounded-lg px-4 py-2 text-sm">Batal</button>
-                <button className="bg-danger-600 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm">Reset Password</button>
-              </div>
-            </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Batal</Button>
+              </DialogClose>
+              <Button>Reset password</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Section>
 
-      <Section title="Dialog konfirmasi" meta="ConfirmDialog.tsx — aksi destruktif (hapus)">
-        <div className="bg-surface-muted rounded-xl p-8 flex items-center justify-center">
-          <div className="w-full max-w-xs rounded-xl bg-surface shadow-2xl p-5 text-center">
-            <p className="text-sm font-semibold text-fg mb-1">Hapus Supplier?</p>
-            <p className="text-xs text-fg-muted mb-4">Supplier yang masih digunakan oleh obat tidak bisa dihapus.</p>
-            <div className="flex justify-center gap-2">
-              <button className="border border-line-strong text-fg-secondary rounded-lg px-4 py-2 text-sm">Batal</button>
-              <button className="bg-danger-600 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm">Hapus</button>
-            </div>
-          </div>
-        </div>
+      <Section title="Konfirmasi hapus" desc="Menjelaskan akibatnya, bukan hanya bertanya Apakah Anda yakin." meta="AlertDialog">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive">Hapus supplier</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="sm:max-w-sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Hapus supplier?</AlertDialogTitle>
+              <AlertDialogDescription>Supplier yang masih dipakai oleh obat tidak bisa dihapus.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <Button variant="outline">Batal</Button>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button variant="destructive">Hapus</Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Section>
     </section>
   )

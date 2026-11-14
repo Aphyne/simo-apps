@@ -4,9 +4,10 @@ import { useMemo } from 'react'
 import { PackageMinus } from 'lucide-react'
 import { useBarangKeluarList } from '@/hooks/useBarangKeluar'
 import type { BarangKeluar } from '@/types/obat'
+import Panel, { SkeletonRows } from './Panel'
 
-export default function AktivitasHariIni() {
-  const { data, isLoading } = useBarangKeluarList({ limit: 9999 })
+export default function AktivitasHariIni({ className }: { className?: string }) {
+  const { data, isLoading, isError } = useBarangKeluarList({ limit: 9999 })
   const allList: BarangKeluar[] = useMemo(() => data?.data ?? [], [data])
 
   const todayList = useMemo(() => {
@@ -33,42 +34,28 @@ export default function AktivitasHariIni() {
   }, [allList])
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
-        <p className="text-sm font-semibold text-fg-secondary">Keluar Hari Ini</p>
-        {todayList.length > 0 && (
-          <span className="px-2 py-0.5 bg-warning-100 text-warning-700 text-xs font-medium rounded-full">
-            {todayList.length} obat
-          </span>
-        )}
-      </div>
-
+    <Panel title="Keluar hari ini" count={todayList.length} className={className} bodyClassName="flex flex-col">
       {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-8 animate-pulse bg-surface-muted rounded-lg" />
-          ))}
-        </div>
+        <SkeletonRows rows={5} />
+      ) : isError ? (
+        <p className="flex-1 py-8 text-center text-sm text-muted-foreground">Catatan keluar hari ini belum bisa dimuat. Coba lagi lewat tombol di atas.</p>
       ) : todayList.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-8 text-fg-muted">
-          <PackageMinus className="w-8 h-8 mb-2 text-gray-300" />
-          <p className="text-sm">Belum ada barang keluar hari ini</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+          <PackageMinus className="size-6 text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">Belum ada barang keluar hari ini</p>
         </div>
       ) : (
-        <ol className="space-y-2">
-          {todayList.map((item, idx) => (
-            <li key={item.nama} className="flex items-center gap-3 py-1.5 border-b border-gray-50 last:border-0">
-              <span className="text-xs font-bold text-fg-muted w-4 flex-shrink-0 text-center">
-                {idx + 1}
-              </span>
-              <p className="flex-1 text-xs font-medium text-gray-800 truncate">{item.nama}</p>
-              <span className="text-xs font-semibold text-warning-700 flex-shrink-0">
-                -{item.total} {item.satuan}
+        <ul className="-my-1 divide-y">
+          {todayList.map((item) => (
+            <li key={item.nama} className="flex items-center justify-between gap-3 py-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{item.nama}</p>
+              <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                <span className="font-semibold text-foreground">-{item.total}</span> {item.satuan}
               </span>
             </li>
           ))}
-        </ol>
+        </ul>
       )}
-    </div>
+    </Panel>
   )
 }

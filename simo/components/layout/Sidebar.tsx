@@ -114,7 +114,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       ref={asideRef}
       aria-label="Menu utama"
       className={cn(
-        'fixed inset-y-0 left-0 z-40 h-dvh w-64 bg-surface border-r border-line flex flex-col flex-shrink-0',
+        'fixed inset-y-0 left-0 z-40 h-dvh w-64 bg-background border-r flex flex-col flex-shrink-0 lg:border-r-0',
         'lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 lg:visible',
         open
           ? 'translate-x-0 visible [transition:transform_200ms,visibility_0s]'
@@ -122,22 +122,22 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       )}
     >
       {/* Brand */}
-      <div className="px-6 h-14 flex items-center gap-2 border-b border-line">
-        <Image src="/logo.png" alt="" width={40} height={40} className="flex-shrink-0" />
-        <h1 className="text-xl font-bold text-fg tracking-tight">SIMO</h1>
+      <div className="px-6 h-16 flex items-center gap-2.5">
+        <Image src="/logo.png" alt="" width={30} height={30} className="flex-shrink-0" />
+        <p className="text-lg font-bold text-foreground tracking-tight">SIMO</p>
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label="Tutup menu"
-          className="ml-auto rounded-lg p-2 text-fg-muted hover:bg-surface-muted hover:text-fg-secondary lg:hidden"
+          className="ml-auto flex size-11 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav aria-label="Navigasi utama" className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
         {visibleItems.map((item) => {
           const Icon = item.icon
           const isActive =
@@ -147,14 +147,15 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
               key={item.href}
               href={item.href}
               onClick={onClose}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex h-11 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
                 isActive
-                  ? 'bg-brand-600 text-white'
-                  : 'text-gray-600 hover:bg-surface-muted hover:text-fg'
+                  ? 'bg-card font-semibold text-foreground'
+                  : 'text-foreground/70 hover:bg-card/60 hover:text-foreground'
               )}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className={cn('size-4 flex-shrink-0', isActive && 'text-primary')} aria-hidden="true" />
               {item.label}
             </Link>
           )
@@ -162,15 +163,15 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       </nav>
 
       {/* Footer: logout + versi */}
-      <div className="px-6 py-3 border-t border-line space-y-1">
+      <div className="px-4 py-4 space-y-1">
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-fg-tertiary hover:bg-danger-50 hover:text-danger-600 transition-colors"
+          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-foreground/70 outline-none transition-colors hover:bg-card/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <LogOut className="size-4 flex-shrink-0" aria-hidden="true" />
           Keluar
         </button>
-        <p className="text-xs text-fg-muted">SIMO v1.0 · 2026</p>
+        <p className="px-3 text-xs text-muted-foreground">SIMO v1.0, 2026</p>
       </div>
     </aside>
     </>
