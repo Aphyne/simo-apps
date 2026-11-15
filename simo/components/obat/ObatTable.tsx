@@ -1,87 +1,188 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Pencil, Trash2, Plus, Search, Eye, Pill, AlertTriangle, TrendingDown, CalendarX } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Pencil, Trash2, Plus, Eye, CalendarX, SearchX, PackageOpen, TriangleAlert, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import StatCard from '@/components/dashboard/StatCard'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { StatTile, ReorderTile } from '@/components/dashboard/StatTile'
+import Panel from '@/components/dashboard/Panel'
+import PageHeader from '@/components/shared/PageHeader'
+import { FilterBar, SearchField, FILTER_SELECT } from '@/components/shared/FilterBar'
+import Pagination from '@/components/shared/Pagination'
+import StateMessage from '@/components/shared/StateMessage'
+import { denganAsal } from '@/components/shared/useAsalHalaman'
+import IconAction from '@/components/shared/IconAction'
 import StatusBadge from '@/components/ui/StatusBadge'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import { useObatList, useDeleteObat } from '@/hooks/useObat'
+import { useObatList, useObatSemua, useDeleteObat } from '@/hooks/useObat'
 import { useAuthStore } from '@/store/auth.store'
-import { formatAngka, formatTanggalPendek } from '@/lib/utils'
+import { cn, formatAngka, formatTanggalPendek } from '@/lib/utils'
 import { useNow } from '@/hooks/useNow'
 import { KATEGORI_OBAT } from '@/lib/constants'
-import ObatKategoriChart from '@/components/obat/ObatKategoriChart'
+import KategoriDonut from '@/components/obat/KategoriDonut'
+import StatusStokBar from '@/components/obat/StatusStokBar'
 import type { Obat } from '@/types/obat'
 
-// ─── Helper: estimasi hari habis ─────────────────────────────────────────────
+const KEPALA = 'h-10 text-xs font-medium text-muted-foreground'
+const BATAS_HALAMAN = 10
+
+// ─── Sel: estimasi hari habis ────────────────────────────────────────────────
+// Merah/oranye hanya untuk stok yang akan segera habis, dan selalu disertai angka hari.
+// Tingkat mendesak ditandai dengan ikon peringatan (bentuk), bukan hanya warna; oranye tanpa ikon.
 function EstimasiHabis({ hari }: { hari: number | null }) {
-  if (hari === null) return <span className="text-fg-muted">—</span>
-  if (hari <= 7)  return <span className="text-xs font-semibold text-danger-600">{hari} hari</span>
-  if (hari <= 30) return <span className="text-xs font-medium text-warning-700">{hari} hari</span>
-  return <span className="text-xs text-fg-muted">{hari} hari</span>
+  if (hari === null) return <span className="text-muted-foreground">-<span className="sr-only"> Belum tersedia</span></span>
+  if (hari <= 7)
+    return (
+      <span className="inline-flex items-center gap-1 font-semibold text-danger-700">
+        <TriangleAlert className="size-3.5" aria-hidden="true" />
+        {hari} hari
+        <span className="sr-only">, segera habis</span>
+      </span>
+    )
+  if (hari <= 30)
+    return (
+      <span className="font-medium text-warning-700">
+        {hari} hari
+        <span className="sr-only">, habis dalam sebulan</span>
+      </span>
+    )
+  return <span className="text-muted-foreground">{hari} hari</span>
 }
 
-// ─── Helper: tanggal expired ──────────────────────────────────────────────────
+// ─── Sel: tanggal expired ────────────────────────────────────────────────────
+// Yang sudah lewat tertulis "Sudah expired" (terlihat, bukan hanya untuk pembaca layar).
 function ExpiredCell({ tanggal }: { tanggal: string | null }) {
   const sekarang = useNow().getTime()
-  if (!tanggal) return <span className="text-fg-muted">—</span>
-  const selisihHari = Math.floor(
-    (new Date(tanggal).getTime() - sekarang) / (1000 * 60 * 60 * 24)
-  )
+  if (!tanggal) return <span className="text-muted-foreground">-<span className="sr-only"> Belum tersedia</span></span>
+  const selisihHari = Math.floor((new Date(tanggal).getTime() - sekarang) / (1000 * 60 * 60 * 24))
   const label = formatTanggalPendek(tanggal)
+  if (selisihHari < 0)
+    return (
+      <span className="font-semibold text-danger-700">
+        <span className="inline-flex items-center gap-1">
+          <TriangleAlert className="size-3.5" aria-hidden="true" />
+          {label}
+        </span>
+        <span className="block text-xs font-medium">Sudah expired</span>
+      </span>
+    )
   if (selisihHari <= 90)
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-danger-100 text-danger-700 font-medium">
+      <span className="inline-flex items-center gap-1 font-semibold text-danger-700">
+        <TriangleAlert className="size-3.5" aria-hidden="true" />
         {label}
+        <span className="sr-only">, kurang dari 3 bulan lagi</span>
       </span>
     )
   if (selisihHari <= 180)
-    return <span className="text-xs font-medium text-warning-700">{label}</span>
-  return <span className="text-xs text-fg-muted">{label}</span>
+    return (
+      <span className="font-medium text-warning-700">
+        {label}
+        <span className="sr-only">, 3 sampai 6 bulan lagi</span>
+      </span>
+    )
+  return <span className="text-muted-foreground">{label}</span>
 }
 
-// ─── Helper: nilai kalkulasi (abu-abu jika belum ada) ─────────────────────────
-function KalkulasiCell({ value, satuan }: { value: number | null; satuan?: string }) {
-  if (value === null || value === undefined)
-    return <span className="text-fg-muted text-xs">—</span>
+// Istilah teknis di kepala kolom: dapat difokus dengan keyboard dan punya penjelasan singkat.
+function IstilahKepala({ istilah, arti }: { istilah: string; arti: string }) {
   return (
-    <span className="text-sm text-fg-secondary">
-      {formatAngka(value, 1)}
-      {satuan && <span className="text-fg-muted text-xs ml-0.5">{satuan}</span>}
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="cursor-help rounded-sm underline decoration-dotted underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {istilah}
+            <span className="sr-only">: {arti}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent sideOffset={6}>{arti}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+// ─── Sel: nilai kalkulasi (ROP, EOQ) ─────────────────────────────────────────
+// Nilai kosong atau 0 berarti belum bisa dihitung (mis. belum ada riwayat penjualan), bukan "titik pesan di 0":
+// ditulis "-". Nilai yang ada ditampilkan 2 desimal persis (kebijakan pembulatan: tidak dibulatkan di tampilan).
+function KalkulasiCell({ value, satuan }: { value: number | null | undefined; satuan?: string }) {
+  if (value === null || value === undefined || !(Number(value) > 0)) return <span className="text-muted-foreground">-<span className="sr-only"> Belum dihitung</span></span>
+  return (
+    <span className="text-foreground">
+      {formatAngka(Number(value), 2)}
+      {satuan && <span className="ml-1 text-xs text-muted-foreground">{satuan}</span>}
     </span>
   )
 }
 
-// ─── Helper: page numbers with ellipsis ──────────────────────────────────────
-function getPageNumbers(current: number, total: number): (number | '...')[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-  if (current <= 4) return [1, 2, 3, 4, 5, '...', total]
-  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
-  return [1, '...', current - 1, current, current + 1, '...', total]
+// Kolom tampil bertahap menurut lebar konten (bukan lebar layar): sidebar 256px muncul mulai lg,
+// jadi konten di lg sama sempitnya dengan di md. Selalu: Obat, Stok, Aksi (Status mulai md).
+// xl (konten sekitar 960px): + ROP, Est. habis, Expired. 2xl: + Kategori, EOQ.
+const KOLOM = {
+  status: 'hidden md:table-cell',
+  rop: 'hidden xl:table-cell',
+  estHabis: 'hidden xl:table-cell',
+  expired: 'hidden xl:table-cell',
+  kategori: 'hidden 2xl:table-cell',
+  eoq: 'hidden 2xl:table-cell',
 }
 
-// ─── Skeleton row ─────────────────────────────────────────────────────────────
+// Urutan dilakukan backend (daftar putih): nama, stok, estimasi (hari habis), expired.
+type Urutan = 'nama' | 'stok' | 'estimasi' | 'expired'
+const URUTAN_VALID: Urutan[] = ['nama', 'stok', 'estimasi', 'expired']
+const STATUS_VALID = ['AMAN', 'MENDEKATI_ROP', 'HARUS_REORDER']
+const EXPIRED_VALID = ['akan', 'lewat']
+
+// Kepala kolom yang bisa diurut: tombol dengan ikon panah dan aria-sort pada selnya.
+// Klik pertama menaik, kedua menurun, ketiga kembali ke urutan bawaan (nama A-Z).
+function KepalaUrut({
+  label, kunci, urutan, arah, onUrut, className,
+}: { label: string; kunci: Urutan; urutan: string; arah: 'asc' | 'desc'; onUrut: (k: Urutan) => void; className?: string }) {
+  const bawaan = kunci === 'nama' && urutan === ''
+  const aktif = urutan === kunci || bawaan
+  const turun = urutan === kunci && arah === 'desc'
+  const Ikon = !aktif ? ChevronsUpDown : turun ? ChevronDown : ChevronUp
+  return (
+    <TableHead aria-sort={aktif ? (turun ? 'descending' : 'ascending') : 'none'} className={cn(KEPALA, className)}>
+      <button
+        type="button"
+        onClick={() => onUrut(kunci)}
+        aria-label={`Urutkan menurut ${label}`}
+        className={cn('-mx-1 inline-flex h-8 items-center gap-1 rounded-md px-1 outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring', aktif && 'text-foreground')}
+      >
+        {label}
+        <Ikon className="size-3.5" aria-hidden="true" />
+      </button>
+    </TableHead>
+  )
+}
+
+// Kerangka pemuatan: jumlah kolom dan jumlah baris sama dengan isi yang akan datang.
 function SkeletonRows() {
   return (
     <>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <tr key={i} className="border-b border-line-subtle">
-          {Array.from({ length: 10 }).map((_, j) => (
-            <td key={j} className="px-3 py-3.5">
-              <div className="h-3.5 bg-surface-muted rounded-md animate-pulse" />
-            </td>
-          ))}
-        </tr>
+      {Array.from({ length: BATAS_HALAMAN }).map((_, i) => (
+        <TableRow key={i} className="hover:bg-transparent">
+          <TableCell className="py-3 pl-5">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="mt-1.5 h-3 w-20" />
+          </TableCell>
+          <TableCell className={`py-3 ${KOLOM.kategori}`}><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-16" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.rop}`}><Skeleton className="ml-auto h-4 w-14" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.eoq}`}><Skeleton className="ml-auto h-4 w-14" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.estHabis}`}><Skeleton className="ml-auto h-4 w-14" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.expired}`}><Skeleton className="h-4 w-16" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.status}`}><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
+          <TableCell className="py-3 pr-4"><Skeleton className="ml-auto h-8 w-20" /></TableCell>
+        </TableRow>
       ))}
     </>
   )
@@ -90,219 +191,300 @@ function SkeletonRows() {
 export default function ObatTable() {
   const sekarang = useNow().getTime()
   const isAdmin = useAuthStore((s) => s.user?.role === 'admin')
-  const [search, setSearch] = useState('')
-  const [kategori, setKategori] = useState('')
-  const [status, setStatus] = useState('')
-  const [page, setPage] = useState(1)
+  // Filter, urutan, dan halaman disimpan di URL (?q=&kategori=&status=&expired=&urut=&arah=&hal=)
+  // supaya tidak hilang saat kembali dari halaman detail dan bisa dibagikan sebagai tautan.
+  const router = useRouter()
+  const pathname = usePathname()
+  const sp = useSearchParams()
+  const search = sp.get('q') ?? ''
+  const kategori = sp.get('kategori') ?? ''
+  const statusUrl = sp.get('status') ?? ''
+  const status = STATUS_VALID.includes(statusUrl) ? statusUrl : ''
+  const expiredUrl = sp.get('expired') ?? ''
+  const expired = EXPIRED_VALID.includes(expiredUrl) ? expiredUrl : ''
+  const urutUrl = sp.get('urut') ?? ''
+  const urutan = URUTAN_VALID.includes(urutUrl as Urutan) ? urutUrl : ''
+  const arah: 'asc' | 'desc' = sp.get('arah') === 'desc' ? 'desc' : 'asc'
+  const page = Math.max(1, parseInt(sp.get('hal') ?? '1', 10) || 1)
 
-  const { data, isLoading } = useObatList({ page, limit: 10, search, kategori, status })
-  const { data: dataAll } = useObatList({ limit: 9999 })
+  const ubahParam = useCallback(
+    (patch: Record<string, string | null>, opsi: { resetHalaman?: boolean } = {}) => {
+      const next = new URLSearchParams(sp.toString())
+      for (const [k, v] of Object.entries(patch)) {
+        if (v) next.set(k, v)
+        else next.delete(k)
+      }
+      if (opsi.resetHalaman !== false) next.delete('hal')
+      const qs = next.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [sp, router, pathname]
+  )
+
+  // Kolom cari memakai state lokal supaya ketikan tidak tertinggal; ke URL (dan ke API) setelah jeda 300 ms.
+  const [cari, setCari] = useState(search)
+  useEffect(() => {
+    // Bandingkan setelah dirapikan: spasi saja dianggap kosong, supaya tidak mengulang pembaruan URL.
+    if ((cari.trim() ? cari : '') === search) return
+    const t = setTimeout(() => ubahParam({ q: cari.trim() ? cari : null }), 300)
+    return () => clearTimeout(t)
+  }, [cari, search, ubahParam])
+
+  function urutPer(kunci: Urutan) {
+    if (urutan !== kunci) ubahParam({ urut: kunci, arah: 'asc' })
+    else if (arah === 'asc') ubahParam({ urut: kunci, arah: 'desc' })
+    else ubahParam({ urut: null, arah: null })
+  }
+
+  const { data, isLoading, isError, refetch } = useObatList({
+    page,
+    limit: BATAS_HALAMAN,
+    search,
+    kategori,
+    status,
+    expired,
+    sort: urutan || undefined,
+    arah: urutan ? arah : undefined,
+  })
+  const { data: dataAll, isError: gagalAll, refetch: muatUlangAll } = useObatSemua()
   const deleteMutation = useDeleteObat()
 
   const obatList: Obat[] = data?.data ?? []
   const meta = data?.meta
 
   const allObat: Obat[] = dataAll?.data ?? []
-  const totalObat     = dataAll?.meta?.total ?? 0
-  const perluReorder  = allObat.filter(o => o.status === 'HARUS_REORDER').length
-  const mendekatiROP  = allObat.filter(o => o.status === 'MENDEKATI_ROP').length
-  const akanExpired   = allObat.filter(o => {
+  const totalObat = dataAll?.meta?.total ?? 0
+  const perluReorder = allObat.filter((o) => o.status === 'HARUS_REORDER').length
+  // Yang sudah lewat tanggal tidak termasuk hitungan "akan expired", tetapi ditulis terpisah di keterangan ubin.
+  const sudahExpired = allObat.filter((o) => {
+    if (!o.expired_terdekat) return false
+    return new Date(o.expired_terdekat).getTime() < sekarang
+  }).length
+  const stokHabis = allObat.filter((o) => o.stok <= 0).length
+  const akanExpired = allObat.filter((o) => {
     if (!o.expired_terdekat) return false
     const selisih = Math.floor((new Date(o.expired_terdekat).getTime() - sekarang) / (1000 * 60 * 60 * 24))
     return selisih >= 0 && selisih <= 90
   }).length
 
+  // Data ringkasan gagal dimuat tidak boleh terbaca sebagai 0: angka jadi "-".
+  const ringkasanLoading = !dataAll && !gagalAll
+  const angka = (n: number) => (gagalAll ? null : n)
+
+  // Pilihan kategori: dari data (urut terbanyak, dengan jumlah). Bila data belum ada, pakai daftar baku tanpa jumlah.
+  const jumlahPerKategori: Record<string, number> = {}
+  allObat.forEach((o) => { jumlahPerKategori[o.kategori] = (jumlahPerKategori[o.kategori] ?? 0) + 1 })
+  const kategoriOpsi: { nama: string; jumlah: number | null }[] =
+    allObat.length > 0
+      ? Object.entries(jumlahPerKategori)
+          .map(([nama, jumlah]) => ({ nama, jumlah }))
+          .sort((a, b) => b.jumlah - a.jumlah || a.nama.localeCompare(b.nama))
+      : KATEGORI_OBAT.map((nama) => ({ nama, jumlah: null }))
+
+  // Alamat daftar saat ini (dengan filternya): dibawa tautan ke halaman Tambah dan Ubah agar tombol Kembali,
+  // Batal, dan Simpan di sana membawa pengguna tepat ke sini.
+  const alamatDaftar = sp.toString() ? `${pathname}?${sp.toString()}` : pathname
+
+  const adaFilter = Boolean(search || kategori || status || expired)
+  function aturUlangFilter() {
+    setCari('')
+    ubahParam({ q: null, kategori: null, status: null, expired: null })
+  }
+  function cobaLagi() {
+    refetch()
+    muatUlangAll()
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4">
 
-      {/* ── Summary Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Pill}          label="Total Obat"     value={totalObat}    sublabel="jenis terdaftar" warna="blue"   />
-        <StatCard icon={AlertTriangle} label="Perlu Reorder"  value={perluReorder} sublabel="stok ≤ ROP"      warna="red"    />
-        <StatCard icon={TrendingDown}  label="Mendekati ROP"  value={mendekatiROP} sublabel="perlu diawasi"   warna="orange" />
-        <StatCard icon={CalendarX}     label="Akan Expired"   value={akanExpired}  sublabel="dalam 90 hari"   warna="orange" />
-      </div>
-
-      {/* ── Kategori Chart ────────────────────────────────────────────────── */}
-      <ObatKategoriChart
-        allObat={allObat}
-        isLoading={!dataAll}
-        kategoriAktif={kategori}
-        onPilihKategori={(k) => { setKategori(k === kategori ? '' : k); setPage(1) }}
+      {/* ── Kepala halaman ──────────────────────────────────────────────── */}
+      <PageHeader
+        className="col-span-12"
+        title="Data obat"
+        description="Stok, titik pesan ulang, dan tanggal expired setiap obat di apotek."
       />
 
-      {/* ── Toolbar ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle pointer-events-none" />
-          <Input
-            placeholder="Cari nama atau kode obat..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="pl-9"
-          />
-        </div>
-
-        <Select value={kategori || 'semua'} onValueChange={(v) => { setKategori(v === 'semua' ? '' : v); setPage(1) }}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Semua Kategori" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="semua">Semua Kategori</SelectItem>
-            {KATEGORI_OBAT.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-          </SelectContent>
-        </Select>
-
-        <Select value={status || 'semua'} onValueChange={(v) => { setStatus(v === 'semua' ? '' : v); setPage(1) }}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Semua Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="semua">Semua Status</SelectItem>
-            <SelectItem value="AMAN">Aman</SelectItem>
-            <SelectItem value="MENDEKATI_ROP">Mendekati ROP</SelectItem>
-            <SelectItem value="HARUS_REORDER">Harus Reorder</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {isAdmin && (
-          <Link href="/obat/tambah" className="ml-auto">
-            <Button className="bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm">
-              <Plus className="w-4 h-4 mr-1.5" />
-              Tambah Obat
-            </Button>
-          </Link>
-        )}
+      {/* ── Ringkasan: satu baris ringkas, satu ubin biru untuk yang perlu dikerjakan ── */}
+      <KategoriDonut
+        className="col-span-12 md:col-span-6 lg:col-span-4"
+        allObat={allObat}
+        isLoading={ringkasanLoading}
+        isError={gagalAll}
+        kategoriAktif={kategori}
+        onPilihKategori={(k) => ubahParam({ kategori: k === kategori ? null : k })}
+      />
+      <StatusStokBar
+        className="col-span-12 md:col-span-6 lg:col-span-4"
+        allObat={allObat}
+        isLoading={ringkasanLoading}
+        isError={gagalAll}
+        statusAktif={status}
+        onPilihStatus={(s) => ubahParam({ status: s === status ? null : s })}
+      />
+      <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1">
+        <ReorderTile
+          compact
+          value={angka(perluReorder)}
+          total={gagalAll ? null : totalObat}
+          keterangan={`dari ${totalObat} obat${stokHabis > 0 ? `, ${stokHabis} stok sudah habis` : ''}`}
+          isLoading={ringkasanLoading}
+          action={
+            <button
+              type="button"
+              aria-label="Tampilkan obat yang perlu reorder di tabel"
+              onClick={() => ubahParam({ status: 'HARUS_REORDER' })}
+              className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-foreground px-3 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-foreground/90 active:translate-y-px active:bg-primary-foreground/80 disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+            >
+              Tampilkan obat
+            </button>
+          }
+        />
+        <StatTile
+          compact
+          label="Akan expired"
+          value={angka(akanExpired)}
+          sublabel={sudahExpired > 0 ? `dalam 90 hari, ${sudahExpired} sudah lewat` : 'dalam 90 hari'}
+          icon={CalendarX}
+          isLoading={ringkasanLoading}
+          onSelect={() => ubahParam({ expired: expired === 'akan' ? null : 'akan' })}
+          selected={expired === 'akan'}
+        />
       </div>
 
-      {/* ── Tabel ─────────────────────────────────────────────────────────── */}
-      <div className="bg-surface rounded-xl border border-line shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line bg-surface-subtle/50">
-                <th className="text-left px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Kode</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Nama Obat</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Kategori</th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Stok</th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
-                  ROP
-                  <span className="block text-fg-muted normal-case font-normal tracking-normal">reorder point</span>
-                </th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
-                  EOQ
-                  <span className="block text-fg-muted normal-case font-normal tracking-normal">qty order optimal</span>
-                </th>
-                <th className="text-right px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
-                  Est. Habis
-                  <span className="block text-fg-muted normal-case font-normal tracking-normal">dari stok saat ini</span>
-                </th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">
-                  Expired
-                  <span className="block text-fg-muted normal-case font-normal tracking-normal">terdekat</span>
-                </th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Status</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line-subtle">
+      {/* ── Daftar obat ──────────────────────────────────────────────────── */}
+      <Panel
+        title="Daftar obat"
+        count={meta?.total}
+        className="col-span-12"
+        bodyClassName="px-0 pb-0"
+      >
+        {/* Satu baris: cari, kategori (dengan jumlah), status, lalu aksi utama di kanan */}
+        <FilterBar className="grid grid-cols-2 px-5 pb-4 sm:flex sm:flex-wrap">
+          <SearchField
+            className="col-span-2 sm:col-span-1 sm:max-w-[15rem]"
+            label="Cari obat"
+            placeholder="Cari nama atau kode obat"
+            value={cari}
+            onChange={setCari}
+          />
+          <Select value={kategori || 'semua'} onValueChange={(v) => ubahParam({ kategori: v === 'semua' ? null : v })}>
+            <SelectTrigger className={`${FILTER_SELECT} col-span-2 sm:col-span-1 sm:w-48`} aria-label="Filter kategori">
+              <SelectValue placeholder="Semua kategori" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua kategori{kategoriOpsi.length > 0 ? ` (${allObat.length})` : ''}</SelectItem>
+              {kategoriOpsi.map((k) => (
+                <SelectItem key={k.nama} value={k.nama}>{k.nama}{k.jumlah !== null ? ` (${k.jumlah})` : ''}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={status || 'semua'} onValueChange={(v) => ubahParam({ status: v === 'semua' ? null : v })}>
+            <SelectTrigger className={`${FILTER_SELECT} sm:w-40`} aria-label="Filter status stok">
+              <SelectValue placeholder="Semua status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua status</SelectItem>
+              <SelectItem value="AMAN">Aman</SelectItem>
+              <SelectItem value="MENDEKATI_ROP">Mendekati ROP</SelectItem>
+              <SelectItem value="HARUS_REORDER">Harus reorder</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={expired || 'semua'} onValueChange={(v) => ubahParam({ expired: v === 'semua' ? null : v })}>
+            <SelectTrigger className={`${FILTER_SELECT} sm:w-44`} aria-label="Filter expired">
+              <SelectValue placeholder="Semua expired" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua expired</SelectItem>
+              <SelectItem value="akan">Akan expired (90 hari)</SelectItem>
+              <SelectItem value="lewat">Sudah expired</SelectItem>
+            </SelectContent>
+          </Select>
+          {adaFilter && (
+            <Button type="button" variant="ghost" className="col-span-2 h-10 rounded-xl px-3 text-primary sm:col-span-1" onClick={aturUlangFilter}>
+              Atur ulang
+            </Button>
+          )}
+          {isAdmin && (
+            <Button size="lg" className="col-span-2 h-10 rounded-xl px-4 sm:col-span-1 sm:ml-auto" asChild>
+              <Link href={denganAsal('/obat/tambah', alamatDaftar)}>
+                <Plus data-icon="inline-start" />
+                Tambah obat
+              </Link>
+            </Button>
+          )}
+        </FilterBar>
+
+        <div aria-busy={isLoading}>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <KepalaUrut label="Obat" kunci="nama" urutan={urutan} arah={arah} onUrut={urutPer} className="pl-5" />
+                <TableHead className={`${KEPALA} ${KOLOM.kategori}`}>Kategori</TableHead>
+                <KepalaUrut label="Stok" kunci="stok" urutan={urutan} arah={arah} onUrut={urutPer} className="text-right" />
+                <TableHead className={`${KEPALA} text-right ${KOLOM.rop}`}>
+                  <IstilahKepala istilah="ROP" arti="Titik pesan ulang. Pesan obat bila stok sama dengan atau di bawah angka ini." />
+                </TableHead>
+                <TableHead className={`${KEPALA} text-right ${KOLOM.eoq}`}>
+                  <IstilahKepala istilah="EOQ" arti="Jumlah pesanan yang disarankan, agar biaya pesan dan simpan paling hemat." />
+                </TableHead>
+                <KepalaUrut label="Est. habis" kunci="estimasi" urutan={urutan} arah={arah} onUrut={urutPer} className={`text-right ${KOLOM.estHabis}`} />
+                <KepalaUrut label="Expired" kunci="expired" urutan={urutan} arah={arah} onUrut={urutPer} className={KOLOM.expired} />
+                <TableHead className={`${KEPALA} ${KOLOM.status}`}>Status</TableHead>
+                <TableHead className={`${KEPALA} pr-4 text-right`}>Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {isLoading ? (
                 <SkeletonRows />
-              ) : obatList.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="text-center py-10 text-fg-muted text-sm">
-                    Tidak ada data obat
-                  </td>
-                </tr>
-              ) : (
+              ) : isError ? null : (
                 obatList.map((obat) => (
-                  <tr key={obat.id} className="hover:bg-surface-subtle transition-colors">
-
-                    {/* Kode */}
-                    <td className="px-3 py-3 font-mono text-xs text-fg-muted whitespace-nowrap">
-                      {obat.kode}
-                    </td>
-
-                    {/* Nama */}
-                    <td className="px-3 py-3 whitespace-nowrap max-w-[200px]">
-                      <span className="font-medium text-fg truncate block">{obat.nama}</span>
-                      {obat.nama_supplier && (
-                        <span className="text-xs text-fg-muted">{obat.nama_supplier}</span>
-                      )}
-                    </td>
-
-                    {/* Kategori */}
-                    <td className="px-3 py-3 text-sm text-fg-tertiary whitespace-nowrap">{obat.kategori}</td>
-
-                    {/* Stok */}
-                    <td className="px-3 py-3 text-right whitespace-nowrap">
-                      <span className="font-semibold text-fg">{formatAngka(obat.stok, 0)}</span>
-                      <span className="text-fg-muted text-xs ml-1">{obat.satuan}</span>
-                    </td>
-
-                    {/* ROP */}
-                    <td className="px-3 py-3 text-right whitespace-nowrap">
+                  <TableRow key={obat.id}>
+                    <TableCell className="whitespace-normal py-3 pl-5">
+                      <Link href={`/obat/${obat.id}/detail`} className="group block max-w-[11rem] rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring sm:max-w-[16rem]">
+                        <span className="block break-words font-medium leading-tight text-foreground group-hover:text-primary">{obat.nama}</span>
+                        <span className="mt-0.5 block font-mono text-xs text-muted-foreground">{obat.kode}</span>
+                      </Link>
+                      {obat.nama_supplier && <span className="mt-0.5 block text-xs text-muted-foreground">{obat.nama_supplier}</span>}
+                      {/* Di layar sempit kolom Status disembunyikan, jadi badge ikut di bawah nama */}
+                      <span className="mt-1.5 block md:hidden"><StatusBadge status={obat.status} stok={obat.stok} /></span>
+                    </TableCell>
+                    <TableCell className={`py-3 text-muted-foreground ${KOLOM.kategori}`}>{obat.kategori}</TableCell>
+                    <TableCell className="py-3 text-right tabular-nums">
+                      <span className="font-semibold text-foreground">{formatAngka(obat.stok, 0)}</span>
+                      <span className="ml-1 text-xs text-muted-foreground">{obat.satuan}</span>
+                    </TableCell>
+                    <TableCell className={`py-3 text-right tabular-nums ${KOLOM.rop}`}>
                       <KalkulasiCell value={obat.rop} satuan={obat.satuan} />
-                    </td>
-
-                    {/* EOQ */}
-                    <td className="px-3 py-3 text-right whitespace-nowrap">
-                      {obat.eoq !== null && obat.eoq !== undefined ? (
-                        <KalkulasiCell value={obat.eoq} satuan={obat.satuan} />
-                      ) : (
-                        <span className="text-xs text-fg-muted italic">Belum dihitung</span>
-                      )}
-                    </td>
-
-                    {/* Estimasi Habis */}
-                    <td className="px-3 py-3 text-right whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className={`py-3 text-right tabular-nums ${KOLOM.eoq}`}>
+                      <KalkulasiCell value={obat.eoq} satuan={obat.satuan} />
+                    </TableCell>
+                    <TableCell className={`py-3 text-right tabular-nums ${KOLOM.estHabis}`}>
                       <EstimasiHabis hari={obat.estimasi_habis_hari} />
-                    </td>
-
-                    {/* Expired */}
-                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className={`py-3 tabular-nums ${KOLOM.expired}`}>
                       <ExpiredCell tanggal={obat.expired_terdekat} />
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-3 py-3 text-center whitespace-nowrap">
-                      <StatusBadge status={obat.status} />
-                    </td>
-
-                    {/* Aksi */}
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <div className="flex gap-1 justify-center">
-                        <Link href={`/obat/${obat.id}/detail`}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-fg-subtle hover:text-success-600 hover:bg-success-50"
-                            title="Detail Kalkulasi"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
-                        </Link>
+                    </TableCell>
+                    <TableCell className={`py-3 ${KOLOM.status}`}>
+                      <StatusBadge status={obat.status} stok={obat.stok} />
+                    </TableCell>
+                    <TableCell className="py-1.5 pr-3">
+                      <div className="flex justify-end gap-1">
+                        {/* Nama obat sudah menjadi tautan ke detail; tombol mata hanya untuk layar lebar, atau untuk staf yang tidak punya aksi lain */}
+                        <IconAction label={`Lihat detail ${obat.nama}`} className={isAdmin ? 'hidden lg:inline-flex' : undefined} asChild>
+                          <Link href={`/obat/${obat.id}/detail`}><Eye /></Link>
+                        </IconAction>
                         {isAdmin && (
                           <>
-                            <Link href={`/obat/${obat.id}/edit`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-fg-subtle hover:text-brand-600 hover:bg-brand-50"
-                                title="Edit"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </Button>
-                            </Link>
+                            <IconAction label={`Ubah ${obat.nama}`} asChild>
+                              <Link href={denganAsal(`/obat/${obat.id}/edit`, alamatDaftar)}><Pencil /></Link>
+                            </IconAction>
                             <ConfirmDialog
                               trigger={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-fg-subtle hover:text-danger-600 hover:bg-danger-50"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
+                                <IconAction label={`Hapus ${obat.nama}`} className="text-destructive hover:text-destructive">
+                                  <Trash2 />
+                                </IconAction>
                               }
                               title={`Hapus ${obat.nama}?`}
                               description="Obat yang sudah memiliki riwayat transaksi tidak bisa dihapus."
@@ -312,77 +494,68 @@ export default function ObatTable() {
                           </>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
+
+          {!isLoading && isError && (
+            <StateMessage
+              icon={TriangleAlert}
+              title="Daftar obat belum bisa dimuat"
+              description="Ini bukan berarti tidak ada obat. Periksa koneksi, lalu coba lagi."
+              action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={cobaLagi}>Coba lagi</Button>}
+            />
+          )}
+          {!isLoading && !isError && obatList.length === 0 && (
+            meta && meta.total > 0 ? (
+              // Alamat memuat nomor halaman yang melewati halaman terakhir (mis. ?hal=99).
+              <StateMessage
+                icon={SearchX}
+                title="Halaman ini tidak ada"
+                description={`Hasilnya hanya sampai halaman ${meta.last_page}.`}
+                action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={() => ubahParam({ hal: null }, { resetHalaman: false })}>Ke halaman pertama</Button>}
+              />
+            ) : adaFilter ? (
+              <StateMessage
+                icon={SearchX}
+                title="Tidak ada obat yang cocok"
+                description="Ubah kata kunci atau longgarkan filter untuk melihat obat lain."
+                action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={aturUlangFilter}>Atur ulang filter</Button>}
+              />
+            ) : (
+              <StateMessage
+                icon={PackageOpen}
+                title="Belum ada obat"
+                description={isAdmin ? 'Tambah obat pertama untuk mulai memantau stoknya.' : 'Admin belum menambahkan obat.'}
+                action={
+                  isAdmin && (
+                    <Button className="h-10 rounded-xl px-4" asChild>
+                      <Link href={denganAsal('/obat/tambah', alamatDaftar)}><Plus data-icon="inline-start" />Tambah obat</Link>
+                    </Button>
+                  )
+                }
+              />
+            )
+          )}
         </div>
 
-        {/* ── Pagination ─────────────────────────────────────────────────── */}
+        {/* Jumlah hasil diumumkan ke pembaca layar setiap filter berubah (juga bila hanya satu halaman) */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {meta && !isLoading ? `${meta.total} obat ditemukan` : ''}
+        </p>
+
         {meta && meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-surface-subtle/50">
-            <span className="text-xs text-fg-muted tabular-nums">
-              {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} dari {meta.total} obat
-            </span>
-            <div className="flex items-center gap-1">
-              {/* Prev */}
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                ‹
-              </button>
-
-              {/* Page numbers */}
-              {getPageNumbers(page, meta.last_page).map((p, i) =>
-                p === '...' ? (
-                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-fg-subtle select-none">…</span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      p === page
-                        ? 'bg-brand-600 text-white border border-brand-600'
-                        : 'border border-line text-gray-600 hover:bg-surface-muted'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-
-              {/* Next */}
-              <button
-                onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
-                disabled={page === meta.last_page}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                ›
-              </button>
-            </div>
-          </div>
+          <Pagination page={page} lastPage={meta.last_page} total={meta.total} perPage={BATAS_HALAMAN} noun="obat" onPageChange={(p) => ubahParam({ hal: p > 1 ? String(p) : null }, { resetHalaman: false })} />
         )}
-      </div>
+      </Panel>
 
-      {/* ── Legenda ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-fg-muted px-1">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-danger-400 inline-block flex-shrink-0" />
-          Est. habis ≤ 7 hari atau expired &lt; 3 bulan
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-warning-400 inline-block flex-shrink-0" />
-          Est. habis 8–30 hari atau expired 3–6 bulan
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="text-fg-muted font-mono">—</span>
-          Data belum tersedia (menunggu riwayat penjualan)
-        </span>
-      </div>
+      {/* ── Keterangan warna ─────────────────────────────────────────────── */}
+      <p className="col-span-12 px-1 text-sm text-muted-foreground">
+        Merah dengan tanda segitiga: stok habis dalam 7 hari atau expired kurang dari 3 bulan (termasuk yang sudah lewat). Oranye: 8 sampai 30 hari atau 3 sampai 6 bulan. Tanda &quot;-&quot; berarti data belum tersedia (menunggu riwayat penjualan).
+      </p>
 
     </div>
   )

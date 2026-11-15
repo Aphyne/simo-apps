@@ -3,142 +3,236 @@
 import { use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, RefreshCw, Pencil, Lock } from 'lucide-react'
+import { RefreshCw, Pencil, Lock, Package, Hourglass, Target, SearchX, TriangleAlert, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import StatusBadge from '@/components/ui/StatusBadge'
 import RumusDisplay from '@/components/obat/RumusDisplay'
 import ObatBatchSummary from '@/components/obat/ObatBatchSummary'
+import Panel from '@/components/dashboard/Panel'
+import { StatTile } from '@/components/dashboard/StatTile'
+import PageHeader from '@/components/shared/PageHeader'
+import StateMessage from '@/components/shared/StateMessage'
+import { Fact, FactList } from '@/components/shared/FactList'
 import { useObatById, useObatPerhitungan, useHitungUlang } from '@/hooks/useObat'
 import { useAuthStore } from '@/store/auth.store'
-import { formatRupiah, formatAngka, formatTanggal } from '@/lib/utils'
+import { denganAsal } from '@/components/shared/useAsalHalaman'
+import { formatRupiah, formatTanggal, formatAngka } from '@/lib/utils'
+import type { Obat } from '@/types/obat'
+
+// Nilai yang belum terisi tidak boleh tampil sebagai angka nol yang tampak sah.
+const BELUM_DIISI = <span className="font-normal text-muted-foreground">Belum diisi</span>
+const rupiahAtauBelum = (n: number | null | undefined) => (n && n > 0 ? formatRupiah(n) : BELUM_DIISI)
+
+// Kalimat HANYA memuat tindakan; angkanya sudah ada di ubin di bawahnya, jadi tidak diulang.
+// Obat yang aman tidak butuh kalimat (badge "Aman" sudah cukup), maka mengembalikan null.
+// Stok habis diperiksa lebih dulu: tidak bergantung pada ROP.
+function kalimatAksi(obat: Obat): string | null {
+  const rop = obat.rop === null || obat.rop === undefined ? 0 : Number(obat.rop)
+  // Jumlah pesanan dibulatkan KE ATAS (barang tidak bisa dipesan pecahan); angka persis ada di panel perhitungan.
+  const saran = obat.eoq ? ` Disarankan pesan sekitar ${formatAngka(Math.ceil(Number(obat.eoq)), 0)} ${obat.satuan}.` : ''
+  if (obat.stok <= 0) return `Stok habis, segera pesan.${saran}`
+  if (!(rop > 0)) return 'Titik pesan ulang belum bisa dihitung, jadi status stok belum bisa dinilai.'
+  if (obat.status === 'HARUS_REORDER') return `Stok sudah di bawah titik pesan ulang, saatnya memesan.${saran}`
+  if (obat.status === 'MENDEKATI_ROP') return 'Stok mendekati titik pesan ulang, siapkan pemesanan.'
+  return null
+}
 
 export default function DetailObatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const isAdmin = useAuthStore((s) => s.isAdmin())
-  const { data: obat, isLoading: loadingObat } = useObatById(id)
+  const { data: obat, isLoading: loadingObat, isError, refetch } = useObatById(id)
   const { data: perhitungan, isLoading: loadingCalc } = useObatPerhitungan(id, isAdmin)
   const hitungUlang = useHitungUlang()
 
   if (loadingObat) {
     return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 bg-surface-muted rounded-lg animate-pulse" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-16 bg-surface-muted rounded-xl animate-pulse" />
-          ))}
+      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4" aria-busy="true" aria-label="Memuat detail obat">
+        <div className="col-span-12 space-y-3">
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-72" />
         </div>
+        <Skeleton className="col-span-6 h-[106px] rounded-2xl sm:col-span-4" />
+        <Skeleton className="col-span-6 h-[106px] rounded-2xl sm:col-span-4" />
+        <Skeleton className="col-span-12 h-[106px] rounded-2xl sm:col-span-4" />
+        <Skeleton className="col-span-12 h-28 rounded-2xl" />
+        <Skeleton className="col-span-12 h-48 rounded-2xl" />
+      </div>
+    )
+  }
+
+  // Gagal memuat dibedakan dari "tidak ditemukan": yang pertama bukan berarti obatnya tidak ada.
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-2xl bg-card">
+        <StateMessage
+          icon={TriangleAlert}
+          title="Data obat belum bisa dimuat"
+          description="Ini bukan berarti obatnya tidak ada. Periksa koneksi, lalu coba lagi."
+          action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={() => refetch()}>Coba lagi</Button>}
+        />
       </div>
     )
   }
 
   if (!obat) {
-    return <div className="text-danger-600 py-16 text-center text-sm">Obat tidak ditemukan</div>
+    return (
+      <div className="mx-auto max-w-3xl rounded-2xl bg-card">
+        <StateMessage
+          icon={SearchX}
+          title="Obat tidak ditemukan"
+          description="Obat ini mungkin sudah dihapus. Kembali ke daftar untuk memilih obat lain."
+          action={<Button variant="outline" className="h-10 rounded-xl px-4" onClick={() => router.back()}>Kembali</Button>}
+        />
+      </div>
+    )
   }
 
+  // Kolom numeric Postgres tiba sebagai teks ("1.95"), jadi diubah ke angka dulu.
+  const ropAda = obat.rop !== null && obat.rop !== undefined && Number(obat.rop) > 0
+  const habis = obat.stok <= 0
+  const perluPesan = habis || obat.status === 'HARUS_REORDER'
+  // Rincian: harga dan biaya terisi dari Barang masuk, lama pengiriman dari Supplier.
+  const adaYangKosong = !(obat.harga_beli > 0) || !(obat.harga_jual > 0) || !(obat.lead_time > 0) || !obat.nama_supplier
+
+  const tombolUbah = (
+    <Button variant={perluPesan ? 'outline' : 'default'} size="lg" className="h-10 rounded-xl px-4" asChild>
+      <Link href={denganAsal(`/obat/${id}/edit`, `/obat/${id}/detail`)}>
+        <Pencil data-icon="inline-start" />
+        Ubah data
+      </Link>
+    </Button>
+  )
+
   return (
-    <div className="space-y-5">
+    <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg-tertiary mb-2 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Kembali ke Data Obat
-          </button>
-          <h1 className="text-xl font-bold text-fg">{obat.nama}</h1>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="font-mono text-xs text-fg-tertiary bg-surface-muted px-2 py-0.5 rounded-md">
-              {obat.kode}
+      {/* ── Kepala: nama, kode, kategori, status, kalimat tindakan ─────────── */}
+      {/* Satu tombol biru: bila perlu dipesan, jalan ke halaman Reorder (khusus admin); bila tidak, Ubah data. */}
+      <PageHeader
+        className="col-span-12"
+        title={obat.nama}
+        backLabel="Kembali ke data obat"
+        onBack={() => router.back()}
+        meta={
+          <>
+            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-foreground/80">{obat.kode}</span>
+            <span>{obat.kategori}</span>
+            <StatusBadge status={obat.status} stok={obat.stok} />
+          </>
+        }
+        description={kalimatAksi(obat) ?? undefined}
+        actions={
+          isAdmin && (
+            <>
+              {perluPesan && tombolUbah}
+              {perluPesan ? (
+                <Button size="lg" className="h-10 rounded-xl px-4" asChild>
+                  <Link href="/reorder">
+                    <ShoppingCart data-icon="inline-start" />
+                    Buka Reorder
+                  </Link>
+                </Button>
+              ) : (
+                tombolUbah
+              )}
+            </>
+          )
+        }
+      />
+
+      {/* ── Tiga angka utama, ringkas; stok dan titik pesan berdampingan ───── */}
+      <StatTile
+        compact
+        className="col-span-6 sm:col-span-4"
+        label="Stok saat ini"
+        value={obat.stok}
+        sublabel={obat.satuan}
+        icon={Package}
+      />
+      <StatTile
+        compact
+        className="col-span-6 sm:col-span-4"
+        label="Titik pesan ulang (ROP)"
+        value={ropAda ? Number(obat.rop) : null}
+        sublabel={ropAda ? obat.satuan : 'belum bisa dihitung'}
+        icon={Target}
+      />
+      <StatTile
+        compact
+        className="col-span-12 sm:col-span-4"
+        label="Estimasi habis"
+        value={obat.estimasi_habis_hari ?? null}
+        teks={habis ? 'Habis' : undefined}
+        sublabel={habis ? '' : obat.estimasi_habis_hari != null ? 'hari lagi' : 'menunggu riwayat penjualan'}
+        icon={Hourglass}
+      />
+
+      {/* ── Rincian: satu baris penuh ──────────────────────────────────────── */}
+      <Panel
+        title="Rincian obat"
+        className="col-span-12"
+        action={
+          adaYangKosong ? (
+            <span className="text-sm font-normal text-muted-foreground">
+              Harga dan biaya terisi dari Barang masuk, lama pengiriman dari Supplier
             </span>
-            <span className="text-sm text-fg-muted">{obat.kategori}</span>
-            <StatusBadge status={obat.status} />
-          </div>
-        </div>
+          ) : undefined
+        }
+      >
+        <FactList className="sm:grid-cols-3 lg:grid-cols-6">
+          <Fact label={`Harga beli per ${obat.satuan}`}>{rupiahAtauBelum(obat.harga_beli)}</Fact>
+          <Fact label={`Harga jual per ${obat.satuan}`}>{rupiahAtauBelum(obat.harga_jual)}</Fact>
+          <Fact label="Isi per dus">{obat.satuan_per_dus} {obat.satuan}</Fact>
+          <Fact label="Lama pengiriman">{obat.lead_time > 0 ? `${obat.lead_time} hari` : BELUM_DIISI}</Fact>
+          <Fact label="Supplier">{obat.nama_supplier ?? BELUM_DIISI}</Fact>
+          <Fact label="Expired terdekat">
+            {obat.expired_terdekat ? formatTanggal(obat.expired_terdekat) : <span className="font-normal text-muted-foreground">Belum ada</span>}
+          </Fact>
+        </FactList>
+      </Panel>
 
-        <div className="flex gap-2 flex-shrink-0">
-          {isAdmin && (
+      {/* ── Perhitungan: untuk admin ───────────────────────────────────────── */}
+      {!isAdmin ? (
+        <p className="col-span-12 flex items-center gap-2 rounded-2xl bg-card px-5 py-4 text-sm text-muted-foreground">
+          <Lock className="size-4 shrink-0" aria-hidden="true" />
+          Rincian perhitungan kapan dan berapa harus memesan hanya bisa dilihat oleh admin.
+        </p>
+      ) : (
+        <Panel
+          title="Kapan dan berapa harus pesan"
+          className="col-span-12"
+          action={
             <Button
               variant="outline"
-              size="sm"
+              className="h-10 rounded-xl px-3"
               onClick={() => hitungUlang.mutate(Number(id))}
               disabled={hitungUlang.isPending}
-              className="border-line-strong text-fg-secondary hover:bg-surface-subtle"
             >
-              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${hitungUlang.isPending ? 'animate-spin' : ''}`} />
-              Hitung Ulang
+              <RefreshCw data-icon="inline-start" className={hitungUlang.isPending ? 'motion-safe:animate-spin' : ''} />
+              {hitungUlang.isPending ? 'Menghitung...' : 'Hitung ulang'}
             </Button>
-          )}
-          {isAdmin && (
-            <Link href={`/obat/${id}/edit`}>
-              <Button size="sm" className="bg-brand-600 hover:bg-brand-700 text-fg-inverse">
-                <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                Edit Data
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* ── Info Grid ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: 'Stok Saat Ini',    nilai: `${formatAngka(obat.stok, 0)} ${obat.satuan}`, alert: obat.status === 'HARUS_REORDER' },
-          { label: 'Estimasi Habis',   nilai: obat.estimasi_habis_hari != null ? `${obat.estimasi_habis_hari} hari` : '—' },
-          { label: `Harga Beli Terkini / ${obat.satuan}`, nilai: formatRupiah(obat.harga_beli) },
-          { label: `Harga Jual Terkini / ${obat.satuan}`, nilai: formatRupiah(obat.harga_jual) },
-          { label: 'Satuan per Dus',   nilai: `${obat.satuan_per_dus} ${obat.satuan}` },
-          { label: 'Lead Time',        nilai: `${obat.lead_time} hari` },
-          { label: 'Supplier',         nilai: obat.nama_supplier ?? '—' },
-          { label: 'Expired Terdekat', nilai: formatTanggal(obat.expired_terdekat) },
-        ].map((item) => (
-          <div
-            key={item.label}
-            className={`rounded-xl border p-3 shadow-sm ${
-              item.alert
-                ? 'border-red-200 bg-danger-50'
-                : 'border-gray-200 bg-surface'
-            }`}
-          >
-            <p className="text-xs text-fg-muted font-medium">{item.label}</p>
-            <p className={`text-sm font-semibold mt-0.5 ${item.alert ? 'text-red-700' : 'text-gray-800'}`}>
-              {item.nilai}
+          }
+        >
+          {loadingCalc ? (
+            <div className="space-y-3" aria-busy="true" aria-label="Memuat perhitungan">
+              <Skeleton className="h-16 rounded-xl" />
+              <Skeleton className="h-10 rounded-xl" />
+            </div>
+          ) : perhitungan ? (
+            <RumusDisplay data={perhitungan} satuan={obat.satuan} />
+          ) : (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Perhitungan belum tersedia untuk obat ini. Coba tombol Hitung ulang di kanan atas panel ini.
             </p>
-          </div>
-        ))}
-      </div>
+          )}
+        </Panel>
+      )}
 
-      {/* ── Detail Perhitungan ─────────────────────────────────────────────── */}
-      <div className="bg-surface rounded-xl border border-line shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-fg-secondary mb-4">
-          Detail Perhitungan EOQ / Safety Stock / ROP
-        </h2>
-        {!isAdmin ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-fg-muted text-sm">
-            <Lock className="w-5 h-5" />
-            Breakdown rumus perhitungan hanya bisa dilihat oleh admin
-          </div>
-        ) : loadingCalc ? (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-surface-muted rounded-xl animate-pulse" />
-            ))}
-          </div>
-        ) : perhitungan ? (
-          <RumusDisplay data={perhitungan} />
-        ) : (
-          <div className="text-center py-10 text-fg-muted text-sm">
-            Data perhitungan tidak tersedia
-          </div>
-        )}
-      </div>
-
-      {/* ── Estimasi Sisa per Batch ───────────────────────────────────────── */}
-      <ObatBatchSummary id={id} />
+      {/* ── Estimasi sisa per batch ────────────────────────────────────────── */}
+      <ObatBatchSummary id={id} className="col-span-12" />
 
     </div>
   )

@@ -12,6 +12,10 @@ interface ObatListParams {
   search?: string
   kategori?: string
   status?: string
+  // Urutan dan filter expired dikerjakan backend (daftar putih): sort = nama|stok|estimasi|expired, arah = asc|desc, expired = akan|lewat
+  sort?: string
+  arah?: string
+  expired?: string
 }
 
 export function useObatList(params: ObatListParams = {}) {
@@ -20,6 +24,36 @@ export function useObatList(params: ObatListParams = {}) {
     queryFn: async () => {
       const res = await api.get<PaginatedResponse<Obat>>('/obat', { params })
       return res.data
+    },
+  })
+}
+
+// Seluruh obat untuk ringkasan, donat, dan pilihan filter. Backend memotong `limit` di 100 per permintaan
+// (limit lebih besar dipotong diam-diam, bukan ditolak), jadi `limit: 9999` hanya mengembalikan 100 obat
+// dan angka ringkasan salah bila obat lebih dari 100. Hook ini mengambil halaman demi halaman sampai habis.
+const UKURAN_HALAMAN = 100
+const BATAS_HALAMAN_AMAN = 50
+
+export function useObatSemua() {
+  return useQuery({
+    queryKey: ['obat', 'semua'],
+    queryFn: async (): Promise<PaginatedResponse<Obat>> => {
+      const semua: Obat[] = []
+      let halaman = 1
+      let total = 0
+      let halamanTerakhir = 1
+      do {
+        const res = await api.get<PaginatedResponse<Obat>>('/obat', { params: { page: halaman, limit: UKURAN_HALAMAN } })
+        semua.push(...res.data.data)
+        total = res.data.meta.total
+        halamanTerakhir = res.data.meta.last_page
+        halaman += 1
+      } while (halaman <= halamanTerakhir && halaman <= BATAS_HALAMAN_AMAN)
+      return {
+        success: true,
+        data: semua,
+        meta: { current_page: 1, per_page: semua.length, total, last_page: 1 },
+      }
     },
   })
 }

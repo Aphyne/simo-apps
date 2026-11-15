@@ -170,7 +170,7 @@ export default function DashboardPage() {
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
 
       <Dialog open={openMasuk} onOpenChange={setOpenMasuk}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Catat Stok Masuk</DialogTitle>
           </DialogHeader>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
       </Dialog>
 
       <Dialog open={openKeluar} onOpenChange={setOpenKeluar}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="max-w-[calc(100%-2rem)] sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Catat Stok Keluar</DialogTitle>
           </DialogHeader>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
       </Dialog>
 
       <Dialog open={openTambahObat} onOpenChange={setOpenTambahObat}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tambah Obat Baru</DialogTitle>
           </DialogHeader>
@@ -196,6 +196,7 @@ export default function DashboardPage() {
             onSubmit={handleTambahObat}
             isLoading={createObatMutation.isPending}
             submitLabel="Tambah Obat"
+            onBatal={() => setOpenTambahObat(false)}
           />
         </DialogContent>
       </Dialog>

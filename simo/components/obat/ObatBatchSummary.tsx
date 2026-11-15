@@ -1,99 +1,86 @@
 'use client'
 
-import { useState } from 'react'
-import { Info } from 'lucide-react'
+import { PackageOpen } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import Panel from '@/components/dashboard/Panel'
 import { useObatBatchSummary } from '@/hooks/useObat'
+import { useNow } from '@/hooks/useNow'
 import { formatTanggalPendek } from '@/lib/utils'
 
 interface Props {
   id: string | number
+  className?: string
 }
 
-function getBadge(expiredBatch: string) {
-  const hari = Math.floor((new Date(expiredBatch).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  if (hari < 0)   return { label: 'Sudah Expired',  cls: 'bg-surface-muted text-fg-tertiary',    hari: null }
-  if (hari <= 30)  return { label: `${hari} hari lagi`, cls: 'bg-danger-100 text-danger-700',     hari }
-  if (hari <= 90)  return { label: `${hari} hari lagi`, cls: 'bg-warning-100 text-warning-700', hari }
-  return           { label: `${hari} hari lagi`, cls: 'bg-success-100 text-success-700',  hari }
+const KEPALA = 'h-9 text-xs font-medium text-muted-foreground'
+
+// Sisa hari per batch memakai badge status: merah (kurang dari 30 hari), oranye (sampai 90 hari),
+// biasa (lebih lama). Selalu tertulis "N hari lagi", jadi warna tidak berdiri sendiri.
+function BadgeSisa({ expiredBatch }: { expiredBatch: string }) {
+  const sekarang = useNow().getTime()
+  const hari = Math.floor((new Date(expiredBatch).getTime() - sekarang) / (1000 * 60 * 60 * 24))
+  if (hari < 0) return <Badge variant="secondary">Sudah expired</Badge>
+  if (hari <= 30) return <Badge variant="destructive" className="text-danger-700">{hari} hari lagi</Badge>
+  if (hari <= 90) return <Badge variant="outline" className="border-transparent bg-warning-50 text-warning-700">{hari} hari lagi</Badge>
+  return <Badge variant="outline">{hari} hari lagi</Badge>
 }
 
-export default function ObatBatchSummary({ id }: Props) {
+export default function ObatBatchSummary({ id, className }: Props) {
   const { data, isLoading } = useObatBatchSummary(id)
-  const [showInfo, setShowInfo] = useState(false)
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-semibold text-fg-secondary">Estimasi Sisa per Batch</p>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowInfo((v) => !v)}
-            className="text-fg-subtle hover:text-brand-500 transition-colors focus:outline-none"
-            aria-label="Informasi metode kalkulasi"
-          >
-            <Info className="w-4 h-4" />
-          </button>
-          {showInfo && (
-            <div className="absolute right-0 top-6 z-20 w-72 bg-gray-800 text-fg-inverse text-xs rounded-lg px-3 py-2 shadow-xl leading-relaxed">
-              Dihitung dengan asumsi FIFO — stok terlama digunakan lebih dulu
-            </div>
-          )}
-        </div>
-      </div>
+    <Panel title="Estimasi sisa per batch" className={className} bodyClassName="px-0 pb-2">
+      {!isLoading && data && data.length > 0 && (
+        <p className="px-5 pb-3 text-sm text-muted-foreground">Dihitung dengan asumsi FIFO: stok terlama dipakai lebih dulu.</p>
+      )}
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-3 px-5 pb-3" aria-busy="true" aria-label="Memuat data batch">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse bg-surface-muted rounded-xl" />
+            <Skeleton key={i} className="h-10 rounded-xl" />
           ))}
         </div>
       ) : !data || data.length === 0 ? (
-        <p className="text-center py-10 text-fg-muted text-sm">
-          Tidak ada data batch dengan expired tercatat
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="text-left py-3 px-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">No. Batch</th>
-                <th className="text-left py-3 px-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Expired</th>
-                <th className="text-right py-3 px-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Total Masuk</th>
-                <th className="text-right py-3 px-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Estimasi Sisa</th>
-                <th className="text-right py-3 px-2 text-xs font-semibold text-fg-muted uppercase tracking-wide">Sisa Hari</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((batch, i) => {
-                const badge = getBadge(batch.expired_batch)
-                return (
-                  <tr key={i} className="border-b border-line-subtle hover:bg-surface-subtle transition-colors">
-                    <td className="py-3 px-2 font-mono text-xs text-fg-secondary">
-                      {batch.no_batch ?? <span className="text-fg-muted">—</span>}
-                    </td>
-                    <td className="py-3 px-2 font-medium text-fg">
-                      {formatTanggalPendek(batch.expired_batch)}
-                    </td>
-                    <td className="py-3 px-2 text-right text-fg-muted text-xs">
-                      {batch.total_masuk} {batch.satuan}
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <span className="font-semibold text-fg">{batch.estimasi_sisa}</span>
-                      <span className="text-xs text-fg-muted ml-1">{batch.satuan}</span>
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${badge.cls}`}>
-                        {badge.label}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="flex flex-col items-center gap-2 px-5 py-6 text-center">
+          <PackageOpen className="size-6 text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">Belum ada batch dengan tanggal expired</p>
+          <p className="text-sm text-muted-foreground">Batch muncul di sini setelah ada barang masuk yang mencatat tanggal expired.</p>
         </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className={`${KEPALA} pl-5`}>No. batch</TableHead>
+              <TableHead className={KEPALA}>Expired</TableHead>
+              <TableHead className={`${KEPALA} hidden text-right sm:table-cell`}>Total masuk</TableHead>
+              <TableHead className={`${KEPALA} text-right`}>Estimasi sisa</TableHead>
+              <TableHead className={`${KEPALA} pr-5 text-right`}>Sisa hari</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((batch, i) => (
+              <TableRow key={i}>
+                <TableCell className="py-2.5 pl-5 font-mono text-xs text-muted-foreground">
+                  {batch.no_batch ?? <span aria-label="Tanpa nomor batch">-</span>}
+                </TableCell>
+                <TableCell className="py-2.5 font-medium tabular-nums text-foreground">{formatTanggalPendek(batch.expired_batch)}</TableCell>
+                <TableCell className="hidden py-2.5 text-right tabular-nums text-muted-foreground sm:table-cell">
+                  {batch.total_masuk} {batch.satuan}
+                </TableCell>
+                <TableCell className="py-2.5 text-right tabular-nums">
+                  <span className="font-semibold text-foreground">{batch.estimasi_sisa}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">{batch.satuan}</span>
+                </TableCell>
+                <TableCell className="py-2.5 pr-5 text-right">
+                  <BadgeSisa expiredBatch={batch.expired_batch} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
-    </div>
+    </Panel>
   )
 }
