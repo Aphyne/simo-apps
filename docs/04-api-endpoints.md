@@ -149,11 +149,18 @@ Perbandingan biaya sebelum vs sesudah EOQ (dari analisis komparatif).
 - `search` — cari nama/kode obat
 - `kategori` — filter kategori
 - `status` — `AMAN` | `MENDEKATI_ROP` | `HARUS_REORDER`
-- `page`, `per_page`
+- `expired` — `akan` (expired 0 sampai 90 hari ke depan, sama dengan angka "akan expired" di dashboard) | `lewat` (tanggal `expired_terdekat` sudah lewat; `expired_terdekat` adalah batch FIFO yang masih punya sisa stok). Nilai lain diabaikan.
+- `sort` — `nama` (bawaan) | `stok` | `estimasi` (hari habis, dihitung di SQL dengan rumus yang sama dengan `utils/estimasi.js`) | `expired`. Nilai lain diabaikan (urutan bawaan nama A-Z). Nilai kosong (NULL) selalu di akhir.
+- `arah` — `asc` (bawaan) | `desc`
+- `page`, `limit` (maksimal 100; lebih dari itu dipotong diam-diam menjadi 100, jadi `limit=9999` hanya mengembalikan 100 obat). Untuk seluruh obat, ambil halaman demi halaman sampai `last_page` (lihat `useObatSemua` di frontend).
+
+Pengurutan dan filter `expired` memakai daftar putih (`backend/src/utils/urutObat.js`): nilai dari query string tidak pernah disambung ke SQL.
 
 **Response:** list obat dengan pagination
 
 ### POST `/api/obat`
+**Nama kembar:** nama dirapikan lebih dulu, lalu dibandingkan dengan obat lain tanpa membedakan huruf besar/kecil dan spasi ganda. Bila sudah ada, respons `409` dengan `{ success: false, field: 'nama', message }`. `PUT /api/obat/{id}` memeriksa hal yang sama hanya bila nama berubah (obat lama yang sudah terlanjur kembar tetap bisa diubah data lainnya).
+
 **Auth:** admin only
 
 **Request body:**
@@ -244,7 +251,9 @@ Memicu kalkulasi ulang EOQ/SS/ROP/TC berdasarkan data terbaru.
 ## BARANG MASUK
 
 ### GET `/api/barang-masuk`
-**Query params:** `obat_id`, `supplier_id`, `tanggal_dari`, `tanggal_sampai`, `page`, `per_page`
+**Query params:** `search` (nama/kode obat, no. faktur, no. batch, supplier), `tanggal`, `dari`, `sampai` (format YYYY-MM-DD), `page`, `limit` (maksimal 100), `semua`
+
+`semua=true` (atau `1`) menonaktifkan paginasi: semua baris yang cocok dikembalikan sekaligus, dibatasi 20.000 baris (`backend/src/utils/paginasi.js`); `meta.total` tetap jumlah sebenarnya. Dipakai halaman yang menghitung ringkasan dan grafik dari seluruh riwayat di sisi klien. `limit` di atas 100 **dipotong diam-diam menjadi 100**, bukan ditolak.
 
 ### POST `/api/barang-masuk`
 **Auth:** admin, staf
@@ -275,7 +284,7 @@ Konversi otomatis di backend: `jumlah_satuan = jumlah_dus × obat.satuan_per_dus
 ## BARANG KELUAR
 
 ### GET `/api/barang-keluar`
-**Query params:** `obat_id`, `keterangan`, `tanggal_dari`, `tanggal_sampai`, `page`, `per_page`
+**Query params:** `search` (nama/kode obat), `keterangan`, `tanggal`, `dari`, `sampai` (format YYYY-MM-DD), `page`, `limit` (maksimal 100), `semua`. Arti `semua` dan pemotongan `limit` sama dengan `GET /api/barang-masuk`.
 
 ### POST `/api/barang-keluar`
 **Auth:** admin, staf

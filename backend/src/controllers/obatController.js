@@ -3,6 +3,7 @@ const { periksaAngka, idValid, tanggalValid } = require('../utils/validasi');
 const { kalkulasiLengkap, kalkulasiStepByStep } = require('../services/eoqService');
 const { hitungUlangObat } = require('../services/stokService');
 const { hitungEstimasiHabis } = require('../utils/estimasi');
+const { bangunOrderBy, kondisiExpired } = require('../utils/urutObat');
 
 // Ekspresi SQL yang HARUS persis sama logikanya dengan hitungStatus() di bawah —
 // dipakai di WHERE clause getAll() supaya filter status difilter di database
@@ -44,6 +45,9 @@ async function getAll(req, res) {
     const search = req.query.search?.trim() || '';
     const kategori = req.query.kategori?.trim() || '';
     const status = req.query.status?.trim() || '';
+    // Urutan dan filter expired: hanya nilai daftar putih yang berlaku (lihat utils/urutObat.js).
+    const orderBy = bangunOrderBy(req.query.sort, req.query.arah);
+    const syaratExpired = kondisiExpired(req.query.expired);
 
     const conditions = [];
     const params = [];
@@ -60,6 +64,9 @@ async function getAll(req, res) {
       params.push(status);
       conditions.push(`${STATUS_SQL} = $${params.length}`);
     }
+    if (syaratExpired) {
+      conditions.push(syaratExpired);
+    }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -71,7 +78,7 @@ async function getAll(req, res) {
 
     params.push(limit, offset);
     const { rows } = await pool.query(
-      `SELECT o.* FROM obat o ${where} ORDER BY o.nama ASC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT o.* FROM obat o ${where} ORDER BY ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
 
@@ -154,6 +161,28 @@ function periksaBodyObat(body) {
   return null;
 }
 
+// Nama obat harus unik. Dibandingkan tanpa membedakan huruf besar/kecil dan spasi ganda
+// (nama baru sudah dirapikan oleh rapikanNama). `kecualiId` = obat yang sedang diubah.
+async function cariNamaKembar(nama, kecualiId) {
+  const params = [nama];
+  let syaratLain = '';
+  if (kecualiId) {
+    params.push(kecualiId);
+    syaratLain = 'AND id <> $2';
+  }
+  const { rows } = await pool.query(
+    `SELECT id, kode, nama FROM obat
+     WHERE lower(regexp_replace(trim(nama), '\\s+', ' ', 'g')) = lower($1) ${syaratLain}
+     LIMIT 1`,
+    params
+  );
+  return rows[0] || null;
+}
+
+function pesanNamaKembar(kembar) {
+  return `Obat "${kembar.nama}" sudah ada (${kembar.kode}). Gunakan nama yang berbeda, misalnya tambahkan kekuatan atau kemasannya.`;
+}
+
 // true bila field dikirim dan berisi nilai (bukan undefined/null/string kosong)
 function body_ada(v) {
   return v !== undefined && v !== null && v !== '';
@@ -181,6 +210,11 @@ async function create(req, res) {
   const stok_awal = parseInt(stok) || 0;
 
   try {
+    const kembar = await cariNamaKembar(nama);
+    if (kembar) {
+      return res.status(409).json({ success: false, field: 'nama', message: pesanNamaKembar(kembar) });
+    }
+
     // Auto-generate kode: ambil nomor terbesar dari kode OBT-xxx
     const { rows: kodeRows } = await pool.query(
       `SELECT kode FROM obat WHERE kode ~ '^OBT-[0-9]+$' ORDER BY CAST(SUBSTRING(kode FROM 5) AS INTEGER) DESC LIMIT 1`
@@ -283,6 +317,15 @@ async function update(req, res) {
     const satuan = pilih(body.satuan, o.satuan);
     if (!nama || !kategori || !satuan) {
       return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
+    }
+
+    // Cek nama kembar hanya bila nama berubah: obat yang sudah terlanjur kembar tetap bisa diubah data lainnya.
+    const namaLamaRapi = String(o.nama ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+    if (nama.toLowerCase() !== namaLamaRapi) {
+      const kembar = await cariNamaKembar(nama, o.id);
+      if (kembar) {
+        return res.status(409).json({ success: false, field: 'nama', message: pesanNamaKembar(kembar) });
+      }
     }
 
     let supplier_id = o.supplier_id;

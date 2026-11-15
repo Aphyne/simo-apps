@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { bacaPaginasi, metaPaginasi } = require('../utils/paginasi');
 const { updateExpiredTerdekat, hitungUlangObat } = require('../services/stokService');
 const { HttpError, idValid, desimalPositif, nonNegatif, angkaDalamRentang, tanggalValid, balasHttpError } = require('../utils/validasi');
 
@@ -53,9 +54,8 @@ async function hitungBiayaPesanPerObat(client, jumlahObatUnik, supplierId) {
 
 async function getAll(req, res) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 15));
-    const offset = (page - 1) * limit;
+    const pg = bacaPaginasi(req.query);
+    const { limit, offset } = pg;
     const search = req.query.search?.trim() || '';
     const tanggal = req.query.tanggal?.trim() || '';
     const dari = req.query.dari?.trim() || '';
@@ -116,12 +116,7 @@ async function getAll(req, res) {
     res.json({
       success: true,
       data: rows,
-      meta: {
-        current_page: page,
-        per_page: limit,
-        total,
-        last_page: Math.ceil(total / limit) || 1,
-      },
+      meta: metaPaginasi(pg, total, rows.length),
     });
   } catch (err) {
     console.error('barangMasuk.getAll:', err);

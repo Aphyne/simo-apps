@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { bacaPaginasi, metaPaginasi } = require('../utils/paginasi');
 const { hitungUlangObat, updateExpiredTerdekat } = require('../services/stokService');
 const { hitungDemandDariRiwayat } = require('../services/demandService');
 const { HttpError, bulatPositif, idValid, tanggalValid, balasHttpError } = require('../utils/validasi');
@@ -11,9 +12,8 @@ class BulkValidationError extends Error {}
 
 async function getAll(req, res) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 15));
-    const offset = (page - 1) * limit;
+    const pg = bacaPaginasi(req.query);
+    const { limit, offset } = pg;
     const search = req.query.search?.trim() || '';
     const keterangan = req.query.keterangan?.trim() || '';
     const tanggal = req.query.tanggal?.trim() || '';
@@ -74,12 +74,7 @@ async function getAll(req, res) {
     res.json({
       success: true,
       data: rows,
-      meta: {
-        current_page: page,
-        per_page: limit,
-        total,
-        last_page: Math.ceil(total / limit) || 1,
-      },
+      meta: metaPaginasi(pg, total, rows.length),
     });
   } catch (err) {
     console.error('barangKeluar.getAll:', err);
