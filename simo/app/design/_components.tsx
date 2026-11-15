@@ -4,7 +4,7 @@
 import { Card } from '@/components/ui/card'
 
 // Ubah bersamaan dengan Riwayat dokumen bila panduan tertulis diperbarui.
-export const VERSI_DESIGN = 'Design System v2.0, 13 November 2026'
+export const VERSI_DESIGN = 'Design System v2.1, 16 November 2026'
 export const PANDUAN_PATH = 'docs/DESIGN.md'
 
 // Judul satu section: ditulis sebagai h2 supaya urutan judul halaman benar.

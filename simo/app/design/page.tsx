@@ -9,6 +9,7 @@ import { FeedbackSection } from './feedback/section'
 import { OverlaySection } from './overlay/section'
 import { NavigasiSection } from './navigasi/section'
 import { TabelSection } from './tabel/section'
+import { HalamanSection } from './halaman/section'
 import { ChartSection } from './chart/section'
 import { MotionSection } from './motion/section'
 import { ProgresSection } from './progres/section'
@@ -39,6 +40,7 @@ export default function DesignPage() {
       <OverlaySection />
       <NavigasiSection />
       <TabelSection />
+      <HalamanSection />
       <ChartSection />
       <ProgresSection />
     </div>

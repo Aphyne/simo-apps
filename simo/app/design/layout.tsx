@@ -35,6 +35,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Data',
     items: [
       { label: 'Tabel', href: '#tabel' },
+      { label: 'Pola halaman', href: '#halaman' },
       { label: 'Chart', href: '#chart' },
     ],
   },

@@ -16,7 +16,7 @@ export const PROGRES_PENATAAN: BarisProgres[] = [
   { halaman: 'Layout (Sidebar + Header)', rute: 'components/layout/*', status: 'Mengikuti', catatan: 'Drawer di < lg; target sentuh 44px' },
   { halaman: 'Dashboard', rute: '/dashboard', status: 'Mengikuti', catatan: '' },
   { halaman: 'Design (style guide)', rute: '/design', status: 'Mengikuti', catatan: 'Hanya superadmin' },
-  { halaman: 'Data Obat (list, tambah, detail, edit)', rute: '/obat/**', status: 'Belum', catatan: 'Isi gaya v1' },
+  { halaman: 'Data Obat (list, tambah, detail, edit)', rute: '/obat/**', status: 'Mengikuti', catatan: 'Dikerjakan 16 Nov 2026; menunggu acc Boss. Pola baru di 4.8' },
   { halaman: 'Barang Masuk', rute: '/barang-masuk', status: 'Belum', catatan: 'Isi gaya v1' },
   { halaman: 'Barang Keluar', rute: '/barang-keluar', status: 'Belum', catatan: 'Isi gaya v1' },
   { halaman: 'Monitoring', rute: '/monitoring', status: 'Belum', catatan: 'Isi gaya v1' },
