@@ -183,6 +183,23 @@
   --chart-3: oklch(0.809 0.105 252);
   --chart-4: oklch(0.446 0.043 257);
   --chart-5: oklch(0.424 0.199 265);
+  /* Warna kategori obat (donat distribusi, 14 kategori). Hanya untuk membedakan irisan; nama dan
+     jumlah selalu tertulis. Sengaja tanpa merah dan oranye (hue 10 sampai 75): dua warna itu
+     milik status stok. */
+  --kategori-1: oklch(0.546 0.215 263);
+  --kategori-2: oklch(0.62 0.12 190);
+  --kategori-3: oklch(0.62 0.17 145);
+  --kategori-4: oklch(0.55 0.2 300);
+  --kategori-5: oklch(0.66 0.14 92);
+  --kategori-6: oklch(0.55 0.04 256);
+  --kategori-7: oklch(0.7 0.13 225);
+  --kategori-8: oklch(0.48 0.18 280);
+  --kategori-9: oklch(0.7 0.17 125);
+  --kategori-10: oklch(0.62 0.2 335);
+  --kategori-11: oklch(0.52 0.1 170);
+  --kategori-12: oklch(0.46 0.11 115);
+  --kategori-13: oklch(0.62 0.05 75);
+  --kategori-14: oklch(0.4 0.06 245);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);

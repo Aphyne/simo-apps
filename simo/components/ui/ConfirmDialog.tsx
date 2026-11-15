@@ -40,7 +40,7 @@ export default function ConfirmDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={loading}
-            className="bg-danger-600 hover:bg-danger-700 text-fg-inverse"
+            className="bg-destructive text-white hover:bg-destructive/90"
           >
             {loading ? 'Menghapus...' : 'Hapus'}
           </AlertDialogAction>

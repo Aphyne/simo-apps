@@ -3,27 +3,25 @@ import type { StatusStok } from '@/types/obat'
 
 interface Props {
   status: StatusStok
+  // Bila diberikan dan stok sudah 0, tampil "Habis" (tingkat tertinggi, DESIGN.md 4.3) menggantikan "Harus reorder".
+  stok?: number
 }
 
-const config: Record<StatusStok, { label: string; className: string }> = {
-  AMAN: {
-    label: 'Aman',
-    className: 'bg-green-100 text-green-700 hover:bg-green-100 border-green-200',
-  },
-  MENDEKATI_ROP: {
-    label: 'Mendekati ROP',
-    className: 'bg-warning-100 text-warning-700 hover:bg-warning-100 border-warning-200',
-  },
-  HARUS_REORDER: {
-    label: 'Harus Reorder',
-    className: 'bg-danger-100 text-danger-700 hover:bg-danger-100 border-danger-200',
-  },
+// Status stok memakai pola badge DESIGN.md 4.3. Warna selalu disertai teks.
+// Harus reorder = stok di bawah ROP (di dashboard disebut Kritis).
+const config: Record<StatusStok, { label: string; variant: 'outline' | 'destructive'; className?: string }> = {
+  AMAN: { label: 'Aman', variant: 'outline' },
+  MENDEKATI_ROP: { label: 'Mendekati ROP', variant: 'outline', className: 'border-transparent bg-warning-50 text-warning-700' },
+  HARUS_REORDER: { label: 'Harus reorder', variant: 'destructive', className: 'text-danger-700' },
 }
 
-export default function StatusBadge({ status }: Props) {
-  const { label, className } = config[status] ?? config.AMAN
+export default function StatusBadge({ status, stok }: Props) {
+  if (stok !== undefined && stok <= 0) {
+    return <Badge className="bg-destructive text-white">Habis</Badge>
+  }
+  const { label, variant, className } = config[status] ?? config.AMAN
   return (
-    <Badge variant="outline" className={className}>
+    <Badge variant={variant} className={className}>
       {label}
     </Badge>
   )
