@@ -19,7 +19,7 @@ test.describe('staf', () => {
     await tenang(page);
     await expect(page.locator('main table tbody tr').first()).toBeVisible(); // data obat sudah termuat
     await expect(page.getByRole('link', { name: /tambah obat/i })).toHaveCount(0);
-    await expect(page.getByTitle('Edit')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /^Ubah / })).toHaveCount(0); // ikon ubah memakai aria-label (bukan title)
   });
 });
 
@@ -38,6 +38,6 @@ test.describe('admin', () => {
     await page.goto('/obat');
     await tenang(page);
     await expect(page.getByRole('link', { name: /tambah obat/i })).toBeVisible();
-    await expect(page.getByTitle('Edit').first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Ubah / }).first()).toBeVisible();
   });
 });

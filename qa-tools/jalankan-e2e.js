@@ -77,6 +77,9 @@ async function bersihkan() {
        WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'peneliti')`,
       [bcrypt.hashSync('password', 10)]
     );
+    // Tanggal dibuat akun uji dibuat tetap: kolom "Terdaftar" di /users tampil di tangkapan layar, jadi tanpa ini
+    // uji tampilan hanya lulus pada hari acuan dibuat.
+    await c.query("UPDATE users SET created_at = '2026-11-14T05:00:00Z'");
     await c.end();
 
     console.log('> backend uji (port %d)…', BE_PORT);
