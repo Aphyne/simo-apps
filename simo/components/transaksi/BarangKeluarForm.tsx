@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import ObatCombobox from '@/components/ui/ObatCombobox'
 import { useCreateBarangKeluarBulk } from '@/hooks/useBarangKeluar'
-import { useObatList } from '@/hooks/useObat'
+import { useObatSemua } from '@/hooks/useObat'
 import { formatRupiah } from '@/lib/utils'
 import type { Obat } from '@/types/obat'
 
@@ -70,7 +70,7 @@ function StokInfo({ obat, jumlah }: { obat?: Obat; jumlah: number }) {
 }
 
 export default function BarangKeluarForm({ onSuccess }: Props) {
-  const { data: obatData } = useObatList({ limit: 999 })
+  const { data: obatData } = useObatSemua()
   const bulkMutation = useCreateBarangKeluarBulk()
   const obatList = obatData?.data ?? []
 

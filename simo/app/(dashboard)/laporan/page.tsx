@@ -15,7 +15,7 @@ import { useSimulasiList } from '@/hooks/useSimulasi'
 import { exportPDF, exportExcel, exportKartuStokPDF } from '@/lib/export'
 import { formatRupiah, formatTanggal } from '@/lib/utils'
 import { KATEGORI_OBAT } from '@/lib/constants'
-import { useObatList } from '@/hooks/useObat'
+import { useObatSemua } from '@/hooks/useObat'
 import { usePengaturan } from '@/hooks/usePengaturan'
 import ObatCombobox from '@/components/ui/ObatCombobox'
 
@@ -91,7 +91,7 @@ function KategoriSelect({ value, onChange }: { value: string; onChange: (v: stri
 
 // ── Filter: Obat (cari & pilih 1 obat) — selalu ditaruh paling kiri ────────────
 function ObatFilterSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const { data: obatData } = useObatList({ limit: 999 })
+  const { data: obatData } = useObatSemua()
   const obatList = obatData?.data ?? []
   return (
     <div className="w-56">
@@ -476,7 +476,7 @@ function TabKartuStok() {
   const [dari, setDari]     = useState('')
   const [sampai, setSampai] = useState('')
   const [preview, setPreview] = useState(false)
-  const { data: obatData } = useObatList({ limit: 999 })
+  const { data: obatData } = useObatSemua()
   const obatList = obatData?.data ?? []
   const selectedObat = obatList.find(o => String(o.id) === obatId)
   const { data: pengaturan } = usePengaturan()

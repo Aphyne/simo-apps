@@ -11,7 +11,7 @@ import {
   useSimpanSimulasi, useDeleteSimulasi, useSimulasiList,
   SimulasiTersimpan,
 } from '@/hooks/useSimulasi'
-import { useObatList } from '@/hooks/useObat'
+import { useObatSemua } from '@/hooks/useObat'
 import { formatRupiah, formatTanggal } from '@/lib/utils'
 import AdminOnly from '@/components/layout/AdminOnly'
 
@@ -145,7 +145,7 @@ function RiwayatSimulasi() {
 
 // ── Halaman utama ──────────────────────────────────────────────────────────────
 function IsiSimulasiPage() {
-  const { data: obatData } = useObatList({ page: 1, limit: 500 })
+  const { data: obatData } = useObatSemua()
   const obatList = obatData?.data ?? []
   const simpan = useSimpanSimulasi()
 

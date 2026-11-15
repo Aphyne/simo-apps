@@ -91,7 +91,7 @@ export default function BarangKeluarTable() {
   const rawList: BarangKeluar[] = data?.data ?? []
   const meta = data?.meta
 
-  const { data: allData, isLoading: summaryLoading } = useBarangKeluarList({ page: 1, limit: 9999 })
+  const { data: allData, isLoading: summaryLoading } = useBarangKeluarList({ semua: true })
   const allList: BarangKeluar[] = allData?.data ?? []
 
   const now = new Date()
@@ -271,7 +271,7 @@ export default function BarangKeluarTable() {
                 Catat Stok Keluar
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-sm font-semibold text-gray-800">Catat Stok Keluar</DialogTitle>
               </DialogHeader>
@@ -284,7 +284,7 @@ export default function BarangKeluarTable() {
       {/* Edit Dialog (admin only) */}
       {editingItem && (
         <Dialog open={!!editingItem} onOpenChange={(o) => { if (!o) setEditingItem(null) }}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold text-gray-800">Edit Stok Keluar</DialogTitle>
             </DialogHeader>
@@ -296,7 +296,7 @@ export default function BarangKeluarTable() {
       {/* Detail/Preview Dialog — tempat Catatan bisa dilihat sejak dihilangkan dari tabel */}
       {selectedItem && (
         <Dialog open={!!selectedItem} onOpenChange={(o) => { if (!o) setSelectedItem(null) }}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold text-gray-800">Detail Stok Keluar</DialogTitle>
             </DialogHeader>

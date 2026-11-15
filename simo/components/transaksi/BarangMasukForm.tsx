@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import ObatCombobox from '@/components/ui/ObatCombobox'
 import { useCreateBarangMasukBulk } from '@/hooks/useBarangMasuk'
-import { useObatList } from '@/hooks/useObat'
+import { useObatSemua } from '@/hooks/useObat'
 import { useSupplierDropdown } from '@/hooks/useSupplier'
 import type { Obat } from '@/types/obat'
 
@@ -84,7 +84,7 @@ function HargaPreview({ obat, item, ppnPct }: { obat?: Obat; item: ItemForm; ppn
 }
 
 export default function BarangMasukForm({ onSuccess }: Props) {
-  const { data: obatData } = useObatList({ limit: 999 })
+  const { data: obatData } = useObatSemua()
   const { data: supplierList } = useSupplierDropdown()
   const bulkMutation = useCreateBarangMasukBulk()
 

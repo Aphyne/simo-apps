@@ -85,7 +85,7 @@ export default function BarangMasukTable() {
   const rawList: BarangMasuk[] = data?.data ?? []
   const meta = data?.meta
 
-  const { data: allData, isLoading: summaryLoading } = useBarangMasukList({ page: 1, limit: 9999 })
+  const { data: allData, isLoading: summaryLoading } = useBarangMasukList({ semua: true })
   const allList: BarangMasuk[] = allData?.data ?? []
 
   const now = new Date()
@@ -252,7 +252,7 @@ export default function BarangMasukTable() {
                 Catat Stok Masuk
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-sm font-semibold text-gray-800">Catat Stok Masuk</DialogTitle>
               </DialogHeader>
@@ -265,7 +265,7 @@ export default function BarangMasukTable() {
       {/* Detail Dialog */}
       {selectedItem && (
         <Dialog open={!!selectedItem} onOpenChange={(o) => { if (!o) setSelectedItem(null) }}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold text-gray-800">Detail Stok Masuk</DialogTitle>
             </DialogHeader>
@@ -341,7 +341,7 @@ export default function BarangMasukTable() {
       {/* Edit Dialog (admin only) */}
       {editingItem && (
         <Dialog open={!!editingItem} onOpenChange={(o) => { if (!o) setEditingItem(null) }}>
-          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold text-gray-800">Edit Stok Masuk</DialogTitle>
             </DialogHeader>

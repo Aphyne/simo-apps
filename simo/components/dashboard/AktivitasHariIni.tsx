@@ -2,12 +2,17 @@
 
 import { useMemo } from 'react'
 import { PackageMinus } from 'lucide-react'
+import { format } from 'date-fns'
 import { useBarangKeluarList } from '@/hooks/useBarangKeluar'
+import { useNow } from '@/hooks/useNow'
 import type { BarangKeluar } from '@/types/obat'
 import Panel, { SkeletonRows } from './Panel'
 
 export default function AktivitasHariIni({ className }: { className?: string }) {
-  const { data, isLoading, isError } = useBarangKeluarList({ limit: 9999 })
+  // Hanya butuh baris hari ini: dipersempit di backend dengan rentang tanggal, bukan mengambil seluruh riwayat.
+  // (Dulu limit 9999, yang diam-diam dipotong backend jadi 100 baris terbaru.)
+  const hariIni = format(useNow(), 'yyyy-MM-dd')
+  const { data, isLoading, isError } = useBarangKeluarList({ dari: hariIni, sampai: hariIni, semua: true })
   const allList: BarangKeluar[] = useMemo(() => data?.data ?? [], [data])
 
   const todayList = useMemo(() => {

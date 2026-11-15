@@ -13,6 +13,9 @@ interface ListParams {
   tanggal?: string
   dari?: string
   sampai?: string
+  // true = tanpa paginasi (backend membatasi 20.000 baris). Untuk ringkasan dan grafik dari seluruh riwayat;
+  // `limit` besar tidak berguna karena backend memotongnya di 100.
+  semua?: boolean
 }
 
 export function useBarangMasukList(params: ListParams = {}) {

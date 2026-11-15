@@ -6,7 +6,7 @@ import { Eye, RefreshCw, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import StatusBadge from '@/components/ui/StatusBadge'
 import RumusDisplay from '@/components/obat/RumusDisplay'
-import { useObatList, useObatPerhitungan, useHitungUlang } from '@/hooks/useObat'
+import { useObatList, useObatSemua, useObatPerhitungan, useHitungUlang } from '@/hooks/useObat'
 import { formatAngka, formatRupiah } from '@/lib/utils'
 import type { Obat } from '@/types/obat'
 
@@ -84,7 +84,7 @@ export default function PerhitunganTable() {
   const [hitungProgress, setHitungProgress] = useState<{ current: number; total: number } | null>(null)
 
   const { data, isLoading } = useObatList({ page, limit: 20, search, status })
-  const { data: allObatData } = useObatList({ limit: 9999 })
+  const { data: allObatData } = useObatSemua()
   const rawList: Obat[] = data?.data ?? []
   const meta = data?.meta
   const hitungUlangBatch = useHitungUlang()
