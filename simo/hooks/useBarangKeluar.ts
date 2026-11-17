@@ -80,12 +80,22 @@ export function useCreateBarangKeluarBulk() {
       qc.invalidateQueries({ queryKey: ['reorder-alerts'] })
       toast.success(result.message)
 
-      result.reorder_alerts.forEach((alert) => {
+      // Satu toast untuk semua obat yang jatuh ke ROP (satu toast per obat menumpuk pada keranjang besar).
+      const alerts = result.reorder_alerts
+      if (alerts.length === 1) {
+        const a = alerts[0]
         toast.warning(
-          `⚠️ Stok ${alert.nama_obat} sudah di bawah ROP (${alert.stok_sesudah} ≤ ${alert.rop}). Segera lakukan pemesanan!`,
+          `Stok ${a.nama_obat} sudah di bawah titik pesan ulang (ROP): ${a.stok_sesudah} dari ROP ${a.rop}. Segera lakukan pemesanan.`,
           { duration: 8000 }
         )
-      })
+      } else if (alerts.length > 1) {
+        const nama = alerts.slice(0, 3).map((a) => a.nama_obat).join(', ')
+        const sisa = alerts.length - 3
+        toast.warning(
+          `${alerts.length} obat sudah di bawah titik pesan ulang (ROP): ${nama}${sisa > 0 ? `, dan ${sisa} lainnya` : ''}. Segera lakukan pemesanan.`,
+          { duration: 8000 }
+        )
+      }
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
       toast.error(err?.response?.data?.message ?? 'Gagal mencatat barang keluar')

@@ -1,8 +1,14 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { formatRupiah } from '@/lib/utils'
+import { PackageOpen, TriangleAlert } from 'lucide-react'
+import Panel from '@/components/dashboard/Panel'
+import Segmented from '@/components/shared/Segmented'
+import StateMessage from '@/components/shared/StateMessage'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { formatAngka, formatRupiah } from '@/lib/utils'
+import { useNow } from '@/hooks/useNow'
 import type { BarangKeluar } from '@/types/obat'
 
 const MONTHS = [
@@ -10,149 +16,139 @@ const MONTHS = [
   'Juli','Agustus','September','Oktober','November','Desember',
 ]
 
-interface ChartPoint {
-  nama: string
-  total: number
-  pendapatan: number
-  label: string
-}
-
-// Tooltip custom — dua baris terpisah (unit keluar & total pendapatan),
-// bukan formatter bawaan Recharts yang cuma bisa 1 baris per Bar.
-function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartPoint }[] }) {
-  if (!active || !payload?.length) return null
-  const data = payload[0].payload
-  return (
-    <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-sm">
-      <p className="font-medium text-gray-800 mb-1">{data.nama}</p>
-      <p className="text-brand-600">Keluar: <span className="font-medium">{data.total} unit</span></p>
-      <p className="text-[#10B981]">Total Pendapatan: <span className="font-medium">{formatRupiah(data.pendapatan)}</span></p>
-    </div>
-  )
-}
+const TOP = 6
 
 interface Props {
   allList: BarangKeluar[]
   isLoading: boolean
+  isError?: boolean
+  onRetry?: () => void
+  className?: string
 }
 
-export default function BarangKeluarPerObatChart({ allList, isLoading }: Props) {
-  const now = new Date()
+type Mode = 'bulanan' | 'tahunan'
+
+// Peringkat obat terlaris menurut jumlah keluar: daftar berbatang dengan nama lengkap, jumlah, dan rupiah tertulis
+// (batang hanya pembanding). Hanya Penjualan yang dihitung.
+export default function BarangKeluarPerObatChart({ allList, isLoading, isError, onRetry, className }: Props) {
+  const now = useNow()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth()
 
-  const [mode, setMode] = useState<'bulanan' | 'tahunan'>('bulanan')
+  const [mode, setMode] = useState<Mode>('bulanan')
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     years.add(currentYear)
-    allList.forEach(item => {
+    allList.forEach((item) => {
       if (item.tanggal) years.add(new Date(item.tanggal).getFullYear())
     })
     return Array.from(years).sort((a, b) => a - b)
   }, [allList, currentYear])
 
-  const chartData = useMemo(() => {
-    const filtered = allList.filter(item => {
-      if (!item.tanggal) return false
-      // Hanya hitung Penjualan — pemusnahan/retur/rusak/dll bukan pendapatan
-      if (item.keterangan !== 'Penjualan') return false
+  const { rows, jumlahObat } = useMemo(() => {
+    const filtered = allList.filter((item) => {
+      if (!item.tanggal || item.keterangan !== 'Penjualan') return false
       const d = new Date(item.tanggal)
-      if (mode === 'bulanan') {
-        return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth
-      }
+      if (mode === 'bulanan') return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth
       return d.getFullYear() === selectedYear
     })
 
-    const map: Record<string, { nama: string; total: number; pendapatan: number }> = {}
-    filtered.forEach(item => {
-      if (!map[item.nama_obat]) map[item.nama_obat] = { nama: item.nama_obat, total: 0, pendapatan: 0 }
+    const map: Record<string, { nama: string; satuan: string; total: number; pendapatan: number }> = {}
+    filtered.forEach((item) => {
+      if (!map[item.nama_obat]) map[item.nama_obat] = { nama: item.nama_obat, satuan: item.satuan, total: 0, pendapatan: 0 }
       map[item.nama_obat].total += item.jumlah ?? 0
-      map[item.nama_obat].pendapatan += (item.jumlah ?? 0) * (item.harga_jual ?? 0)
+      map[item.nama_obat].pendapatan += (item.jumlah ?? 0) * (Number(item.harga_jual) || 0)
     })
 
-    return Object.values(map)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 6)
-      .map(item => ({
-        ...item,
-        label: item.nama.length > 12 ? item.nama.slice(0, 12) + '…' : item.nama,
-      }))
+    const urut = Object.values(map).sort((a, b) => b.total - a.total)
+    return { rows: urut.slice(0, TOP), jumlahObat: urut.length }
   }, [allList, mode, selectedMonth, selectedYear])
 
-  const periodeLabel = mode === 'bulanan'
-    ? `${MONTHS[selectedMonth]} ${selectedYear}`
-    : `Tahun ${selectedYear}`
+  const periodeLabel = mode === 'bulanan' ? `${MONTHS[selectedMonth]} ${selectedYear}` : `tahun ${selectedYear}`
+  const terbesar = rows[0]?.total ?? 0
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-        <div>
-          <p className="text-sm font-semibold text-fg-secondary">Keluar per Obat</p>
-          <p className="text-xs text-fg-muted mt-0.5">{periodeLabel} · khusus Penjualan</p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Toggle Bulanan / Tahunan */}
-          <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
-            {(['bulanan', 'tahunan'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  mode === m ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-fg-secondary'
-                }`}
-              >
-                {m === 'bulanan' ? 'Bulanan' : 'Tahunan'}
-              </button>
-            ))}
-          </div>
-
-          {/* Dropdown Bulan — hanya saat Bulanan */}
-          {mode === 'bulanan' && (
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="border border-line rounded-lg px-2.5 py-1 text-xs text-fg-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              {MONTHS.map((name, i) => (
-                <option key={i} value={i}>{name}</option>
-              ))}
-            </select>
-          )}
-
-          {/* Dropdown Tahun — selalu ada */}
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border border-line rounded-lg px-2.5 py-1 text-xs text-fg-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            {availableYears.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
+    <Panel title="Keluar per obat" className={className}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Segmented
+          label="Periode peringkat"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'bulanan', label: 'Bulanan' },
+            { value: 'tahunan', label: 'Tahunan' },
+          ]}
+        />
+        {mode === 'bulanan' && (
+          <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
+            <SelectTrigger className="h-10 w-36 rounded-xl data-[size=default]:h-10" aria-label="Bulan peringkat">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((name, i) => <SelectItem key={name} value={String(i)}>{name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+          <SelectTrigger className="h-10 w-28 rounded-xl data-[size=default]:h-10" aria-label="Tahun peringkat">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableYears.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
-      {isLoading ? (
-        <div className="h-[200px] animate-pulse bg-surface-muted rounded-xl" />
-      ) : chartData.length === 0 ? (
-        <p className="text-center py-10 text-fg-muted text-sm">
-          Tidak ada barang keluar di {periodeLabel}
-        </p>
+      {isError ? (
+        <StateMessage
+          icon={TriangleAlert}
+          title="Peringkat belum bisa dimuat"
+          description="Ini bukan berarti tidak ada penjualan. Periksa koneksi, lalu coba lagi."
+          action={onRetry && <Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={onRetry}>Coba lagi</Button>}
+          className="py-10"
+        />
+      ) : isLoading ? (
+        <div className="mt-4 space-y-4" aria-hidden="true">
+          {Array.from({ length: TOP }).map((_, i) => (
+            <div key={i} className="h-9 rounded-lg bg-muted motion-safe:animate-pulse" />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <StateMessage
+          icon={PackageOpen}
+          title={`Belum ada penjualan di ${periodeLabel}`}
+          description="Peringkat muncul setelah ada stok keluar berketerangan Penjualan pada periode ini."
+          className="py-10"
+        />
       ) : (
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData} barSize={28} margin={{ top: 4, right: 4, left: 0, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={28} />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: '#F3F4F6' }} />
-            <Bar dataKey="total" fill="#10B981" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {jumlahObat > TOP ? `${TOP} terlaris dari ${jumlahObat} obat` : `${jumlahObat} obat`}, {periodeLabel}. Khusus penjualan.
+          </p>
+          <ol className="mt-3 space-y-3.5">
+            {rows.map((d) => (
+              <li key={d.nama}>
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="min-w-0 break-words font-medium text-foreground">{d.nama}</span>
+                  <span className="shrink-0 text-right tabular-nums text-muted-foreground">
+                    <span className="font-semibold text-foreground">{formatAngka(d.total, 0)}</span> {d.satuan}
+                    {d.pendapatan > 0 && <span> · {formatRupiah(d.pendapatan)}</span>}
+                  </span>
+                </div>
+                <div className="mt-1.5 h-2 rounded-full bg-muted" aria-hidden="true">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${Math.max(2, (d.total / terbesar) * 100)}%`, background: 'var(--chart-1)' }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
-    </div>
+    </Panel>
   )
 }

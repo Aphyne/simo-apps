@@ -2,138 +2,182 @@
 
 import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { ChartColumn, TriangleAlert } from 'lucide-react'
+import Panel from '@/components/dashboard/Panel'
+import Segmented from '@/components/shared/Segmented'
+import StateMessage from '@/components/shared/StateMessage'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { tanggalLokal } from '@/lib/barangKeluar'
+import { formatAngka, formatRupiah } from '@/lib/utils'
 import type { BarangKeluar } from '@/types/obat'
 import { useNow } from '@/hooks/useNow'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+const TICK = { fontSize: 12, fill: 'var(--muted-foreground)' }
 
 interface Props {
   allList: BarangKeluar[]
   isLoading: boolean
+  isError?: boolean
+  onRetry?: () => void
+  className?: string
 }
 
-const formatAngka = (n: number) => new Intl.NumberFormat('id-ID').format(n)
-const formatRupiah = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+type Mode = 'mingguan' | 'bulanan'
 
-export default function BarangKeluarTrendChart({ allList, isLoading }: Props) {
+// Hanya Penjualan yang dihitung: retur, rusak, kedaluarsa, dan lainnya bukan pendapatan.
+export default function BarangKeluarTrendChart({ allList, isLoading, isError, onRetry, className }: Props) {
   const now = useNow()
   const currentYear = now.getFullYear()
 
-  const [mode, setMode] = useState<'mingguan' | 'bulanan'>('bulanan')
+  const [mode, setMode] = useState<Mode>('bulanan')
   const [selectedYear, setSelectedYear] = useState(currentYear)
+
+  const salesList = useMemo(() => allList.filter((item) => item.keterangan === 'Penjualan'), [allList])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     years.add(currentYear)
-    allList.forEach(item => {
+    salesList.forEach((item) => {
       if (item.tanggal) years.add(new Date(item.tanggal).getFullYear())
     })
     return Array.from(years).sort((a, b) => a - b)
-  }, [allList, currentYear])
+  }, [salesList, currentYear])
 
   // Unit dan nilai Rp dihitung sekaligus; keduanya tampil di tooltip saat hover
   function sumItems(items: BarangKeluar[]) {
     return {
       unit: items.reduce((sum, item) => sum + (item.jumlah ?? 0), 0),
-      nilai: items.reduce((sum, item) => sum + ((item.jumlah ?? 0) * (item.harga_jual ?? 0)), 0),
+      nilai: items.reduce((sum, item) => sum + ((item.jumlah ?? 0) * (Number(item.harga_jual) || 0)), 0),
     }
   }
 
   const trendData = useMemo(() => {
-    // Hanya hitung Penjualan — pemusnahan/retur/rusak/dll bukan pendapatan
-    const salesList = allList.filter(item => item.keterangan === 'Penjualan')
-
     if (mode === 'mingguan') {
       return Array.from({ length: 7 }, (_, i) => {
         const d = new Date(now)
         d.setDate(d.getDate() - (6 - i))
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        const items = salesList.filter(item => {
-          if (!item.tanggal) return false
-          const td = new Date(item.tanggal)
-          return `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-${String(td.getDate()).padStart(2, '0')}` === key
-        })
+        const key = tanggalLokal(d)
+        const items = salesList.filter((item) => item.tanggal && tanggalLokal(new Date(item.tanggal)) === key)
         return { label: `${d.getDate()}/${d.getMonth() + 1}`, ...sumItems(items) }
       })
     }
-
     return Array.from({ length: 12 }, (_, i) => {
-      const items = salesList.filter(item => {
+      const items = salesList.filter((item) => {
         if (!item.tanggal) return false
         const td = new Date(item.tanggal)
         return td.getFullYear() === selectedYear && td.getMonth() === i
       })
       return { label: MONTHS[i], ...sumItems(items) }
     })
-  }, [allList, mode, selectedYear, now])
+  }, [salesList, mode, selectedYear, now])
+
+  const periodeLabel = mode === 'mingguan' ? '7 hari terakhir' : `tahun ${selectedYear}`
+  const total = trendData.reduce((s, d) => s + d.unit, 0)
+  // Total penjualan periode ini. Penjualan tanpa harga jual tidak bisa dijumlahkan: dihitung terpisah.
+  const totalRupiah = trendData.reduce((s, d) => s + d.nilai, 0)
+  const tanpaHarga = useMemo(() => {
+    const dari = new Date(now)
+    dari.setDate(dari.getDate() - 6)
+    const dariYmd = tanggalLokal(dari)
+    const sampaiYmd = tanggalLokal(now)
+    return salesList.filter((item) => {
+      if (!item.tanggal || Number(item.harga_jual) > 0) return false
+      const td = new Date(item.tanggal)
+      if (mode === 'mingguan') {
+        const k = tanggalLokal(td)
+        return k >= dariYmd && k <= sampaiYmd
+      }
+      return td.getFullYear() === selectedYear
+    }).length
+  }, [salesList, mode, selectedYear, now])
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-        <div>
-          <p className="text-sm font-semibold text-fg-secondary">Tren Stok Keluar</p>
-          <p className="text-xs text-fg-muted mt-0.5">khusus Penjualan</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Toggle periode */}
-          <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
-            {(['mingguan', 'bulanan'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  mode === m ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-fg-secondary'
-                }`}
-              >
-                {m === 'mingguan' ? 'Per Minggu' : 'Bulanan'}
-              </button>
-            ))}
-          </div>
-
-          {/* Dropdown Tahun — paling kanan */}
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            disabled={mode === 'mingguan'}
-            className={`border border-line rounded-lg px-2.5 py-1 text-xs bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors ${
-              mode === 'mingguan' ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700'
-            }`}
-          >
-            {availableYears.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
+    <Panel title="Tren stok keluar" className={className}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Segmented
+          label="Periode grafik"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'mingguan', label: '7 hari' },
+            { value: 'bulanan', label: 'Per bulan' },
+          ]}
+        />
+        {mode === 'bulanan' && (
+          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+            <SelectTrigger className="h-10 w-28 rounded-xl data-[size=default]:h-10" aria-label="Tahun grafik">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableYears.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
+      <p className="mt-2 text-sm text-muted-foreground">Khusus penjualan; retur, rusak, dan kedaluarsa tidak dihitung.</p>
 
-      {isLoading ? (
-        <div className="h-[200px] animate-pulse bg-surface-muted rounded-xl" />
+      {isError ? (
+        <StateMessage
+          icon={TriangleAlert}
+          title="Grafik belum bisa dimuat"
+          description="Ini bukan berarti tidak ada penjualan. Periksa koneksi, lalu coba lagi."
+          action={onRetry && <Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={onRetry}>Coba lagi</Button>}
+          className="py-10"
+        />
+      ) : isLoading ? (
+        <div className="mt-4 h-[240px] rounded-xl bg-muted motion-safe:animate-pulse" aria-hidden="true" />
+      ) : total === 0 ? (
+        <StateMessage
+          icon={ChartColumn}
+          title={`Belum ada penjualan di ${periodeLabel}`}
+          description="Grafik muncul setelah ada stok keluar berketerangan Penjualan pada periode ini."
+          className="py-10"
+        />
       ) : (
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={trendData} barSize={mode === 'bulanan' ? 24 : 28}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={36} />
-            <Tooltip
-              cursor={{ fill: '#F3F4F6' }}
-              content={({ active, payload, label }) => {
-                if (!active || !payload?.length) return null
-                const d = payload[0].payload as { unit: number; nilai: number }
-                return (
-                  <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-sm">
-                    <p className="font-semibold text-gray-900 mb-1">{label}</p>
-                    <p className="text-brand-700">Keluar: <span className="font-semibold tabular-nums">{formatAngka(d.unit)}</span> unit</p>
-                    <p className="text-gray-700">Total pendapatan: <span className="font-semibold tabular-nums">{formatRupiah(d.nilai)}</span></p>
-                  </div>
-                )
-              }}
-            />
-            <Bar dataKey="unit" fill="#2563EB" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <>
+          <p className="mt-4 text-sm text-muted-foreground">
+            <span className="text-base font-semibold tabular-nums text-foreground">{formatRupiah(totalRupiah)}</span> total penjualan dalam {periodeLabel}
+            <span className="tabular-nums"> · {formatAngka(total, 0)} satuan keluar</span>
+            {tanpaHarga > 0 && <span> · {tanpaHarga} catatan belum berharga, belum ikut dihitung</span>}
+          </p>
+          <div className="mt-3" aria-hidden="true">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={trendData} barSize={mode === 'bulanan' ? 24 : 32} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="label" tick={TICK} tickLine={false} axisLine={{ stroke: 'var(--border)' }} tickMargin={8} />
+                <YAxis tick={TICK} tickLine={false} axisLine={false} width={44} allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: 'var(--muted)', opacity: 0.6 }}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null
+                    const d = payload[0].payload as { unit: number; nilai: number }
+                    return (
+                      <div className="rounded-xl bg-popover px-3 py-2 text-sm shadow-md ring-1 ring-foreground/10">
+                        <p className="mb-1 font-semibold text-foreground">{label}</p>
+                        <p className="text-muted-foreground">Keluar: <span className="font-semibold tabular-nums text-foreground">{formatAngka(d.unit, 0)}</span> satuan</p>
+                        <p className="text-muted-foreground">Penjualan: <span className="font-semibold tabular-nums text-foreground">{formatRupiah(d.nilai)}</span></p>
+                      </div>
+                    )
+                  }}
+                />
+                <Bar dataKey="unit" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Grafik tidak bisa dibaca pembaca layar; tabel ini memuat angka yang sama */}
+          <table className="sr-only">
+            <caption>Penjualan, {periodeLabel}</caption>
+            <thead><tr><th scope="col">Periode</th><th scope="col">Satuan keluar</th><th scope="col">Penjualan</th></tr></thead>
+            <tbody>
+              {trendData.map((d) => (
+                <tr key={d.label}><th scope="row">{d.label}</th><td>{formatAngka(d.unit, 0)}</td><td>{formatRupiah(d.nilai)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
-    </div>
+    </Panel>
   )
 }

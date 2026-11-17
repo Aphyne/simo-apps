@@ -15,8 +15,8 @@ import { useAuthStore } from '@/store/auth.store'
 import TrenPermintaanChart from '@/components/dashboard/TrenPermintaanChart'
 import DaftarExpiredCard from '@/components/dashboard/DaftarExpiredCard'
 import StokMenipisCard from '@/components/dashboard/StokMenipisCard'
-import BarangMasukForm from '@/components/transaksi/BarangMasukForm'
-import BarangKeluarForm from '@/components/transaksi/BarangKeluarForm'
+import BarangMasukTambahDialog from '@/components/transaksi/BarangMasukTambahDialog'
+import BarangKeluarTambahDialog from '@/components/transaksi/BarangKeluarTambahDialog'
 import ObatForm from '@/components/obat/ObatForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useDashboardSummary, useTrenPermintaan } from '@/hooks/useDashboard'
@@ -50,12 +50,10 @@ export default function DashboardPage() {
   const [openTambahObat, setOpenTambahObat] = useState(false)
 
   function handleBarangMasukSuccess() {
-    setOpenMasuk(false)
     router.push('/barang-masuk')
   }
 
   function handleBarangKeluarSuccess() {
-    setOpenKeluar(false)
     router.push('/barang-keluar')
   }
 
@@ -169,23 +167,9 @@ export default function DashboardPage() {
 
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
 
-      <Dialog open={openMasuk} onOpenChange={setOpenMasuk}>
-        <DialogContent aria-describedby={undefined} className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Catat Stok Masuk</DialogTitle>
-          </DialogHeader>
-          <BarangMasukForm onSuccess={handleBarangMasukSuccess} />
-        </DialogContent>
-      </Dialog>
+      <BarangMasukTambahDialog open={openMasuk} onOpenChange={setOpenMasuk} onSuccess={handleBarangMasukSuccess} />
 
-      <Dialog open={openKeluar} onOpenChange={setOpenKeluar}>
-        <DialogContent aria-describedby={undefined} className="max-w-[calc(100%-2rem)] sm:max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Catat Stok Keluar</DialogTitle>
-          </DialogHeader>
-          <BarangKeluarForm onSuccess={handleBarangKeluarSuccess} />
-        </DialogContent>
-      </Dialog>
+      <BarangKeluarTambahDialog open={openKeluar} onOpenChange={setOpenKeluar} onSuccess={handleBarangKeluarSuccess} />
 
       <Dialog open={openTambahObat} onOpenChange={setOpenTambahObat}>
         <DialogContent aria-describedby={undefined} className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
