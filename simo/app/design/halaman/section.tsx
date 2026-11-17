@@ -12,6 +12,9 @@ import Pagination from '@/components/shared/Pagination'
 import { Fact, FactList } from '@/components/shared/FactList'
 import StateMessage from '@/components/shared/StateMessage'
 import IconAction from '@/components/shared/IconAction'
+import Segmented from '@/components/shared/Segmented'
+import { InputSatuan, Opsional, Wajib } from '@/components/shared/FormParts'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import KategoriDonut from '@/components/obat/KategoriDonut'
 import StatusStokBar from '@/components/obat/StatusStokBar'
 import type { Obat } from '@/types/obat'
@@ -43,6 +46,7 @@ export function HalamanSection() {
   const [status, setStatus] = useState('semua')
   const [halaman, setHalaman] = useState(2)
   const [kategoriBatang, setKategoriBatang] = useState('')
+  const [periode, setPeriode] = useState<'mingguan' | 'bulanan'>('bulanan')
 
   return (
     <section id="halaman">
@@ -162,6 +166,36 @@ export function HalamanSection() {
           <Fact label="Supplier">PT Kimia Farma</Fact>
           <Fact label="Expired terdekat">-</Fact>
         </FactList>
+      </Section>
+
+      <Section title="Pilihan periode (segmen)" desc="Pilih satu dari dua atau tiga nilai yang saling menggantikan, mis. periode grafik. Wadah dan tombol 40px, aktif putih bertepi tipis di atas abu muda. Radiogroup dengan panah kiri dan kanan. Lebih dari tiga nilai (tahun, bulan) memakai Select, diletakkan di sebelahnya. Dipakai di panel grafik Stok masuk." meta="Segmented">
+        <Segmented
+          label="Periode contoh"
+          value={periode}
+          onChange={setPeriode}
+          options={[
+            { value: 'mingguan', label: '7 hari' },
+            { value: 'bulanan', label: 'Per bulan' },
+          ]}
+        />
+      </Section>
+
+      <Section title="Kolom isian: wajib, opsional, satuan" desc="Form dengan kolom wajib dan opsional bercampur: bintang merah pada yang wajib (dengan keterangan satu baris Wajib diisi di atas form) dan kata (opsional) abu pada yang boleh kosong. Satuan Rp atau persen berada di dalam kotak (dekoratif, sebut satuannya di label atau hint). Angka terpilih seluruhnya saat difokus supaya nilai 0 bawaan mudah ditimpa. Dipakai di form Stok masuk." meta="Wajib, Opsional, InputSatuan">
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor="contoh-dus">Jumlah (dus) <Wajib /></FieldLabel>
+            <InputSatuan id="contoh-dus" type="number" defaultValue={2.5} />
+            <FieldDescription>Boleh pecahan, mis. 2,5 dus.</FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="contoh-beli">Harga beli per dus <Opsional /></FieldLabel>
+            <InputSatuan id="contoh-beli" type="number" awalan="Rp" defaultValue={111000} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="contoh-ppn">PPN <Opsional /></FieldLabel>
+            <InputSatuan id="contoh-ppn" type="number" akhiran="%" defaultValue={11} />
+          </Field>
+        </div>
       </Section>
 
       <Section title="Keadaan: kosong, tidak cocok, gagal" desc="Ikon kecil, satu kalimat tebal, satu kalimat arah. Kosong mengajak mengisi; tidak cocok menawarkan atur ulang filter; gagal berkata jujur bahwa itu bukan berarti datanya nol." meta="StateMessage" flush>
