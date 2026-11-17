@@ -275,6 +275,15 @@ Memicu kalkulasi ulang EOQ/SS/ROP/TC berdasarkan data terbaru.
 
 Konversi otomatis di backend: `jumlah_satuan = jumlah_dus × obat.satuan_per_dus`
 
+### POST `/api/barang-masuk/bulk` (satu faktur, banyak obat) dan PUT `/api/barang-masuk/{id}` (admin)
+Bidang tambahan sejak migrasi 024 (18 Nov 2026):
+- `jatuh_tempo` (header faktur, `YYYY-MM-DD`, opsional). Disimpan di setiap baris faktur yang sama (supplier + `no_faktur`). Pada PUT, nilai yang dikirim berlaku untuk **semua baris faktur itu**; string kosong menghapusnya; tidak dikirim = nilai lama dipertahankan.
+- `items[].diskon_pct` (PUT: `diskon_pct`; 0 sampai 100, opsional). Diskon persen per baris, dipotong dari harga SEBELUM PPN:
+  `harga_beli (per satuan, tersimpan) = harga_beli_dus x (1 - diskon/100) x (1 + ppn/100) / satuan_per_dus`.
+  Di luar 0 sampai 100 ditolak (400). Pada PUT, bila tidak dikirim, diskon lama dipertahankan.
+- Aturan harga (keputusan Boss, 17 Nov 2026): `harga_beli_dus` kosong atau 0 = `harga_beli` baris NULL ("belum diisi") dan harga beli obat tidak ditimpa. `harga_jual` kosong = harga jual obat yang sekarang bila sudah > 0, kalau belum ada = NULL. Harga beli, harga jual, dan biaya simpan obat hanya diperbarui bila diisi.
+- Respons `GET /api/barang-masuk` memuat `diskon_pct` dan `jatuh_tempo` (baris lama: 0 dan null).
+
 ### GET `/api/barang-masuk/{id}`
 ### DELETE `/api/barang-masuk/{id}`
 **Auth:** admin only (staf tidak bisa hapus)

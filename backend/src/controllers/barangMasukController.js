@@ -256,7 +256,7 @@ async function create(req, res) {
 // Efek stok lama ditarik balik dulu, baru efek nilai baru diterapkan, dalam 1 transaksi.
 async function update(req, res) {
   const { id } = req.params;
-  const { tanggal, jumlah_dus, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli_dus, harga_jual, biaya_simpan_pct, ppn_pct } = req.body;
+  const { tanggal, jumlah_dus, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli_dus, harga_jual, biaya_simpan_pct, ppn_pct, diskon_pct, jatuh_tempo } = req.body;
 
   if (!tanggal || !jumlah_dus || !desimalPositif(jumlah_dus, 1000000)) {
     return res.status(400).json({ success: false, message: 'Tanggal dan jumlah dus (angka lebih dari 0) wajib diisi' });
@@ -273,6 +273,12 @@ async function update(req, res) {
   }
   if (biayaSimpanPctInvalid(biaya_simpan_pct)) {
     return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
+  }
+  if (diskon_pct && angkaDalamRentang(diskon_pct, 0, 100) === null) {
+    return res.status(400).json({ success: false, message: 'Diskon harus antara 0 sampai 100' });
+  }
+  if (jatuh_tempo && !tanggalValid(jatuh_tempo)) {
+    return res.status(400).json({ success: false, message: 'Format jatuh tempo tidak valid (YYYY-MM-DD)' });
   }
 
   let client;
@@ -322,33 +328,45 @@ async function update(req, res) {
     }
 
     const ppn = ppn_pct ? parseFloat(ppn_pct) : 0;
-    let harga_beli_per_satuan;
-    if (harga_beli_dus) {
-      const hargaRiilPerDus = parseFloat(harga_beli_dus) * (1 + ppn / 100);
-      harga_beli_per_satuan = parseFloat((hargaRiilPerDus / spd).toFixed(4));
-    } else {
-      harga_beli_per_satuan = parseFloat(obat.harga_beli);
-    }
-    const harga_jual_per_satuan = harga_jual ? parseFloat(harga_jual) : parseFloat(obat.harga_jual);
+    // Aturan harga sama dengan catat faktur: harga beli kosong = NULL (belum diisi, harga obat tidak ditimpa);
+    // harga jual kosong = harga jual obat yang sekarang bila sudah ada, kalau belum ada = NULL.
+    // Bila klien tidak mengirim diskon atau jatuh tempo, nilai lama dipertahankan (tidak terhapus diam-diam).
+    const diskon = diskon_pct === undefined ? (parseFloat(old.diskon_pct) || 0) : (diskon_pct ? parseFloat(diskon_pct) : 0);
+    const jatuhTempoBaru = jatuh_tempo === undefined ? (old.jatuh_tempo || null) : (jatuh_tempo || null);
+    const harga_beli_per_satuan = harga_beli_dus
+      ? parseFloat(((parseFloat(harga_beli_dus) * (1 - diskon / 100) * (1 + ppn / 100)) / spd).toFixed(4))
+      : null;
+    const hargaJualObat = parseFloat(obat.harga_jual);
+    const harga_jual_per_satuan = harga_jual ? parseFloat(harga_jual) : (hargaJualObat > 0 ? hargaJualObat : null);
     const pct = resolveBiayaSimpanPct(biaya_simpan_pct);
-    const biaya_simpan = parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4));
+    const biaya_simpan = harga_beli_per_satuan !== null
+      ? parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4))
+      : null;
 
     const { rows: updated } = await client.query(
       `UPDATE barang_masuk SET
          tanggal=$1, jumlah_dus=$2, jumlah_satuan=$3, supplier_id=$4, no_faktur=$5,
          no_batch=$6, expired_batch=$7, catatan=$8, harga_beli=$9, harga_jual=$10, ppn_pct=$11,
-         stok_sebelum=$12, stok_sesudah=$13
-       WHERE id=$14
+         stok_sebelum=$12, stok_sesudah=$13, diskon_pct=$14, jatuh_tempo=$15
+       WHERE id=$16
        RETURNING *`,
       [
         tanggal, jumlah_dus_baru, jumlah_satuan_baru, supplier_id, no_faktur,
         no_batch, expired_batch, catatan || null, harga_beli_per_satuan, harga_jual_per_satuan, ppn,
-        stok_setelah_reverse, stok_baru, id,
+        stok_setelah_reverse, stok_baru, diskon, jatuhTempoBaru, id,
       ]
     );
 
+    // Jatuh tempo adalah milik faktur, bukan baris: semua baris faktur yang sama (supplier + no. faktur) ikut diperbarui,
+    // sehingga tampilan Per faktur tidak menampilkan dua tanggal untuk satu faktur.
     await client.query(
-      `UPDATE obat SET stok=$1, supplier_id=$2, harga_beli=$3, harga_jual=$4, biaya_simpan=$5, updated_at=NOW() WHERE id=$6`,
+      'UPDATE barang_masuk SET jatuh_tempo = $1 WHERE no_faktur = $2 AND supplier_id = $3',
+      [jatuhTempoBaru, no_faktur, supplier_id]
+    );
+
+    await client.query(
+      `UPDATE obat SET stok=$1, supplier_id=$2, harga_beli=COALESCE($3, harga_beli), harga_jual=COALESCE($4, harga_jual),
+                       biaya_simpan=COALESCE($5, biaya_simpan), updated_at=NOW() WHERE id=$6`,
       [stok_baru, supplier_id, harga_beli_per_satuan, harga_jual_per_satuan, biaya_simpan, obat.id]
     );
 
@@ -439,7 +457,7 @@ async function remove(req, res) {
 // Catatan: Diskon % sengaja belum didukung di sini — posisinya (level faktur vs
 // per-obat) masih belum diputuskan, lihat Fase 15 di docs/08-development-roadmap.md.
 async function createBulk(req, res) {
-  const { tanggal, supplier_id, no_faktur, ppn_pct, catatan, items } = req.body;
+  const { tanggal, supplier_id, no_faktur, ppn_pct, catatan, items, jatuh_tempo } = req.body;
   const user_id = req.user?.id ?? null;
 
   if (!tanggal || !supplier_id || !no_faktur) {
@@ -457,6 +475,9 @@ async function createBulk(req, res) {
   if (items.length > 200) {
     return res.status(400).json({ success: false, message: 'Maksimal 200 baris per faktur' });
   }
+  if (jatuh_tempo && !tanggalValid(jatuh_tempo)) {
+    return res.status(400).json({ success: false, message: 'Format jatuh tempo tidak valid (YYYY-MM-DD)' });
+  }
   for (const item of items) {
     if (!item || !idValid(item.obat_id) || !desimalPositif(item.jumlah_dus, 1000000)) {
       return res.status(400).json({ success: false, message: 'Setiap baris harus punya obat valid dan jumlah dus angka lebih dari 0' });
@@ -472,6 +493,9 @@ async function createBulk(req, res) {
     }
     if (biayaSimpanPctInvalid(item.biaya_simpan_pct)) {
       return res.status(400).json({ success: false, message: 'Biaya simpan harus antara 0 sampai 100' });
+    }
+    if (item.diskon_pct && angkaDalamRentang(item.diskon_pct, 0, 100) === null) {
+      return res.status(400).json({ success: false, message: 'Diskon harus antara 0 sampai 100' });
     }
   }
 
@@ -523,35 +547,38 @@ async function createBulk(req, res) {
       const stok_sebelum = obat.stok;
       const stok_sesudah = stok_sebelum + jumlah_satuan;
 
-      // Harga: kalau diisi → hitung dari harga faktur + PPN. Kalau dikosongkan →
-      // backfill harga master apa adanya (termasuk kalau masih 0, obat.harga_beli/
-      // harga_jual selalu NOT NULL DEFAULT 0, tidak perlu pengecualian khusus).
-      let harga_beli_per_satuan;
-      if (item.harga_beli_dus) {
-        const hargaRiilPerDus = parseFloat(item.harga_beli_dus) * (1 + ppn / 100);
-        harga_beli_per_satuan = parseFloat((hargaRiilPerDus / spd).toFixed(4));
-      } else {
-        harga_beli_per_satuan = parseFloat(obat.harga_beli);
-      }
+      // Harga beli: diisi → hitung dari harga faktur + PPN. Dikosongkan → NULL ("belum diisi"): tidak
+      // meminjam harga obat, tidak ikut jumlah total, dan harga beli obat tidak ditimpa.
+      // Harga jual: diisi → dipakai. Dikosongkan → memakai harga jual obat yang sekarang bila sudah ada (> 0);
+      // bila belum ada sama sekali → NULL ("belum diisi").
+      // Diskon persen per baris dipotong dari harga SEBELUM PPN, lalu PPN ditambahkan.
+      const diskon = item.diskon_pct ? parseFloat(item.diskon_pct) : 0;
+      const harga_beli_per_satuan = item.harga_beli_dus
+        ? parseFloat(((parseFloat(item.harga_beli_dus) * (1 - diskon / 100) * (1 + ppn / 100)) / spd).toFixed(4))
+        : null;
 
+      const hargaJualObat = parseFloat(obat.harga_jual);
       const harga_jual_per_satuan = item.harga_jual
         ? parseFloat(item.harga_jual)
-        : parseFloat(obat.harga_jual);
+        : (hargaJualObat > 0 ? hargaJualObat : null);
 
+      // Biaya simpan (H) hanya bisa dihitung bila harga beli ada; kalau tidak, nilai pada obat dibiarkan.
       const pct = resolveBiayaSimpanPct(item.biaya_simpan_pct);
-      const biaya_simpan = parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4));
+      const biaya_simpan = harga_beli_per_satuan !== null
+        ? parseFloat((harga_beli_per_satuan * (pct / 100)).toFixed(4))
+        : null;
 
       const { rows } = await client.query(
         `INSERT INTO barang_masuk
-           (tanggal, obat_id, jumlah_dus, jumlah_satuan, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli, harga_jual, ppn_pct, user_id, stok_sebelum, stok_sesudah)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+           (tanggal, obat_id, jumlah_dus, jumlah_satuan, supplier_id, no_faktur, no_batch, expired_batch, catatan, harga_beli, harga_jual, ppn_pct, user_id, stok_sebelum, stok_sesudah, diskon_pct, jatuh_tempo)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
          RETURNING *`,
         [
           tanggal, obat.id, jumlah_dus, jumlah_satuan,
           supplier_id, no_faktur,
           item.no_batch, item.expired_batch,
           catatan || null, harga_beli_per_satuan, harga_jual_per_satuan, ppn,
-          user_id, stok_sebelum, stok_sesudah,
+          user_id, stok_sebelum, stok_sesudah, diskon, jatuh_tempo || null,
         ]
       );
 
@@ -589,7 +616,9 @@ async function createBulk(req, res) {
   for (const h of hasil) {
     try {
       await pool.query(
-        `UPDATE obat SET supplier_id = $1, harga_beli = $2, harga_jual = $3, biaya_simpan = $4, biaya_pesan = $5, updated_at = NOW()
+        // COALESCE: nilai kosong (NULL) tidak menimpa harga beli, harga jual, atau biaya simpan obat.
+        `UPDATE obat SET supplier_id = $1, harga_beli = COALESCE($2, harga_beli), harga_jual = COALESCE($3, harga_jual),
+                         biaya_simpan = COALESCE($4, biaya_simpan), biaya_pesan = $5, updated_at = NOW()
          WHERE id = $6`,
         [supplier_id, h.harga_beli_per_satuan, h.harga_jual_per_satuan, h.biaya_simpan, h.biaya_pesan, h.obat_id]
       );

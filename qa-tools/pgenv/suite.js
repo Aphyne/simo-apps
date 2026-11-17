@@ -185,6 +185,62 @@ const tgl = (d = 0) => { const x = new Date(Date.now() + d * 864e5); return x.to
     const f2 = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'DUP-1', items: [{ obat_id: idJ, jumlah_dus: 1, no_batch: 'X', expired_batch: tgl(300), harga_beli_dus: 100 }] } });
     rec('TC-21', 'Faktur duplikat (no_faktur sama) ditolak/diperingatkan', f2.s >= 400, `pertama=${f1.s}, kedua=${f2.s}`);
 
+    // ===== Kebijakan harga barang masuk (17 Nov 2026): harga beli kosong = NULL dan tidak menimpa obat;
+    // harga jual kosong = harga jual obat yang sekarang bila sudah ada (> 0), kalau belum ada = NULL.
+    const idHrg = await mk(10, { harga_beli: 1000, harga_jual: 1500 });
+    r = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'HRG-1', items: [{ obat_id: idHrg, jumlah_dus: 1, no_batch: 'H1', expired_batch: tgl(300) }] } });
+    const bmHrg = (await q("select harga_beli::text hb, harga_jual::text hj from barang_masuk where no_faktur='HRG-1'"))[0];
+    const obHrg = (await q('select harga_beli::text hb, harga_jual::text hj, biaya_simpan::text bs from obat where id=$1', [idHrg]))[0];
+    rec('HRG-01', 'Bulk masuk tanpa harga: harga beli NULL (obat tidak ditimpa), harga jual memakai harga obat', r.s === 201 && bmHrg && bmHrg.hb === null && Number(bmHrg.hj) === 1500 && Number(obHrg.hb) === 1000 && Number(obHrg.hj) === 1500 && Number(obHrg.bs) === 100, JSON.stringify({ s: r.s, bmHrg, obHrg }));
+
+    const idHrg0 = await mk(10, { harga_jual: 0 });
+    r = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'HRG-2', items: [{ obat_id: idHrg0, jumlah_dus: 1, no_batch: 'H2', expired_batch: tgl(300) }] } });
+    const bmHrg0 = (await q("select harga_beli::text hb, harga_jual::text hj from barang_masuk where no_faktur='HRG-2'"))[0];
+    rec('HRG-02', 'Harga jual kosong dan obat belum punya harga jual: barang_masuk.harga_jual NULL', r.s === 201 && bmHrg0 && bmHrg0.hj === null, JSON.stringify({ s: r.s, bmHrg0, idHrg0 }));
+
+    r = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'HRG-3', items: [{ obat_id: idHrg, jumlah_dus: 1, no_batch: 'H3', expired_batch: tgl(300), harga_beli_dus: 20000, harga_jual: 2500 }] } });
+    const obHrg3 = (await q('select harga_beli::text hb, harga_jual::text hj from obat where id=$1', [idHrg]))[0];
+    rec('HRG-03', 'Harga diisi: harga beli dan harga jual obat ikut diperbarui', r.s === 201 && Number(obHrg3.hb) === 2000 && Number(obHrg3.hj) === 2500, JSON.stringify({ s: r.s, obHrg3 }));
+
+    const idBmHrg = (await q("select id from barang_masuk where no_faktur='HRG-1'"))[0].id;
+    r = await call('PUT', '/api/barang-masuk/' + idBmHrg, { t: ADMIN, body: { tanggal: tgl(), jumlah_dus: 1, supplier_id: sid, no_faktur: 'HRG-1', no_batch: 'H1', expired_batch: tgl(300) } });
+    const bmHrgU = (await q('select harga_beli::text hb, harga_jual::text hj from barang_masuk where id=$1', [idBmHrg]))[0];
+    const obHrgU = (await q('select harga_beli::text hb, harga_jual::text hj from obat where id=$1', [idHrg]))[0];
+    rec('HRG-04', 'Ubah catatan tanpa harga beli: NULL, harga obat (hasil HRG-03) tidak ditimpa', r.s === 200 && bmHrgU.hb === null && Number(obHrgU.hb) === 2000 && Number(obHrgU.hj) === 2500, JSON.stringify({ s: r.s, bmHrgU, obHrgU }));
+
+    // ===== Diskon per baris dan jatuh tempo per faktur (migrasi 024, 18 Nov 2026)
+    // harga beli per satuan = harga_dus x (1 - diskon/100) x (1 + ppn/100) / isi per dus (isi per dus uji = 10)
+    const idDskA = await mk(10, { harga_beli: 1000, harga_jual: 1500 }), idDskB = await mk(10);
+    r = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'DSK-1', ppn_pct: 11, jatuh_tempo: tgl(30), items: [
+      { obat_id: idDskA, jumlah_dus: 1, no_batch: 'D1', expired_batch: tgl(300), harga_beli_dus: 100000, diskon_pct: 10 },
+      { obat_id: idDskB, jumlah_dus: 1, no_batch: 'D2', expired_batch: tgl(300), harga_beli_dus: 100000 },
+    ] } });
+    const barisDsk = await q("select obat_id, harga_beli::text hb, diskon_pct::text dk, jatuh_tempo::text jt from barang_masuk where no_faktur='DSK-1' order by obat_id");
+    const dA = barisDsk.find(x => x.obat_id === idDskA), dB = barisDsk.find(x => x.obat_id === idDskB);
+    const obDskA = (await q('select harga_beli::text hb from obat where id=$1', [idDskA]))[0];
+    rec('DSK-01', 'Bulk masuk: diskon 10% dipotong sebelum PPN 11% (100000 -> 9990/satuan), jatuh tempo tersimpan di semua baris', r.s === 201 && Number(dA.hb) === 9990 && Number(dA.dk) === 10 && Number(dB.hb) === 11100 && Number(dB.dk) === 0 && dA.jt === dB.jt && !!dA.jt && Number(obDskA.hb) === 9990, JSON.stringify({ s: r.s, dA, dB, obDskA }));
+
+    r = await call('PUT', '/api/barang-masuk/' + (await q("select id from barang_masuk where no_faktur='DSK-1' and obat_id=$1", [idDskA]))[0].id, { t: ADMIN, body: { tanggal: tgl(), jumlah_dus: 1, supplier_id: sid, no_faktur: 'DSK-1', no_batch: 'D1', expired_batch: tgl(300), harga_beli_dus: 100000, diskon_pct: 20, ppn_pct: 11, jatuh_tempo: tgl(60) } });
+    const barisDsk2 = await q("select obat_id, harga_beli::text hb, diskon_pct::text dk, jatuh_tempo::text jt from barang_masuk where no_faktur='DSK-1' order by obat_id");
+    const dA2 = barisDsk2.find(x => x.obat_id === idDskA), dB2 = barisDsk2.find(x => x.obat_id === idDskB);
+    rec('DSK-02', 'Ubah satu baris: diskon 20% menghitung ulang harga (8880), jatuh tempo baru berlaku untuk SEMUA baris faktur', r.s === 200 && Number(dA2.hb) === 8880 && Number(dA2.dk) === 20 && dA2.jt === dB2.jt && dA2.jt !== dA.jt, JSON.stringify({ s: r.s, dA2, dB2 }));
+
+    r = await call('PUT', '/api/barang-masuk/' + (await q("select id from barang_masuk where no_faktur='DSK-1' and obat_id=$1", [idDskA]))[0].id, { t: ADMIN, body: { tanggal: tgl(), jumlah_dus: 1, supplier_id: sid, no_faktur: 'DSK-1', no_batch: 'D1', expired_batch: tgl(300), harga_beli_dus: 100000, ppn_pct: 11 } });
+    const dA3 = (await q("select diskon_pct::text dk, jatuh_tempo::text jt from barang_masuk where no_faktur='DSK-1' and obat_id=$1", [idDskA]))[0];
+    rec('DSK-03', 'Ubah tanpa mengirim diskon dan jatuh tempo: nilai lama dipertahankan (tidak terhapus diam-diam)', r.s === 200 && Number(dA3.dk) === 20 && dA3.jt === dA2.jt, JSON.stringify({ s: r.s, dA3, jtLama: dA2.jt }));
+
+    r = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'DSK-2', items: [{ obat_id: idDskB, jumlah_dus: 1, no_batch: 'D9', expired_batch: tgl(300), harga_beli_dus: 100, diskon_pct: 150 }] } });
+    const r2 = await call('POST', '/api/barang-masuk/bulk', { t: ADMIN, body: { tanggal: tgl(), supplier_id: sid, no_faktur: 'DSK-3', jatuh_tempo: 'abc', items: [{ obat_id: idDskB, jumlah_dus: 1, no_batch: 'D8', expired_batch: tgl(300) }] } });
+    rec('DSK-04', 'Diskon 150% dan jatuh tempo "abc" ditolak (4xx)', r.s >= 400 && r.s < 500 && r2.s >= 400 && r2.s < 500, `diskon=${r.s}, jatuh_tempo=${r2.s}`);
+
+    // ===== Dasar tampilan "Per transaksi" Stok Keluar (18 Nov 2026): baris satu keranjang punya created_at identik,
+    // baris dari keranjang lain berbeda. Tampilan mengelompokkan berdasarkan itu (tanpa nomor struk di database).
+    const idKlA = await mk(50), idKlB = await mk(50);
+    await call('POST', '/api/barang-keluar/bulk', { t: ADMIN, body: { tanggal: tgl(), keterangan: 'Penjualan', items: [{ obat_id: idKlA, jumlah: 1 }, { obat_id: idKlB, jumlah: 2 }] } });
+    await call('POST', '/api/barang-keluar/bulk', { t: ADMIN, body: { tanggal: tgl(), keterangan: 'Penjualan', items: [{ obat_id: idKlA, jumlah: 1 }] } });
+    const rowsKl = await q('select obat_id, created_at::text ca from barang_keluar where obat_id = any($1::int[]) order by id', [[idKlA, idKlB]]);
+    rec('KLR-01', 'Bulk keluar: baris satu keranjang created_at identik, keranjang lain berbeda', rowsKl.length === 3 && rowsKl[0].ca === rowsKl[1].ca && rowsKl[2].ca !== rowsKl[0].ca, JSON.stringify(rowsKl));
+
     // ===== Paginasi dan parsing
     r = await call('GET', '/api/obat/abc', { t: ADMIN }); rec('INJ-09', 'GET /obat/abc -> 4xx', r.s >= 400 && r.s < 500, 'status ' + r.s);
     r = await call('POST', '/api/obat', { t: ADMIN, raw: '{"a":' }); rec('INJ-09b', 'JSON rusak -> 400', r.s === 400, 'status ' + r.s);
