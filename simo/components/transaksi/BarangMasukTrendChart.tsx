@@ -2,25 +2,36 @@
 
 import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { ChartColumn, TriangleAlert } from 'lucide-react'
+import Panel from '@/components/dashboard/Panel'
+import Segmented from '@/components/shared/Segmented'
+import StateMessage from '@/components/shared/StateMessage'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { formatAngka, formatRupiah } from '@/lib/utils'
 import type { BarangMasuk } from '@/types/obat'
 import { useNow } from '@/hooks/useNow'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+const TICK = { fontSize: 12, fill: 'var(--muted-foreground)' }
 
 interface Props {
   allList: BarangMasuk[]
   isLoading: boolean
+  isError?: boolean
+  onRetry?: () => void
+  className?: string
 }
 
-const formatAngka = (n: number) => new Intl.NumberFormat('id-ID').format(n)
-const formatRupiah = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+type Mode = 'mingguan' | 'bulanan'
 
-export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+export default function BarangMasukTrendChart({ allList, isLoading, isError, onRetry, className }: Props) {
   const now = useNow()
   const currentYear = now.getFullYear()
 
-  const [mode, setMode] = useState<'mingguan' | 'bulanan'>('bulanan')
+  const [mode, setMode] = useState<Mode>('bulanan')
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
   const availableYears = useMemo(() => {
@@ -45,12 +56,8 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
       return Array.from({ length: 7 }, (_, i) => {
         const d = new Date(now)
         d.setDate(d.getDate() - (6 - i))
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        const items = allList.filter(item => {
-          if (!item.tanggal) return false
-          const td = new Date(item.tanggal)
-          return `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, '0')}-${String(td.getDate()).padStart(2, '0')}` === key
-        })
+        const key = ymd(d)
+        const items = allList.filter(item => item.tanggal && ymd(new Date(item.tanggal)) === key)
         return { label: `${d.getDate()}/${d.getMonth() + 1}`, ...sumItems(items) }
       })
     }
@@ -65,69 +72,110 @@ export default function BarangMasukTrendChart({ allList, isLoading }: Props) {
     })
   }, [allList, mode, selectedYear, now])
 
+  const periodeLabel = mode === 'mingguan' ? '7 hari terakhir' : `tahun ${selectedYear}`
+  const total = trendData.reduce((s, d) => s + d.unit, 0)
+  // Total pengeluaran periode ini (harga beli sesudah PPN x jumlah). Baris tanpa harga beli tidak bisa dijumlahkan: dihitung terpisah.
+  const totalRupiah = trendData.reduce((s, d) => s + d.nilai, 0)
+  const tanpaHarga = useMemo(() => {
+    const dari = new Date(now)
+    dari.setDate(dari.getDate() - 6)
+    const dariYmd = ymd(dari)
+    const sampaiYmd = ymd(now)
+    return allList.filter((item) => {
+      if (!item.tanggal || item.harga_beli != null) return false
+      const td = new Date(item.tanggal)
+      if (mode === 'mingguan') {
+        const k = ymd(td)
+        return k >= dariYmd && k <= sampaiYmd
+      }
+      return td.getFullYear() === selectedYear
+    }).length
+  }, [allList, mode, selectedYear, now])
+
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-        <p className="text-sm font-semibold text-fg-secondary">Tren Stok Masuk</p>
-
-        <div className="flex items-center gap-2">
-          {/* Toggle periode */}
-          <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
-            {(['mingguan', 'bulanan'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  mode === m ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-fg-secondary'
-                }`}
-              >
-                {m === 'mingguan' ? 'Per Minggu' : 'Bulanan'}
-              </button>
-            ))}
-          </div>
-
-          {/* Dropdown Tahun — paling kanan, hanya aktif saat Bulanan */}
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            disabled={mode === 'mingguan'}
-            className={`border border-line rounded-lg px-2.5 py-1 text-xs bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors ${
-              mode === 'mingguan' ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700'
-            }`}
-          >
-            {availableYears.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
+    <Panel title="Tren stok masuk" className={className}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Segmented
+          label="Periode grafik"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'mingguan', label: '7 hari' },
+            { value: 'bulanan', label: 'Per bulan' },
+          ]}
+        />
+        {mode === 'bulanan' && (
+          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+            <SelectTrigger className="h-10 w-28 rounded-xl data-[size=default]:h-10" aria-label="Tahun grafik">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableYears.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
-      {isLoading ? (
-        <div className="h-[200px] animate-pulse bg-surface-muted rounded-xl" />
+      {isError ? (
+        <StateMessage
+          icon={TriangleAlert}
+          title="Grafik belum bisa dimuat"
+          description="Ini bukan berarti tidak ada stok masuk. Periksa koneksi, lalu coba lagi."
+          action={onRetry && <Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={onRetry}>Coba lagi</Button>}
+          className="py-10"
+        />
+      ) : isLoading ? (
+        <div className="mt-4 h-[240px] rounded-xl bg-muted motion-safe:animate-pulse" aria-hidden="true" />
+      ) : total === 0 ? (
+        <StateMessage
+          icon={ChartColumn}
+          title={`Belum ada stok masuk di ${periodeLabel}`}
+          description="Grafik muncul setelah ada stok masuk yang dicatat pada periode ini."
+          className="py-10"
+        />
       ) : (
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={trendData} barSize={mode === 'bulanan' ? 24 : 28}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} width={36} />
-            <Tooltip
-              cursor={{ fill: '#F3F4F6' }}
-              content={({ active, payload, label }) => {
-                if (!active || !payload?.length) return null
-                const d = payload[0].payload as { unit: number; nilai: number }
-                return (
-                  <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-sm">
-                    <p className="font-semibold text-gray-900 mb-1">{label}</p>
-                    <p className="text-emerald-700">Masuk: <span className="font-semibold tabular-nums">{formatAngka(d.unit)}</span> unit</p>
-                    <p className="text-gray-700">Total pengeluaran: <span className="font-semibold tabular-nums">{formatRupiah(d.nilai)}</span></p>
-                  </div>
-                )
-              }}
-            />
-            <Bar dataKey="unit" fill="#10B981" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <>
+          <p className="mt-4 text-sm text-muted-foreground">
+            <span className="text-base font-semibold tabular-nums text-foreground">{formatRupiah(totalRupiah)}</span> total pengeluaran sesudah PPN dalam {periodeLabel}
+            <span className="tabular-nums"> · {formatAngka(total, 0)} satuan masuk</span>
+            {tanpaHarga > 0 && <span> · {tanpaHarga} catatan belum berharga, belum ikut dihitung</span>}
+          </p>
+          <div className="mt-3" aria-hidden="true">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={trendData} barSize={mode === 'bulanan' ? 24 : 32} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="label" tick={TICK} tickLine={false} axisLine={{ stroke: 'var(--border)' }} tickMargin={8} />
+                <YAxis tick={TICK} tickLine={false} axisLine={false} width={44} allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: 'var(--muted)', opacity: 0.6 }}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null
+                    const d = payload[0].payload as { unit: number; nilai: number }
+                    return (
+                      <div className="rounded-xl bg-popover px-3 py-2 text-sm shadow-md ring-1 ring-foreground/10">
+                        <p className="mb-1 font-semibold text-foreground">{label}</p>
+                        <p className="text-muted-foreground">Masuk: <span className="font-semibold tabular-nums text-foreground">{formatAngka(d.unit, 0)}</span> satuan</p>
+                        <p className="text-muted-foreground">Pengeluaran: <span className="font-semibold tabular-nums text-foreground">{formatRupiah(d.nilai)}</span></p>
+                      </div>
+                    )
+                  }}
+                />
+                <Bar dataKey="unit" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Grafik tidak bisa dibaca pembaca layar; tabel ini memuat angka yang sama */}
+          <table className="sr-only">
+            <caption>Stok masuk, {periodeLabel}</caption>
+            <thead><tr><th scope="col">Periode</th><th scope="col">Satuan masuk</th><th scope="col">Pengeluaran</th></tr></thead>
+            <tbody>
+              {trendData.map(d => (
+                <tr key={d.label}><th scope="row">{d.label}</th><td>{formatAngka(d.unit, 0)}</td><td>{formatRupiah(d.nilai)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
-    </div>
+    </Panel>
   )
 }

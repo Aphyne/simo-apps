@@ -17,11 +17,12 @@ import Pagination from '@/components/shared/Pagination'
 import StateMessage from '@/components/shared/StateMessage'
 import { denganAsal } from '@/components/shared/useAsalHalaman'
 import IconAction from '@/components/shared/IconAction'
+import ExpiredCell from '@/components/shared/ExpiredCell'
 import StatusBadge from '@/components/ui/StatusBadge'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useObatList, useObatSemua, useDeleteObat } from '@/hooks/useObat'
 import { useAuthStore } from '@/store/auth.store'
-import { cn, formatAngka, formatTanggalPendek } from '@/lib/utils'
+import { cn, formatAngka } from '@/lib/utils'
 import { useNow } from '@/hooks/useNow'
 import { KATEGORI_OBAT } from '@/lib/constants'
 import KategoriDonut from '@/components/obat/KategoriDonut'
@@ -52,41 +53,6 @@ function EstimasiHabis({ hari }: { hari: number | null }) {
       </span>
     )
   return <span className="text-muted-foreground">{hari} hari</span>
-}
-
-// ─── Sel: tanggal expired ────────────────────────────────────────────────────
-// Yang sudah lewat tertulis "Sudah expired" (terlihat, bukan hanya untuk pembaca layar).
-function ExpiredCell({ tanggal }: { tanggal: string | null }) {
-  const sekarang = useNow().getTime()
-  if (!tanggal) return <span className="text-muted-foreground">-<span className="sr-only"> Belum tersedia</span></span>
-  const selisihHari = Math.floor((new Date(tanggal).getTime() - sekarang) / (1000 * 60 * 60 * 24))
-  const label = formatTanggalPendek(tanggal)
-  if (selisihHari < 0)
-    return (
-      <span className="font-semibold text-danger-700">
-        <span className="inline-flex items-center gap-1">
-          <TriangleAlert className="size-3.5" aria-hidden="true" />
-          {label}
-        </span>
-        <span className="block text-xs font-medium">Sudah expired</span>
-      </span>
-    )
-  if (selisihHari <= 90)
-    return (
-      <span className="inline-flex items-center gap-1 font-semibold text-danger-700">
-        <TriangleAlert className="size-3.5" aria-hidden="true" />
-        {label}
-        <span className="sr-only">, kurang dari 3 bulan lagi</span>
-      </span>
-    )
-  if (selisihHari <= 180)
-    return (
-      <span className="font-medium text-warning-700">
-        {label}
-        <span className="sr-only">, 3 sampai 6 bulan lagi</span>
-      </span>
-    )
-  return <span className="text-muted-foreground">{label}</span>
 }
 
 // Istilah teknis di kepala kolom: dapat difokus dengan keyboard dan punya penjelasan singkat.

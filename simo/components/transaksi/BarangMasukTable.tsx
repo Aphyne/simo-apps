@@ -1,538 +1,564 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, PackagePlus, Package, CalendarDays, TrendingUp, Clock, Eye, Pencil, Trash2 } from 'lucide-react'
-import StatCard from '@/components/dashboard/StatCard'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { PackagePlus, Package, CalendarDays, TrendingUp, Clock, Eye, Pencil, Trash2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import BarangMasukForm from '@/components/transaksi/BarangMasukForm'
+import { StatTile } from '@/components/dashboard/StatTile'
+import Panel from '@/components/dashboard/Panel'
+import PageHeader from '@/components/shared/PageHeader'
+import { FilterBar, SearchField, FILTER_SELECT } from '@/components/shared/FilterBar'
+import Pagination from '@/components/shared/Pagination'
+import StateMessage from '@/components/shared/StateMessage'
+import IconAction from '@/components/shared/IconAction'
+import ExpiredCell from '@/components/shared/ExpiredCell'
+import KonfirmasiBuang from '@/components/shared/KonfirmasiBuang'
+import BarangMasukTambahDialog from '@/components/transaksi/BarangMasukTambahDialog'
 import BarangMasukEditForm from '@/components/transaksi/BarangMasukEditForm'
-import { useBarangMasukList, useDeleteBarangMasuk } from '@/hooks/useBarangMasuk'
-import { formatTanggalPendek, formatRupiah } from '@/lib/utils'
-import { useNow } from '@/hooks/useNow'
+import BarangMasukDetailDialog from '@/components/transaksi/BarangMasukDetailDialog'
+import BarangMasukPerFaktur from '@/components/transaksi/BarangMasukPerFaktur'
+import BarangMasukFakturDialog from '@/components/transaksi/BarangMasukFakturDialog'
+import Segmented from '@/components/shared/Segmented'
 import BarangMasukTrendChart from '@/components/transaksi/BarangMasukTrendChart'
 import BarangMasukPerObatChart from '@/components/transaksi/BarangMasukPerObatChart'
+import { useBarangMasukList, useDeleteBarangMasuk } from '@/hooks/useBarangMasuk'
 import { useAuthStore } from '@/store/auth.store'
+import { useNow } from '@/hooks/useNow'
+import { isRiwayatFaktur, kelompokkanPerFaktur, type KelompokFaktur } from '@/lib/barangMasuk'
+import { Badge } from '@/components/ui/badge'
+import { formatAngka, formatRupiah, formatTanggal, formatTanggalPendek } from '@/lib/utils'
 import type { BarangMasuk } from '@/types/obat'
 
-function getPageNumbers(current: number, total: number): (number | '...')[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-  if (current <= 4) return [1, 2, 3, 4, 5, '...', total]
-  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
-  return [1, '...', current - 1, current, current + 1, '...', total]
+const KEPALA = 'h-10 text-xs font-medium text-muted-foreground'
+const BATAS_HALAMAN = 10
+const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
+const FORMAT_TANGGAL = /^\d{4}-\d{2}-\d{2}$/
+
+// Kolom tampil bertahap menurut lebar konten (bukan lebar layar): sidebar 256px muncul mulai lg, jadi konten
+// di lg sama sempitnya dengan di md. Selalu: Tanggal, Obat, Jumlah, Aksi. md: Supplier. xl: Batch dan expired.
+// 2xl: Perubahan stok (Subtotal mulai xl supaya harga terlihat di laptop 1366px).
+const KOLOM = {
+  supplier: 'hidden md:table-cell',
+  batch: 'hidden xl:table-cell',
+  stok: 'hidden 2xl:table-cell',
+  subtotal: 'hidden xl:table-cell',
 }
 
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const toLocalYMD = (s: string | null | undefined) => (s ? ymd(new Date(s)) : '')
+
+// Kerangka pemuatan: jumlah kolom dan baris sama dengan isi yang akan datang.
 function SkeletonRows() {
   return (
     <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="border-b border-line-subtle">
-          {Array.from({ length: 10 }).map((_, j) => (
-            <td key={j} className="py-3 px-4">
-              <div className="h-4 bg-surface-muted rounded-xl animate-pulse" />
-            </td>
-          ))}
-        </tr>
+      {Array.from({ length: BATAS_HALAMAN }).map((_, i) => (
+        <TableRow key={i} className="hover:bg-transparent">
+          <TableCell className="py-3 pl-5"><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell className="py-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="mt-1.5 h-3 w-20" />
+          </TableCell>
+          <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-16" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.supplier}`}>
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="mt-1.5 h-3 w-20" />
+          </TableCell>
+          <TableCell className={`py-3 ${KOLOM.batch}`}>
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="mt-1.5 h-3 w-16" />
+          </TableCell>
+          <TableCell className={`py-3 ${KOLOM.stok}`}><Skeleton className="ml-auto h-4 w-16" /></TableCell>
+          <TableCell className={`py-3 ${KOLOM.subtotal}`}><Skeleton className="ml-auto h-4 w-20" /></TableCell>
+          <TableCell className="py-3 pr-4"><Skeleton className="ml-auto h-8 w-20" /></TableCell>
+        </TableRow>
       ))}
     </>
   )
 }
 
-
-const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']
-
-function todayYMD(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function daysAgoYMD(n: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() - n)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 export default function BarangMasukTable() {
-  const sekarang = useNow().getTime()
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [date, setDate] = useState('')        // date picker asli — pilih 1 hari bebas
-  const [mingguan, setMingguan] = useState(false) // tombol cepat "Mingguan" — 7 hari terakhir
-  const [open, setOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<BarangMasuk | null>(null)
-  const [editingItem, setEditingItem] = useState<BarangMasuk | null>(null)
-
+  const now = useNow()
   const isAdmin = useAuthStore((s) => s.isAdmin())
   const deleteMutation = useDeleteBarangMasuk()
 
-  const today = todayYMD()
-  const sevenDaysAgo = daysAgoYMD(6)
+  // Pencarian, periode, dan halaman disimpan di URL (?q=&tanggal=&rentang=7&hal=) supaya tidak hilang
+  // saat halaman dimuat ulang dan bisa dibagikan sebagai tautan. Nilai yang tidak dikenal diabaikan.
+  const router = useRouter()
+  const pathname = usePathname()
+  const sp = useSearchParams()
+  const search = sp.get('q') ?? ''
+  const mingguan = sp.get('rentang') === '7'
+  const tanggalUrl = sp.get('tanggal') ?? ''
+  const date = !mingguan && FORMAT_TANGGAL.test(tanggalUrl) && !Number.isNaN(new Date(tanggalUrl).getTime()) ? tanggalUrl : ''
+  const page = Math.max(1, parseInt(sp.get('hal') ?? '1', 10) || 1)
+  // Tampilan riwayat: per obat (bawaan, satu baris per catatan) atau per faktur (?tampil=faktur).
+  const perFaktur = sp.get('tampil') === 'faktur'
 
-  // Tombol "Mingguan" aktif → pakai rentang 7 hari terakhir. Selain itu, pakai date
-  // picker biasa (tanggal tunggal bebas, persis seperti semula) kalau diisi.
-  const effectiveDari = mingguan ? sevenDaysAgo : undefined
+  const ubahParam = useCallback(
+    (patch: Record<string, string | null>, opsi: { resetHalaman?: boolean } = {}) => {
+      const next = new URLSearchParams(sp.toString())
+      for (const [k, v] of Object.entries(patch)) {
+        if (v) next.set(k, v)
+        else next.delete(k)
+      }
+      if (opsi.resetHalaman !== false) next.delete('hal')
+      const qs = next.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [sp, router, pathname]
+  )
+
+  // Kolom cari memakai state lokal supaya ketikan tidak tertinggal; ke URL (dan ke API) setelah jeda 300 ms.
+  const [cari, setCari] = useState(search)
+  useEffect(() => {
+    if ((cari.trim() ? cari : '') === search) return
+    const t = setTimeout(() => ubahParam({ q: cari.trim() ? cari : null }), 300)
+    return () => clearTimeout(t)
+  }, [cari, search, ubahParam])
+
+  const [bukaTambah, setBukaTambah] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<BarangMasuk | null>(null)
+  const [fakturDipilih, setFakturDipilih] = useState<KelompokFaktur | null>(null)
+  const [editingItem, setEditingItem] = useState<BarangMasuk | null>(null)
+  const [kotorEdit, setKotorEdit] = useState(false)
+  // Konfirmasi membuang perubahan di dialog ubah (dialog tambah mengurus konfirmasinya sendiri).
+  const [buangEdit, setBuangEdit] = useState(false)
+
+  const today = ymd(now)
+  const tujuhHariLalu = (() => { const d = new Date(now); d.setDate(d.getDate() - 6); return ymd(d) })()
+
+  // Tombol "7 hari terakhir" aktif → rentang 7 hari. Selain itu, tanggal tunggal bebas bila diisi.
+  const effectiveDari = mingguan ? tujuhHariLalu : undefined
   const effectiveSampai = mingguan ? today : undefined
   const effectiveTanggal = !mingguan ? (date || undefined) : undefined
 
-  const { data, isLoading } = useBarangMasukList({ page, limit: 10, search, tanggal: effectiveTanggal, dari: effectiveDari, sampai: effectiveSampai })
-  const rawList: BarangMasuk[] = data?.data ?? []
+  const { data, isLoading, isError, refetch } = useBarangMasukList({ page, limit: BATAS_HALAMAN, search, tanggal: effectiveTanggal, dari: effectiveDari, sampai: effectiveSampai })
+  const list: BarangMasuk[] = data?.data ?? []
   const meta = data?.meta
 
-  const { data: allData, isLoading: summaryLoading } = useBarangMasukList({ semua: true })
-  const allList: BarangMasuk[] = allData?.data ?? []
+  const { data: allData, isError: gagalAll, refetch: muatUlangAll } = useBarangMasukList({ semua: true })
+  const allList: BarangMasuk[] = useMemo(() => allData?.data ?? [], [allData])
+  // Data ringkasan gagal dimuat tidak boleh terbaca sebagai 0: angka jadi "-".
+  const ringkasanLoading = !allData && !gagalAll
+  // Riwayat lebih banyak dari yang dimuat (batas backend 20.000 baris): angka dan grafik terpotong, jadi diberi tahu.
+  const terpotong = !!allData?.meta && allList.length < allData.meta.total
+  const angka = (n: number) => (gagalAll ? null : n)
 
-  const now = new Date()
-  const currentMonthLabel = `${MONTHS[now.getMonth()]} ${now.getFullYear()}`
-
+  const bulanIni = `${MONTHS[now.getMonth()]} ${now.getFullYear()}`
   const isThisMonth = (s: string | null | undefined) => {
     if (!s) return false
     const d = new Date(s)
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
   }
-
-  const transaksiMonth = allList.filter((item) => isThisMonth(item.tanggal)).length
-  const satuanMonth = allList
-    .filter((item) => isThisMonth(item.tanggal))
+  const transaksiBulanIni = allList.filter((item) => isThisMonth(item.tanggal)).length
+  // Baris "Riwayat faktur" (data lama) tidak menambah stok, jadi tidak ikut jumlah satuan yang masuk.
+  const satuanBulanIni = allList
+    .filter((item) => isThisMonth(item.tanggal) && !isRiwayatFaktur(item))
     .reduce((sum, item) => sum + (item.jumlah_satuan ?? 0), 0)
 
-  const lastItem = allList[0]
-  const lastTanggal = lastItem?.tanggal
-    ? formatTanggalPendek(lastItem.tanggal)
-    : '—'
-  const daysAgo = lastItem?.tanggal
-    ? Math.floor((now.getTime() - new Date(lastItem.tanggal).getTime()) / (1000 * 60 * 60 * 24))
+  const terakhir = allList[0]
+  const selisihHari = terakhir?.tanggal
+    ? Math.round((new Date(today).getTime() - new Date(toLocalYMD(terakhir.tanggal)).getTime()) / 86400000)
     : null
-  const daysAgoLabel =
-    daysAgo === null ? '' :
-    daysAgo === 0 ? 'hari ini' :
-    daysAgo === 1 ? 'kemarin' :
-    `${daysAgo} hari lalu`
+  const terakhirTeks =
+    selisihHari === null ? '-' :
+    selisihHari <= 0 ? 'Hari ini' :
+    selisihHari === 1 ? 'Kemarin' :
+    `${selisihHari} hari lalu`
 
-  const toLocalYMD = (s: string | null | undefined): string => {
-    if (!s) return ''
-    const d = new Date(s)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }
-
-  // Tanggal sekarang difilter di backend (lihat query useBarangMasukList di atas),
-  // jadi rawList sudah benar untuk SEMUA halaman, bukan cuma halaman yang sedang dibuka.
-  const list = rawList
-
-  // Total nilai mengikuti filter search + periode yang aktif, dihitung dari allList
-  // (bukan dari `list`/`rawList` yang server-paginated) supaya tetap akurat biarpun
-  // hasil filter lebih dari 1 halaman.
+  // Total pengeluaran mengikuti pencarian dan periode yang aktif, dihitung dari seluruh riwayat
+  // (bukan dari baris di halaman ini) supaya tetap akurat bila hasilnya lebih dari satu halaman.
   const searchLower = search.trim().toLowerCase()
-  const filteredAllList = allList.filter((item) => {
+  const cocokFilter = (item: BarangMasuk) => {
     const matchSearch = !searchLower
       || item.nama_obat.toLowerCase().includes(searchLower)
       || item.kode_obat.toLowerCase().includes(searchLower)
       || (item.no_faktur ?? '').toLowerCase().includes(searchLower)
       || (item.no_batch ?? '').toLowerCase().includes(searchLower)
       || (item.nama_supplier ?? '').toLowerCase().includes(searchLower)
-    const ymd = toLocalYMD(item.tanggal)
+    const tgl = toLocalYMD(item.tanggal)
     const matchTanggal = mingguan
-      ? ymd >= effectiveDari! && ymd <= effectiveSampai!
-      : !date || ymd === date
+      ? tgl >= tujuhHariLalu && tgl <= today
+      : !date || tgl === date
     return matchSearch && matchTanggal
-  })
-  const totalSesudahPPN = filteredAllList.reduce(
+  }
+  const filteredAllList = allList.filter(cocokFilter)
+  // Tampilan Per faktur: faktur dipertahankan utuh bila ada satu barisnya yang cocok dengan pencarian atau tanggal,
+  // supaya jumlah obat dan totalnya adalah total FAKTUR, bukan hanya baris yang cocok (dicocokkan dengan faktur kertas).
+  const kelompok = perFaktur ? kelompokkanPerFaktur(allList).filter((k) => k.rows.some(cocokFilter)) : []
+  const barisTotal = perFaktur ? kelompok.flatMap((k) => k.rows) : filteredAllList
+  const totalSesudahPPN = barisTotal.reduce(
     (sum, item) => sum + (item.harga_beli != null ? item.harga_beli * item.jumlah_satuan : 0),
     0
   )
-  const totalSebelumPPN = filteredAllList.reduce((sum, item) => {
+  const totalSebelumPPN = barisTotal.reduce((sum, item) => {
     if (item.harga_beli == null) return sum
     const ppnPct = Number(item.ppn_pct) || 0
     return sum + (item.harga_beli / (1 + ppnPct / 100)) * item.jumlah_satuan
   }, 0)
 
-  return (
-    <div className="space-y-4">
+  const adaFilter = Boolean(search || date || mingguan)
+  const periode = mingguan ? '7-hari' : date === today ? 'hari-ini' : date ? 'tanggal' : 'semua'
+  function aturUlangFilter() {
+    setCari('')
+    ubahParam({ q: null, tanggal: null, rentang: null })
+  }
+  function cobaLagi() {
+    refetch()
+    muatUlangAll()
+  }
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {summaryLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
-              <div className="w-11 h-11 rounded-xl bg-surface-muted animate-pulse flex-shrink-0" />
-              <div className="space-y-2 flex-1">
-                <div className="h-3 bg-surface-muted rounded animate-pulse w-24" />
-                <div className="h-7 bg-surface-muted rounded animate-pulse w-16" />
-                <div className="h-3 bg-surface-muted rounded animate-pulse w-20" />
-              </div>
-            </div>
-          ))
+  // Menutup dialog ubah yang isiannya sudah diubah meminta konfirmasi dulu (juga lewat Esc, X, dan klik di luar).
+  function mintaTutupEdit() {
+    if (kotorEdit) setBuangEdit(true)
+    else setEditingItem(null)
+  }
+  function tutupEdit() { setEditingItem(null); setKotorEdit(false); setBuangEdit(false) }
+
+  const pesanKosong = mingguan
+    ? 'Belum ada stok masuk dalam 7 hari terakhir.'
+    : date === today
+      ? 'Belum ada stok masuk hari ini.'
+      : date
+        ? `Belum ada stok masuk pada ${formatTanggal(date)}.`
+        : 'Ubah kata kunci atau longgarkan filter untuk melihat catatan lain.'
+
+  const tombolCatat = (
+    <Button size="lg" className="h-10 rounded-xl px-4" onClick={() => setBukaTambah(true)}>
+      <PackagePlus data-icon="inline-start" />
+      Catat stok masuk
+    </Button>
+  )
+
+  return (
+    <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4">
+
+      {/* ── Kepala halaman ──────────────────────────────────────────────── */}
+      <PageHeader
+        className="col-span-12"
+        actions={tombolCatat}
+        actionsAlign="end"
+        title="Stok masuk"
+        description="Riwayat obat yang diterima dari supplier. Setiap catatan menambah stok dan menyimpan batch serta tanggal expired-nya."
+      />
+
+      {/* ── Peringatan bila riwayat lebih banyak dari yang dimuat (batas 20.000 baris) ── */}
+      {terpotong && (
+        <p role="status" className="col-span-12 flex items-start gap-2 rounded-xl bg-warning-50 px-4 py-3 text-sm font-medium text-warning-700">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          Ringkasan, grafik, dan tampilan Per faktur hanya memuat {formatAngka(allList.length, 0)} catatan terbaru dari {formatAngka(allData?.meta?.total ?? 0, 0)}. Angkanya bisa lebih kecil dari sebenarnya.
+        </p>
+      )}
+
+      {/* ── Ringkasan: empat ubin ringkas ───────────────────────────────── */}
+      <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile compact icon={Package} label="Total transaksi" value={angka(allData?.meta?.total ?? 0)} sublabel="semua riwayat" isLoading={ringkasanLoading} />
+        <StatTile compact icon={CalendarDays} label="Transaksi bulan ini" value={angka(transaksiBulanIni)} sublabel={bulanIni} isLoading={ringkasanLoading} />
+        <StatTile compact icon={TrendingUp} label="Satuan masuk bulan ini" value={angka(satuanBulanIni)} sublabel={bulanIni} isLoading={ringkasanLoading} />
+        <StatTile
+          compact
+          icon={Clock}
+          label="Terakhir masuk"
+          value={null}
+          teks={gagalAll ? '-' : terakhirTeks}
+          sublabel={gagalAll || !terakhir?.tanggal ? '' : formatTanggalPendek(terakhir.tanggal)}
+          isLoading={ringkasanLoading}
+        />
+      </div>
+
+      {/* ── Grafik: tren dan peringkat obat ─────────────────────────────── */}
+      <BarangMasukTrendChart
+        className="col-span-12 lg:col-span-7"
+        allList={allList}
+        isLoading={ringkasanLoading}
+        isError={gagalAll}
+        onRetry={() => muatUlangAll()}
+      />
+      <BarangMasukPerObatChart
+        className="col-span-12 lg:col-span-5"
+        allList={allList}
+        isLoading={ringkasanLoading}
+        isError={gagalAll}
+        onRetry={() => muatUlangAll()}
+      />
+
+      {/* ── Riwayat stok masuk ──────────────────────────────────────────── */}
+      <Panel
+        title="Riwayat stok masuk"
+        count={perFaktur ? (ringkasanLoading || gagalAll ? undefined : kelompok.length) : meta?.total}
+        className="col-span-12"
+        bodyClassName="px-0 pb-0"
+      >
+        {/* Satu baris: cari, periode, tanggal, lalu pilihan tampilan (Per obat / Per faktur) di kanan */}
+        <FilterBar className="grid grid-cols-2 px-5 pb-4 sm:flex sm:flex-wrap">
+          <SearchField
+            className="col-span-2 sm:col-span-1 sm:max-w-[20rem]"
+            label="Cari stok masuk"
+            placeholder="Cari obat, kode, faktur, batch, atau supplier"
+            value={cari}
+            onChange={setCari}
+          />
+          <Select
+            value={periode}
+            onValueChange={(v) => {
+              if (v === 'semua') ubahParam({ tanggal: null, rentang: null })
+              else if (v === 'hari-ini') ubahParam({ tanggal: today, rentang: null })
+              else if (v === '7-hari') ubahParam({ tanggal: null, rentang: '7' })
+            }}
+          >
+            <SelectTrigger className={`${FILTER_SELECT} sm:w-48`} aria-label="Filter periode">
+              <SelectValue placeholder="Semua waktu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semua">Semua waktu</SelectItem>
+              <SelectItem value="hari-ini">Hari ini</SelectItem>
+              <SelectItem value="7-hari">7 hari terakhir</SelectItem>
+              {periode === 'tanggal' && <SelectItem value="tanggal">Tanggal {formatTanggalPendek(date)}</SelectItem>}
+            </SelectContent>
+          </Select>
+          <Input
+            type="date"
+            aria-label="Pilih tanggal stok masuk"
+            value={date}
+            onChange={(e) => ubahParam({ tanggal: e.target.value || null, rentang: null })}
+            className="h-10 rounded-xl sm:w-44"
+          />
+          {adaFilter && (
+            <Button type="button" variant="ghost" className="col-span-2 h-10 rounded-xl px-3 text-primary sm:col-span-1" onClick={aturUlangFilter}>
+              Atur ulang
+            </Button>
+          )}
+          <div className="col-span-2 sm:col-span-1 sm:ml-auto">
+            <Segmented
+              label="Tampilan riwayat"
+              value={perFaktur ? 'faktur' : 'obat'}
+              onChange={(v) => ubahParam({ tampil: v === 'faktur' ? 'faktur' : null })}
+              options={[
+                { value: 'obat', label: 'Per obat' },
+                { value: 'faktur', label: 'Per faktur' },
+              ]}
+            />
+          </div>
+        </FilterBar>
+
+        {perFaktur ? (
+          <BarangMasukPerFaktur
+            kelompok={kelompok}
+            isLoading={ringkasanLoading}
+            isError={gagalAll}
+            onRetry={() => muatUlangAll()}
+            adaFilter={adaFilter}
+            onAturUlang={aturUlangFilter}
+            page={page}
+            onPageChange={(p) => ubahParam({ hal: p > 1 ? String(p) : null }, { resetHalaman: false })}
+            onBuka={setFakturDipilih}
+            aksiKosong={tombolCatat}
+          />
         ) : (
           <>
-            <StatCard icon={Package}     label="Total Transaksi"       value={allData?.meta?.total ?? 0}          sublabel="semua riwayat"              warna="blue"   />
-            <StatCard icon={CalendarDays} label="Transaksi Bulan Ini"  value={transaksiMonth}                     sublabel={currentMonthLabel}           warna="purple" />
-            <StatCard icon={TrendingUp}  label="Satuan Masuk Bulan Ini" value={satuanMonth.toLocaleString('id-ID')} sublabel={`unit · ${currentMonthLabel}`} warna="green"  />
-            <StatCard icon={Clock}       label="Terakhir Masuk"        value={lastTanggal}                        sublabel={daysAgoLabel}                warna="orange" />
-          </>
-        )}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <BarangMasukTrendChart allList={allList} isLoading={summaryLoading} />
-        <BarangMasukPerObatChart allList={allList} isLoading={summaryLoading} />
-      </div>
-
-      {/* Controls row */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[180px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle pointer-events-none" />
-          <input
-            className="w-full border border-line-strong rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-            placeholder="Cari nama obat, kode, no. faktur, no. batch, atau supplier..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          />
-        </div>
-
-        {/* Tombol cepat Harian/Mingguan + date picker bebas (persis seperti semula) */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => {
-              const aktif = !mingguan && date === today
-              setMingguan(false)
-              setDate(aktif ? '' : today)
-              setPage(1)
-            }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              !mingguan && date === today
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'border-line-strong text-gray-600 hover:bg-surface-subtle'
-            }`}
-          >
-            Harian
-          </button>
-          <button
-            onClick={() => {
-              setMingguan((aktif) => !aktif)
-              setDate('')
-              setPage(1)
-            }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              mingguan
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'border-line-strong text-gray-600 hover:bg-surface-subtle'
-            }`}
-          >
-            Mingguan
-          </button>
-
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => { setMingguan(false); setDate(e.target.value); setPage(1) }}
-            className="border border-line-strong rounded-lg px-3 py-2 text-sm text-fg-secondary focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-          />
-          {(date || mingguan) && (
-            <button
-              onClick={() => { setDate(''); setMingguan(false); setPage(1) }}
-              className="text-xs text-fg-muted hover:text-fg-tertiary px-2 py-1.5 rounded-lg hover:bg-surface-muted transition-colors"
-            >
-              Reset
-            </button>
-          )}
-        </div>
-
-        <div className="ml-auto">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-brand-600 hover:bg-brand-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm">
-                <PackagePlus className="w-4 h-4 mr-1.5" />
-                Catat Stok Masuk
-              </Button>
-            </DialogTrigger>
-            <DialogContent aria-describedby={undefined} className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-sm font-semibold text-gray-800">Catat Stok Masuk</DialogTitle>
-              </DialogHeader>
-              <BarangMasukForm onSuccess={() => setOpen(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Detail Dialog */}
-      {selectedItem && (
-        <Dialog open={!!selectedItem} onOpenChange={(o) => { if (!o) setSelectedItem(null) }}>
-          <DialogContent aria-describedby={undefined} className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-sm font-semibold text-gray-800">Detail Stok Masuk</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* Obat + Tanggal */}
-              <div className="bg-surface-subtle rounded-lg px-4 py-3">
-                <p className="font-semibold text-fg">{selectedItem.nama_obat}</p>
-                <p className="text-xs text-fg-muted font-mono mt-0.5">{selectedItem.kode_obat} · {formatTanggalPendek(selectedItem.tanggal)}</p>
-              </div>
-              {/* Grid detail */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                {[
-                  { label: 'Jumlah Masuk', value: `${selectedItem.jumlah_satuan} ${selectedItem.satuan} (${Number(selectedItem.jumlah_dus)} dus)` },
-                  { label: 'Perubahan Stok', value: `${selectedItem.stok_sebelum} → ${selectedItem.stok_sesudah} ${selectedItem.satuan}` },
-                  { label: 'No. Faktur', value: selectedItem.no_faktur ?? '—' },
-                  { label: 'Supplier', value: selectedItem.nama_supplier ?? '—' },
-                  { label: 'No. Batch', value: selectedItem.no_batch ?? '—', mono: true },
-                  { label: 'Expired Batch', value: selectedItem.expired_batch ? formatTanggalPendek(selectedItem.expired_batch) : '—' },
-                  { label: 'Harga Jual', value: selectedItem.harga_jual != null ? formatRupiah(selectedItem.harga_jual) : '—' },
-                  { label: 'Dicatat oleh', value: selectedItem.nama_user ?? '—' },
-                ].map(({ label, value, mono }) => (
-                  <div key={label}>
-                    <p className="text-xs text-fg-muted mb-0.5">{label}</p>
-                    <p className={`text-sm font-medium text-gray-800 ${mono ? 'font-mono' : ''}`}>{value}</p>
-                  </div>
-                ))}
-                {selectedItem.catatan && (
-                  <div className="col-span-2">
-                    <p className="text-xs text-fg-muted mb-0.5">Catatan</p>
-                    <p className="text-sm text-gray-800">{selectedItem.catatan}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Harga & PPN — dipisah dari grid di atas karena butuh breakdown sebelum/sesudah PPN */}
-              {selectedItem.harga_beli != null && (() => {
-                const ppnPct = Number(selectedItem.ppn_pct) || 0
-                const hargaDusSesudahPPN = selectedItem.harga_beli * (selectedItem.jumlah_satuan / selectedItem.jumlah_dus || 1)
-                const hargaDusSebelumPPN = hargaDusSesudahPPN / (1 + ppnPct / 100)
-                const subTotalSesudahPPN = selectedItem.harga_beli * selectedItem.jumlah_satuan
-                const subTotalSebelumPPN = subTotalSesudahPPN / (1 + ppnPct / 100)
-                return (
-                  <div className="rounded-lg border border-line bg-surface-subtle/60 px-4 py-3 space-y-2">
-                    <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
-                      Harga {ppnPct > 0 ? `· PPN ${ppnPct}%` : '· Tanpa PPN'}
-                    </p>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                      <div>
-                        <p className="text-xs text-fg-muted mb-0.5">Harga (Sebelum PPN)</p>
-                        <p className="text-sm font-medium text-gray-800">{formatRupiah(hargaDusSebelumPPN)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-fg-muted mb-0.5">Harga (Sesudah PPN)</p>
-                        <p className="text-sm font-medium text-gray-800">{formatRupiah(hargaDusSesudahPPN)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-fg-muted mb-0.5">Sub Total (Sebelum PPN)</p>
-                        <p className="text-sm font-medium text-gray-800">{formatRupiah(subTotalSebelumPPN)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-fg-muted mb-0.5">Sub Total (Sesudah PPN)</p>
-                        <p className="text-sm font-semibold text-fg">{formatRupiah(subTotalSesudahPPN)}</p>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Edit Dialog (admin only) */}
-      {editingItem && (
-        <Dialog open={!!editingItem} onOpenChange={(o) => { if (!o) setEditingItem(null) }}>
-          <DialogContent aria-describedby={undefined} className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-sm font-semibold text-gray-800">Edit Stok Masuk</DialogTitle>
-            </DialogHeader>
-            <BarangMasukEditForm item={editingItem} onSuccess={() => setEditingItem(null)} />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Table */}
-      <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Tanggal</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Obat</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Jumlah Masuk</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Supplier</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">No. Faktur</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">No. Batch</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Expired</th>
-                <th className="text-center py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Perubahan Stok</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-fg-muted uppercase tracking-wide whitespace-nowrap">Sub Total</th>
-                <th className="py-3 px-3 w-10"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line-subtle">
+        <div aria-busy={isLoading}>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={`${KEPALA} pl-5`}>Tanggal</TableHead>
+                <TableHead className={KEPALA}>Obat</TableHead>
+                <TableHead className={`${KEPALA} text-right`}>Jumlah masuk</TableHead>
+                <TableHead className={`${KEPALA} ${KOLOM.supplier}`}>Supplier dan faktur</TableHead>
+                <TableHead className={`${KEPALA} ${KOLOM.batch}`}>Batch dan expired</TableHead>
+                <TableHead className={`${KEPALA} text-right ${KOLOM.stok}`}>Stok berubah</TableHead>
+                <TableHead className={`${KEPALA} text-right ${KOLOM.subtotal}`}>
+                  <span className="block leading-tight">Subtotal<span className="block font-normal">sebelum PPN</span></span>
+                </TableHead>
+                <TableHead className={`${KEPALA} pr-4 text-right`}>Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {isLoading ? (
                 <SkeletonRows />
-              ) : list.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="text-center py-16 text-fg-muted text-sm">
-                    {mingguan
-                      ? (search ? 'Tidak ada hasil untuk filter ini' : 'Belum ada transaksi 7 hari terakhir')
-                      : date === today
-                        ? (search ? 'Tidak ada hasil untuk filter ini' : 'Belum ada transaksi hari ini')
-                        : search || date
-                          ? 'Tidak ada hasil untuk filter ini'
-                          : 'Belum ada riwayat barang masuk'}
-                  </td>
-                </tr>
-              ) : (
+              ) : isError ? null : (
                 list.map((item) => (
-                  <tr key={item.id} className="border-b border-line-subtle hover:bg-surface-subtle transition-colors">
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-fg-secondary">
+                  <TableRow key={item.id}>
+                    <TableCell className="whitespace-nowrap py-3 pl-5 tabular-nums text-muted-foreground">
                       {formatTanggalPendek(item.tanggal)}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <p className="font-medium text-fg">{item.nama_obat}</p>
-                      <p className="text-xs text-fg-muted font-mono">{item.kode_obat}</p>
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <p className="font-semibold text-success-700">+{item.jumlah_satuan} {item.satuan}</p>
-                      <p className="text-xs text-fg-muted">{Number(item.jumlah_dus)} dus</p>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-xs text-fg-secondary">
-                      {item.nama_supplier ?? <span className="text-fg-muted">—</span>}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-xs font-mono text-fg-tertiary">
-                      {item.no_faktur ?? <span className="text-fg-muted">—</span>}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-xs font-mono text-fg-tertiary">
-                      {item.no_batch ?? <span className="text-fg-muted">—</span>}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {item.expired_batch ? (
-                        <span className={`text-xs font-medium ${
-                          Math.floor((new Date(item.expired_batch).getTime() - sekarang) / (1000*60*60*24)) <= 90
-                            ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                          {formatTanggalPendek(item.expired_batch)}
-                        </span>
+                    </TableCell>
+                    <TableCell className="whitespace-normal py-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedItem(item)}
+                        className="group block max-w-[11rem] rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring sm:max-w-[16rem]"
+                      >
+                        <span className="block break-words font-medium leading-tight text-foreground group-hover:text-primary">{item.nama_obat}</span>
+                        <span className="mt-0.5 block font-mono text-xs text-muted-foreground">{item.kode_obat}</span>
+                      </button>
+                      {isRiwayatFaktur(item) && <Badge variant="secondary" className="mt-1.5">Riwayat faktur, stok tidak berubah</Badge>}
+                      {/* Di layar sempit kolom Supplier disembunyikan, jadi ikut di bawah nama */}
+                      {item.nama_supplier && <span className="mt-0.5 block text-xs text-muted-foreground md:hidden">{item.nama_supplier}</span>}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap py-3 text-right tabular-nums">
+                      <span className="font-semibold text-foreground">{isRiwayatFaktur(item) ? '' : '+'}{formatAngka(item.jumlah_satuan, 0)}</span>
+                      <span className="ml-1 text-xs text-muted-foreground">{item.satuan}</span>
+                      <span className="block text-xs text-muted-foreground">{formatAngka(Number(item.jumlah_dus), 2)} dus</span>
+                    </TableCell>
+                    <TableCell className={`py-3 ${KOLOM.supplier}`}>
+                      <span className="block text-foreground">{item.nama_supplier ?? <span className="text-muted-foreground">-<span className="sr-only"> Belum diisi</span></span>}</span>
+                      <span className="mt-0.5 block font-mono text-xs text-muted-foreground">{item.no_faktur ?? '-'}</span>
+                    </TableCell>
+                    <TableCell className={`py-3 tabular-nums ${KOLOM.batch}`}>
+                      <span className="block font-mono text-xs text-muted-foreground">{item.no_batch ?? '-'}</span>
+                      <span className="mt-0.5 block"><ExpiredCell tanggal={item.expired_batch} /></span>
+                    </TableCell>
+                    <TableCell className={`whitespace-nowrap py-3 text-right tabular-nums ${KOLOM.stok}`}>
+                      {isRiwayatFaktur(item) ? (
+                        <span className="text-muted-foreground">tidak berubah</span>
                       ) : (
-                        <span className="text-fg-muted text-xs">—</span>
+                        <>
+                          <span className="text-muted-foreground">{formatAngka(item.stok_sebelum, 0)}</span>
+                          <span className="mx-1 text-muted-foreground" aria-hidden="true">→</span>
+                          <span className="sr-only"> menjadi </span>
+                          <span className="font-medium text-foreground">{formatAngka(item.stok_sesudah, 0)}</span>
+                        </>
                       )}
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap text-xs text-fg-muted">
-                      <span className="text-fg-muted">{item.stok_sebelum}</span>
-                      <span className="mx-1 text-success-500">→</span>
-                      <span className="font-medium text-gray-800">{item.stok_sesudah}</span>
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap text-xs text-fg-secondary">
+                    </TableCell>
+                    <TableCell className={`whitespace-nowrap py-3 text-right tabular-nums ${KOLOM.subtotal}`}>
                       {item.harga_beli != null
                         ? formatRupiah((item.harga_beli / (1 + (Number(item.ppn_pct) || 0) / 100)) * item.jumlah_satuan)
-                        : <span className="text-fg-muted">—</span>}
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-0.5">
-                        <button
-                          onClick={() => setSelectedItem(item)}
-                          className="p-1.5 rounded-lg text-fg-subtle hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                          title="Lihat detail"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        : <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
+                    </TableCell>
+                    <TableCell className="py-1.5 pr-3">
+                      <div className="flex justify-end gap-1">
+                        {/* Nama obat sudah membuka rincian; tombol mata hanya untuk layar lebar, atau untuk staf yang tidak punya aksi lain */}
+                        <IconAction label={`Lihat rincian ${item.nama_obat}`} className={isAdmin ? 'hidden lg:inline-flex' : undefined} onClick={() => setSelectedItem(item)}>
+                          <Eye />
+                        </IconAction>
                         {isAdmin && (
                           <>
-                            <button
-                              onClick={() => setEditingItem(item)}
-                              className="p-1.5 rounded-lg text-fg-subtle hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                              title="Edit"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
+                            {/* Baris riwayat faktur tidak bisa diubah (ditolak backend); hapus lalu catat ulang bila datanya salah */}
+                            {!isRiwayatFaktur(item) && (
+                              <IconAction label={`Ubah stok masuk ${item.nama_obat}`} onClick={() => setEditingItem(item)}>
+                                <Pencil />
+                              </IconAction>
+                            )}
                             <ConfirmDialog
                               trigger={
-                                <button
-                                  className="p-1.5 rounded-lg text-fg-subtle hover:text-danger-600 hover:bg-danger-50 transition-colors"
-                                  title="Hapus"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <IconAction label={`Hapus stok masuk ${item.nama_obat}`} className="text-destructive hover:text-destructive">
+                                  <Trash2 />
+                                </IconAction>
                               }
-                              title={`Hapus barang masuk ${item.nama_obat}?`}
-                              description="Stok akan ditarik balik sesuai jumlah baris ini. Ditolak otomatis kalau hasilnya bikin stok jadi minus (indikasi sebagian sudah terjual)."
+                              title={`Hapus stok masuk ${item.nama_obat}?`}
+                              description={isRiwayatFaktur(item)
+                                ? 'Baris ini hanya riwayat faktur. Menghapusnya tidak mengubah stok obat.'
+                                : 'Stok obat dikurangi sesuai jumlah di baris ini. Ditolak otomatis bila hasilnya membuat stok minus, tanda sebagian sudah terjual.'}
                               onConfirm={() => deleteMutation.mutate(item.id)}
-                              loading={deleteMutation.isPending}
+                              loading={deleteMutation.isPending && deleteMutation.variables === item.id}
                             />
                           </>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
+
+          {!isLoading && isError && (
+            <StateMessage
+              icon={TriangleAlert}
+              title="Riwayat stok masuk belum bisa dimuat"
+              description="Ini bukan berarti tidak ada stok masuk. Periksa koneksi, lalu coba lagi."
+              action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={cobaLagi}>Coba lagi</Button>}
+            />
+          )}
+          {!isLoading && !isError && list.length === 0 && (
+            meta && meta.total > 0 ? (
+              // Alamat memuat nomor halaman yang melewati halaman terakhir (mis. ?hal=99).
+              <StateMessage
+                icon={SearchX}
+                title="Halaman ini tidak ada"
+                description={`Hasilnya hanya sampai halaman ${meta.last_page}.`}
+                action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={() => ubahParam({ hal: null }, { resetHalaman: false })}>Ke halaman pertama</Button>}
+              />
+            ) : adaFilter ? (
+              <StateMessage
+                icon={SearchX}
+                title="Tidak ada stok masuk yang cocok"
+                description={pesanKosong}
+                action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={aturUlangFilter}>Atur ulang filter</Button>}
+              />
+            ) : (
+              <StateMessage
+                icon={PackageOpen}
+                title="Belum ada stok masuk"
+                description="Catat faktur pertama dari supplier untuk mulai menambah stok."
+                action={tombolCatat}
+              />
+            )
+          )}
         </div>
 
+        {/* Jumlah hasil diumumkan ke pembaca layar setiap filter berubah (juga bila hanya satu halaman) */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {meta && !isLoading ? `${meta.total} catatan stok masuk ditemukan` : ''}
+        </p>
+
         {meta && meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-surface-subtle/50">
-            <span className="text-xs text-fg-muted tabular-nums">
-              {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} dari {meta.total} transaksi
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                ‹
-              </button>
-              {getPageNumbers(page, meta.last_page).map((p, i) =>
-                p === '...' ? (
-                  <span key={`ellipsis-${i}`} className="px-1.5 text-xs text-fg-subtle select-none">…</span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p as number)}
-                    className={`min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      page === p
-                        ? 'bg-brand-600 text-white border border-brand-600'
-                        : 'border border-line text-gray-600 hover:bg-surface-muted'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-              <button
-                onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
-                disabled={page === meta.last_page}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                ›
-              </button>
-            </div>
-          </div>
+          <Pagination page={page} lastPage={meta.last_page} total={meta.total} perPage={BATAS_HALAMAN} noun="transaksi" onPageChange={(p) => ubahParam({ hal: p > 1 ? String(p) : null }, { resetHalaman: false })} />
+        )}
+          </>
         )}
 
-        {/* Total pengeluaran — cuma muncul kalau ada filter aktif (search/tanggal/mingguan),
-            dan hasil filter-nya tidak kosong. Tidak muncul kalau belum ada filter sama sekali. */}
-        {(search || date || mingguan) && filteredAllList.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-brand-50/50 flex-wrap gap-y-1">
-            <span className="text-xs text-fg-muted">
-              Total {filteredAllList.length} transaksi
-              {mingguan ? ` · 7 hari terakhir (${formatTanggalPendek(sevenDaysAgo)}–${formatTanggalPendek(today)})` : ''}
-              {!mingguan && date ? ` · tanggal ${formatTanggalPendek(date)}` : ''}
-              {search ? ` · "${search}"` : ''}
-            </span>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-fg-muted">
-                Total Pengeluaran Sebelum PPN: <span className="text-xs font-semibold text-fg">{formatRupiah(totalSebelumPPN)}</span>
-              </span>
-              <span className="text-xs text-fg-muted">
-                Total Pengeluaran Sesudah PPN: <span className="text-xs font-semibold text-fg">{formatRupiah(totalSesudahPPN)}</span>
-              </span>
-            </div>
+        {/* Total pengeluaran: hanya bila ada filter aktif dan hasilnya tidak kosong. Bila ringkasan gagal dimuat, tidak ditampilkan (bukan Rp 0). */}
+        {adaFilter && !gagalAll && !ringkasanLoading && barisTotal.length > 0 && (
+          <div className="flex flex-col gap-3 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              {perFaktur ? `Total ${kelompok.length} faktur` : `Total ${filteredAllList.length} transaksi`}
+              {mingguan ? `, 7 hari terakhir (${formatTanggalPendek(tujuhHariLalu)} sampai ${formatTanggalPendek(today)})` : ''}
+              {!mingguan && date ? `, tanggal ${formatTanggalPendek(date)}` : ''}
+              {search ? `, pencarian "${search}"` : ''}
+            </p>
+            <dl className="flex flex-wrap gap-x-8 gap-y-2">
+              <div>
+                <dt className="text-sm text-muted-foreground">Pengeluaran sebelum PPN</dt>
+                <dd className="text-base font-medium tabular-nums text-foreground">{formatRupiah(totalSebelumPPN)}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-muted-foreground">Pengeluaran sesudah PPN</dt>
+                <dd className="text-base font-semibold tabular-nums text-foreground">{formatRupiah(totalSesudahPPN)}</dd>
+              </div>
+            </dl>
           </div>
         )}
-      </div>
+      </Panel>
+
+      {/* ── Keterangan warna ─────────────────────────────────────────────── */}
+      <p className="col-span-12 px-1 text-sm text-muted-foreground">
+        Tanggal expired merah dengan tanda segitiga: kurang dari 3 bulan lagi atau sudah lewat. Oranye: 3 sampai 6 bulan. Subtotal dihitung dari harga beli sebelum PPN. Tanda jatuh tempo hanya membaca tanggal; aplikasi belum mencatat apakah faktur sudah dibayar. Tanda &quot;-&quot; berarti data belum diisi.
+      </p>
+
+      {/* ── Dialog ───────────────────────────────────────────────────────── */}
+      <BarangMasukTambahDialog open={bukaTambah} onOpenChange={setBukaTambah} />
+
+      <BarangMasukDetailDialog item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <BarangMasukFakturDialog faktur={fakturDipilih} onClose={() => setFakturDipilih(null)} />
+
+      {/* Ubah stok masuk (khusus admin) */}
+      <Dialog open={!!editingItem} onOpenChange={(o) => { if (!o) mintaTutupEdit() }}>
+        <DialogContent className="max-h-[90vh] gap-5 overflow-y-auto p-5 sm:max-w-2xl">
+          <DialogHeader className="gap-1.5 pr-8">
+            <DialogTitle className="text-lg font-semibold">Ubah stok masuk</DialogTitle>
+            <DialogDescription>Perubahan jumlah ikut menyesuaikan stok obat.</DialogDescription>
+          </DialogHeader>
+          {editingItem && <BarangMasukEditForm item={editingItem} onSuccess={tutupEdit} onBatal={mintaTutupEdit} onDirtyChange={setKotorEdit} />}
+        </DialogContent>
+      </Dialog>
+
+      <KonfirmasiBuang open={buangEdit} onOpenChange={setBuangEdit} onBuang={tutupEdit} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { FieldDescription, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 interface FormSectionProps {
@@ -30,6 +31,51 @@ export function FormActions({ children, className }: { children: ReactNode; clas
   return (
     <div className={cn('flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:items-center sm:justify-end', className)}>
       {children}
+    </div>
+  )
+}
+
+// Tanda wajib: bintang merah untuk mata, "(wajib)" untuk pembaca layar. Pasangkan dengan satu baris
+// keterangan "* Wajib diisi" di atas form; kolom yang boleh kosong ditulis "(opsional)" di labelnya.
+export function Wajib() {
+  return (
+    <>
+      <span className="text-destructive" aria-hidden="true">*</span>
+      <span className="sr-only">(wajib)</span>
+    </>
+  )
+}
+
+export function Opsional() {
+  return <span className="font-normal text-muted-foreground">(opsional)</span>
+}
+
+// Input dengan awalan ("Rp") atau akhiran ("%") di dalam kotak, supaya satuan tidak ikut terketik.
+// Awalan dan akhiran bersifat dekoratif; sebut satuannya di label atau hint untuk pembaca layar.
+export function InputSatuan({
+  awalan,
+  akhiran,
+  className,
+  ...props
+}: React.ComponentProps<typeof Input> & { awalan?: string; akhiran?: string }) {
+  return (
+    <div className="relative">
+      {awalan && (
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground" aria-hidden="true">
+          {awalan}
+        </span>
+      )}
+      <Input
+        className={cn('h-10 rounded-xl tabular-nums', awalan && 'pl-10', akhiran && 'pr-9', className)}
+        onWheel={(e) => e.currentTarget.blur()}
+        onFocus={(e) => e.currentTarget.select()}
+        {...props}
+      />
+      {akhiran && (
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground" aria-hidden="true">
+          {akhiran}
+        </span>
+      )}
     </div>
   )
 }

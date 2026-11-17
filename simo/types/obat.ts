@@ -60,6 +60,9 @@ export interface BarangMasuk {
   harga_beli: number | null
   harga_jual: number | null
   ppn_pct: number | null
+  // Diskon persen per baris (dipotong sebelum PPN) dan jatuh tempo faktur (migrasi 024). Baris lama: 0 dan null.
+  diskon_pct: number | null
+  jatuh_tempo: string | null
   catatan: string | null
   stok_sebelum: number
   stok_sesudah: number
@@ -94,6 +97,9 @@ export interface BarangMasukUpdateFormData {
   harga_jual?: number
   biaya_simpan_pct?: number
   ppn_pct?: number
+  diskon_pct?: number
+  // String kosong menghapus jatuh tempo faktur; tidak dikirim = nilai lama dipertahankan.
+  jatuh_tempo?: string
   catatan?: string
 }
 
@@ -102,6 +108,7 @@ export interface BarangMasukBulkFormData {
   supplier_id: number
   no_faktur: string
   ppn_pct?: number
+  jatuh_tempo?: string
   catatan?: string
   items: {
     obat_id: number
@@ -111,6 +118,7 @@ export interface BarangMasukBulkFormData {
     harga_beli_dus?: number
     harga_jual?: number
     biaya_simpan_pct?: number
+    diskon_pct?: number
   }[]
 }
 

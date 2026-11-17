@@ -40,7 +40,9 @@
     @apply font-sans;
     scrollbar-color: var(--input) transparent;
   }
-  html,
+  /* Hanya body, bukan html: bila html juga bukan `visible`, overflow body tidak lagi diteruskan ke viewport, dan saat
+     Select/Dialog terbuka (Radix mengunci gulir dengan `body { overflow: hidden }`) body menjadi wadah gulir sendiri
+     sehingga sidebar sticky ikut tergulir hilang. */
   body {
     overflow-x: clip;
   }
