@@ -1,28 +1,14 @@
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense } from 'react'
 import SupplierTable from '@/components/supplier/SupplierTable'
-import { useAuthStore } from '@/store/auth.store'
+import AdminOnly from '@/components/layout/AdminOnly'
 
+// SupplierTable membaca filter dari URL (useSearchParams), jadi harus dibungkus Suspense agar build produksi tidak gagal.
 export default function SupplierPage() {
-  const router = useRouter()
-  const isHydrated = useAuthStore((s) => s.isHydrated)
-  const isAdmin = useAuthStore((s) => s.isAdmin())
-
-  useEffect(() => {
-    if (isHydrated && !isAdmin) {
-      router.replace('/dashboard')
-    }
-  }, [isHydrated, isAdmin, router])
-
-  if (!isHydrated || !isAdmin) {
-    return null
-  }
-
   return (
-    <div>
-      <SupplierTable />
-    </div>
+    <AdminOnly>
+      <Suspense fallback={<div className="mx-auto max-w-7xl py-16 text-center text-sm text-muted-foreground" role="status">Memuat supplier</div>}>
+        <SupplierTable />
+      </Suspense>
+    </AdminOnly>
   )
 }

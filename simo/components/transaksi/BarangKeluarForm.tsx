@@ -6,7 +6,7 @@ import { Pencil, Trash2, TriangleAlert, PackageOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import ObatCombobox from '@/components/ui/ObatCombobox'
 import IconAction from '@/components/shared/IconAction'
@@ -280,20 +280,17 @@ export default function BarangKeluarForm({ onSuccess, onBatal, onDirtyChange }: 
               control={control}
               rules={{ required: 'Pilih keterangan' }}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    id="keterangan"
-                    aria-required="true"
-                    aria-invalid={!!errors.keterangan_str}
-                    aria-describedby={errors.keterangan_str ? 'keterangan-error' : 'keterangan-hint'}
-                    className="h-10 w-full rounded-xl data-[size=default]:h-10"
-                  >
-                    <SelectValue placeholder="Pilih keterangan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {KETERANGAN_KELUAR.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <PilihanCombobox
+                  id="keterangan"
+                  options={KETERANGAN_KELUAR.map((k) => ({ value: k, label: k }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Pilih keterangan"
+                  noun="keterangan"
+                  error={!!errors.keterangan_str}
+                  aria-required="true"
+                  aria-describedby={errors.keterangan_str ? 'keterangan-error' : 'keterangan-hint'}
+                />
               )}
             />
             {errors.keterangan_str ? (

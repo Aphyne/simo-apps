@@ -1,20 +1,20 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { PackageMinus, Package, CalendarDays, Wallet, Coins, Eye, Pencil, Trash2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { PackageMinus, Package, Wallet, Coins, Eye, Pencil, Trash2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
+import TabelSkeleton, { type KolomSkeleton } from '@/components/shared/TabelSkeleton'
+import { useCariTertunda, useFilterUrl } from '@/components/shared/useFilterUrl'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { StatTile } from '@/components/dashboard/StatTile'
 import Panel from '@/components/dashboard/Panel'
 import PageHeader from '@/components/shared/PageHeader'
-import { FilterBar, SearchField, FILTER_SELECT } from '@/components/shared/FilterBar'
+import { FilterBar, SearchField } from '@/components/shared/FilterBar'
 import Pagination from '@/components/shared/Pagination'
 import StateMessage from '@/components/shared/StateMessage'
 import IconAction from '@/components/shared/IconAction'
@@ -55,28 +55,16 @@ function BadgeKeterangan({ nilai }: { nilai: string }) {
   return <Badge variant={nilai === 'Penjualan' ? 'secondary' : 'outline'}>{nilai}</Badge>
 }
 
-// Kerangka pemuatan: jumlah kolom dan baris sama dengan isi yang akan datang.
-function SkeletonRows() {
-  return (
-    <>
-      {Array.from({ length: BATAS_HALAMAN }).map((_, i) => (
-        <TableRow key={i} className="hover:bg-transparent">
-          <TableCell className="py-3 pl-5"><Skeleton className="h-4 w-20" /></TableCell>
-          <TableCell className="py-3">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="mt-1.5 h-3 w-20" />
-          </TableCell>
-          <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-16" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.keterangan}`}><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.total}`}><Skeleton className="ml-auto h-4 w-20" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.stok}`}><Skeleton className="ml-auto h-4 w-16" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.oleh}`}><Skeleton className="h-4 w-24" /></TableCell>
-          <TableCell className="py-3 pr-4"><Skeleton className="ml-auto h-8 w-20" /></TableCell>
-        </TableRow>
-      ))}
-    </>
-  )
-}
+const KOLOM_SKELETON: KolomSkeleton[] = [
+  { garis: ['w-20'] },
+  { garis: ['w-40', 'w-20'] },
+  { garis: ['w-16'], kanan: true },
+  { garis: ['w-20'], bentuk: 'badge', kelas: KOLOM.keterangan },
+  { garis: ['w-20'], kanan: true, kelas: KOLOM.total },
+  { garis: ['w-16'], kanan: true, kelas: KOLOM.stok },
+  { garis: ['w-24'], kelas: KOLOM.oleh },
+  { garis: ['w-20'], bentuk: 'tombol' },
+]
 
 export default function BarangKeluarTable() {
   const now = useNow()
@@ -85,9 +73,7 @@ export default function BarangKeluarTable() {
 
   // Pencarian, keterangan, periode, dan halaman disimpan di URL (?q=&keterangan=&tanggal=&rentang=7&hal=) supaya
   // tidak hilang saat halaman dimuat ulang dan bisa dibagikan sebagai tautan. Nilai yang tidak dikenal diabaikan.
-  const router = useRouter()
-  const pathname = usePathname()
-  const sp = useSearchParams()
+  const { sp, ubahParam } = useFilterUrl()
   const search = sp.get('q') ?? ''
   const keteranganUrl = sp.get('keterangan') ?? ''
   const keterangan = (KETERANGAN_KELUAR as readonly string[]).includes(keteranganUrl) ? keteranganUrl : ''
@@ -98,27 +84,8 @@ export default function BarangKeluarTable() {
   // Tampilan riwayat: per obat (bawaan, satu baris per obat) atau per transaksi (?tampil=transaksi, satu baris per pencatatan).
   const perTransaksi = sp.get('tampil') === 'transaksi'
 
-  const ubahParam = useCallback(
-    (patch: Record<string, string | null>, opsi: { resetHalaman?: boolean } = {}) => {
-      const next = new URLSearchParams(sp.toString())
-      for (const [k, v] of Object.entries(patch)) {
-        if (v) next.set(k, v)
-        else next.delete(k)
-      }
-      if (opsi.resetHalaman !== false) next.delete('hal')
-      const qs = next.toString()
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-    },
-    [sp, router, pathname]
-  )
-
   // Kolom cari memakai state lokal supaya ketikan tidak tertinggal; ke URL (dan ke API) setelah jeda 300 ms.
-  const [cari, setCari] = useState(search)
-  useEffect(() => {
-    if ((cari.trim() ? cari : '') === search) return
-    const t = setTimeout(() => ubahParam({ q: cari.trim() ? cari : null }), 300)
-    return () => clearTimeout(t)
-  }, [cari, search, ubahParam])
+  const [cari, setCari] = useCariTertunda(search, ubahParam)
 
   const [bukaTambah, setBukaTambah] = useState(false)
   const [selectedItem, setSelectedItem] = useState<BarangKeluar | null>(null)
@@ -156,9 +123,7 @@ export default function BarangKeluarTable() {
   }
   // "Transaksi" = satu pencatatan (satu keranjang), sama dengan tampilan Per transaksi; "catatan obat" = satu baris per obat.
   const semuaTransaksi = kelompokkanPerTransaksi(allList)
-  const transaksiHariIni = semuaTransaksi.filter((k) => toLocalYMD(k.tanggal) === today).length
-  const transaksiBulanIni = semuaTransaksi.filter((k) => isThisMonth(k.tanggal)).length
-  const catatanHariIni = allList.filter((item) => toLocalYMD(item.tanggal) === today).length
+  const transaksiPenjualanHariIni = semuaTransaksi.filter((k) => k.keterangan === 'Penjualan' && toLocalYMD(k.tanggal) === today).length
   // Penjualan dalam rupiah. Retur, rusak, kedaluarsa, dan lainnya bukan pendapatan; penjualan tanpa harga jual
   // tidak bisa dijumlahkan dan disebut terpisah.
   const penjualanHariIni = allList.filter((item) => toLocalYMD(item.tanggal) === today && item.keterangan === 'Penjualan')
@@ -167,6 +132,20 @@ export default function BarangKeluarTable() {
   const penjualanBulanIni = allList.filter((item) => isThisMonth(item.tanggal) && item.keterangan === 'Penjualan')
   const pendapatanBulanIni = penjualanBulanIni.reduce((sum, item) => sum + (nilaiPenjualan(item) ?? 0), 0)
   const penjualanTanpaHarga = penjualanBulanIni.filter((item) => nilaiPenjualan(item) === null).length
+  // Perbandingan adil: penjualan bulan ini sampai tanggal hari ini lawan bulan lalu sampai tanggal yang sama (bukan bulan lalu penuh).
+  const bulanLalu = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const pendapatanBulanLaluSampaiTglIni = allList
+    .filter((item) => {
+      if (item.keterangan !== 'Penjualan' || !item.tanggal) return false
+      const d = new Date(item.tanggal)
+      return d.getFullYear() === bulanLalu.getFullYear() && d.getMonth() === bulanLalu.getMonth() && d.getDate() <= now.getDate()
+    })
+    .reduce((sum, item) => sum + (nilaiPenjualan(item) ?? 0), 0)
+  const selisihBulanLalu = pendapatanBulanLaluSampaiTglIni > 0
+    ? Math.round(((pendapatanBulanIni - pendapatanBulanLaluSampaiTglIni) / pendapatanBulanLaluSampaiTglIni) * 100)
+    : null
+  // Keluar yang bukan penjualan (retur, rusak, kedaluarsa, lainnya): tidak menghasilkan uang, sinyal kerugian.
+  const bukanPenjualanBulanIni = allList.filter((item) => isThisMonth(item.tanggal) && item.keterangan !== 'Penjualan').length
 
   // Total penjualan mengikuti pencarian, keterangan, dan periode yang aktif, dihitung dari seluruh riwayat
   // (bukan dari baris di halaman ini) supaya tetap akurat bila hasilnya lebih dari satu halaman.
@@ -242,17 +221,15 @@ export default function BarangKeluarTable() {
         </p>
       )}
 
-      {/* ── Ringkasan: empat ubin ringkas ───────────────────────────────── */}
-      <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile compact icon={Package} label="Transaksi hari ini" value={angka(transaksiHariIni)} sublabel={`${catatanHariIni} catatan obat`} isLoading={ringkasanLoading} />
-        <StatTile compact icon={CalendarDays} label="Transaksi bulan ini" value={angka(transaksiBulanIni)} sublabel={bulanIni} isLoading={ringkasanLoading} />
+      {/* ── Ringkasan: tiga ubin ringkas ────────────────────────────────── */}
+      <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile
           compact
           icon={Coins}
           label="Penjualan hari ini"
           value={null}
           teks={gagalAll ? '-' : rupiahUbin(pendapatanHariIni)}
-          sublabel={gagalAll ? '' : hariIniTanpaHarga > 0 ? `${hariIniTanpaHarga} belum berharga` : penjualanHariIni.length === 0 ? 'belum ada penjualan' : `${penjualanHariIni.length} obat`}
+          sublabel={gagalAll ? '' : hariIniTanpaHarga > 0 ? `${hariIniTanpaHarga} belum berharga` : transaksiPenjualanHariIni === 0 ? 'belum ada penjualan' : `${transaksiPenjualanHariIni} transaksi`}
           isLoading={ringkasanLoading}
         />
         <StatTile
@@ -261,9 +238,10 @@ export default function BarangKeluarTable() {
           label="Penjualan bulan ini"
           value={null}
           teks={gagalAll ? '-' : rupiahUbin(pendapatanBulanIni)}
-          sublabel={gagalAll ? '' : penjualanTanpaHarga > 0 ? `${penjualanTanpaHarga} belum berharga` : bulanIni}
+          sublabel={gagalAll ? '' : penjualanTanpaHarga > 0 ? `${penjualanTanpaHarga} belum berharga` : selisihBulanLalu === null ? bulanIni : `${selisihBulanLalu >= 0 ? 'naik' : 'turun'} ${Math.abs(selisihBulanLalu)}% dari tgl 1-${now.getDate()} bulan lalu`}
           isLoading={ringkasanLoading}
         />
+        <StatTile compact icon={Package} label="Keluar bukan penjualan" value={angka(bukanPenjualanBulanIni)} sublabel="catatan bulan ini: retur, rusak, dll." isLoading={ringkasanLoading} />
       </div>
 
       {/* ── Grafik: tren dan peringkat obat ─────────────────────────────── */}
@@ -293,33 +271,31 @@ export default function BarangKeluarTable() {
             value={cari}
             onChange={setCari}
           />
-          <Select value={keterangan || 'semua'} onValueChange={(v) => ubahParam({ keterangan: v === 'semua' ? null : v })}>
-            <SelectTrigger className={`${FILTER_SELECT} sm:w-48`} aria-label="Filter keterangan">
-              <SelectValue placeholder="Semua keterangan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua keterangan</SelectItem>
-              {KETERANGAN_KELUAR.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select
+          <PilihanCombobox
+            aria-label="Filter keterangan"
+            className="sm:w-48"
+            options={[{ value: '', label: 'Semua keterangan' }, ...KETERANGAN_KELUAR.map((k) => ({ value: k, label: k }))]}
+            value={keterangan}
+            onChange={(v) => ubahParam({ keterangan: v || null })}
+            noun="keterangan"
+          />
+          <PilihanCombobox
+            aria-label="Filter periode"
+            className="sm:w-48"
             value={periode}
-            onValueChange={(v) => {
+            onChange={(v) => {
               if (v === 'semua') ubahParam({ tanggal: null, rentang: null })
               else if (v === 'hari-ini') ubahParam({ tanggal: today, rentang: null })
               else if (v === '7-hari') ubahParam({ tanggal: null, rentang: '7' })
             }}
-          >
-            <SelectTrigger className={`${FILTER_SELECT} sm:w-48`} aria-label="Filter periode">
-              <SelectValue placeholder="Semua waktu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua waktu</SelectItem>
-              <SelectItem value="hari-ini">Hari ini</SelectItem>
-              <SelectItem value="7-hari">7 hari terakhir</SelectItem>
-              {periode === 'tanggal' && <SelectItem value="tanggal">Tanggal {formatTanggalPendek(date)}</SelectItem>}
-            </SelectContent>
-          </Select>
+            options={[
+              { value: 'semua', label: 'Semua waktu' },
+              { value: 'hari-ini', label: 'Hari ini' },
+              { value: '7-hari', label: '7 hari terakhir' },
+              ...(periode === 'tanggal' ? [{ value: 'tanggal', label: `Tanggal ${formatTanggalPendek(date)}` }] : []),
+            ]}
+            noun="periode"
+          />
           <Input
             type="date"
             aria-label="Pilih tanggal stok keluar"
@@ -376,7 +352,7 @@ export default function BarangKeluarTable() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <SkeletonRows />
+                <TabelSkeleton kolom={KOLOM_SKELETON} baris={BATAS_HALAMAN} />
               ) : isError ? null : (
                 list.map((item) => {
                   const nilai = nilaiPenjualan(item)

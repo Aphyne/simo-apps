@@ -79,8 +79,8 @@ export default function BarangKeluarPerTransaksi({ kelompok, isLoading, isError,
                   <Badge variant={k.keterangan === 'Penjualan' ? 'secondary' : 'outline'}>{k.keterangan}</Badge>
                 </TableCell>
                 <TableCell className="whitespace-nowrap py-3 text-right tabular-nums">
-                  <span className="font-semibold text-foreground">{k.rows.length}</span>
-                  <span className="ml-1 text-xs text-muted-foreground">obat</span>
+                  <span className="font-semibold text-foreground">{k.rows.length}</span>{' '}
+                  <span className="text-xs text-muted-foreground">obat</span>
                 </TableCell>
                 <TableCell className="whitespace-nowrap py-3 text-right tabular-nums">
                   {k.keterangan !== 'Penjualan' ? (

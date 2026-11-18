@@ -5,21 +5,22 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
-import { Pill, ShoppingCart, ArrowLeftRight, CalendarX, PackagePlus, PackageMinus, Plus } from 'lucide-react'
+import { Banknote, CalendarX, Hourglass, PackagePlus, PackageMinus, Plus } from 'lucide-react'
 import { StatTile, ReorderTile } from '@/components/dashboard/StatTile'
 import Panel from '@/components/dashboard/Panel'
 import { Button } from '@/components/ui/button'
 import { useNow } from '@/hooks/useNow'
 import { formatRupiah } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth.store'
-import TrenPermintaanChart from '@/components/dashboard/TrenPermintaanChart'
+import PembelianPenjualanChart from '@/components/dashboard/PembelianPenjualanChart'
 import DaftarExpiredCard from '@/components/dashboard/DaftarExpiredCard'
-import StokMenipisCard from '@/components/dashboard/StokMenipisCard'
+import TerlarisCard from '@/components/dashboard/TerlarisCard'
+import PerluDilengkapiCard from '@/components/dashboard/PerluDilengkapiCard'
 import BarangMasukTambahDialog from '@/components/transaksi/BarangMasukTambahDialog'
 import BarangKeluarTambahDialog from '@/components/transaksi/BarangKeluarTambahDialog'
 import ObatForm from '@/components/obat/ObatForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useDashboardSummary, useTrenPermintaan } from '@/hooks/useDashboard'
+import { useDashboardSummary, usePembelianPenjualan } from '@/hooks/useDashboard'
 import AktivitasHariIni from '@/components/dashboard/AktivitasHariIni'
 import { useCreateObat } from '@/hooks/useObat'
 import type { ObatFormData } from '@/types/obat'
@@ -37,13 +38,18 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
 
   const { data: summary, isLoading: loadingSummary, isError: gagalSummary } = useDashboardSummary()
-  const { data: tren, isLoading: loadingTren, isError: gagalTren } = useTrenPermintaan()
+  // Halaman Reorder dan semua angka uang (pendapatan, harga beli, terlaris) khusus admin; staf melihat angka stok saja.
+  // Backend juga tidak mengirim angka uang ke staf, jadi ini bukan sekadar menyembunyikan tampilan.
+  const isAdmin = useAuthStore((s) => s.isAdmin())
+  const { data: grafik, isLoading: loadingGrafik, isError: gagalGrafik } = usePembelianPenjualan(isAdmin)
   const createObatMutation = useCreateObat()
 
   const cards = summary?.cards
   const daftarExpired = summary?.daftar_expired ?? []
+  const daftarLewat = summary?.daftar_lewat ?? []
+  const terlaris = summary?.terlaris_30_hari ?? []
+  const perlu = summary?.perlu_dilengkapi
   const totalUrgent = summary?.total_urgent ?? 0
-  const stokMenipis = summary?.stok_menipis ?? []
 
   const [openMasuk, setOpenMasuk]           = useState(false)
   const [openKeluar, setOpenKeluar]         = useState(false)
@@ -67,23 +73,10 @@ export default function DashboardPage() {
   const dataGagal = gagalSummary || (!loadingSummary && !cards)
   const reorder = cards?.obat_reorder ?? 0
   const expiring = cards?.obat_expiring ?? 0
-  // Dua baris catatan: aktivitas hari ini, lalu hal yang butuh perhatian. Hanya angka yang ada di data.
-  const masuk = cards?.masuk_hari_ini
-  const keluar = cards?.keluar_hari_ini
-  const pendapatan = cards?.pendapatan_hari_ini
-  const sebagianTanpaHarga = (cards?.penjualan_tanpa_harga ?? 0) > 0
-  const catatanHariIni = [
-    masuk !== undefined ? `${masuk} transaksi masuk` : null,
-    keluar !== undefined ? `${keluar} transaksi keluar` : null,
-    pendapatan !== undefined ? `pendapatan ${formatRupiah(pendapatan)}${sebagianTanpaHarga ? ' (sebagian penjualan belum ber-harga)' : ''}` : null,
-  ].filter(Boolean)
-  const catatanPerhatian =
-    reorder === 0 && expiring === 0
-      ? 'semua stok aman dan tidak ada obat yang akan expired dalam 90 hari'
-      : [
-          reorder > 0 ? `${reorder} obat perlu dipesan ulang` : 'tidak ada obat yang perlu dipesan ulang',
-          expiring > 0 ? `${expiring} obat akan expired dalam 90 hari` : 'tidak ada yang akan expired dalam 90 hari',
-        ].join(', ')
+  // Admin: tiga ubin (4 kolom tiap ubin). Staf: dua ubin (6 kolom tiap ubin).
+  const kolomUbin = isAdmin ? 'col-span-12 sm:col-span-6 lg:col-span-4' : 'col-span-12 sm:col-span-6'
+  const lewat = cards?.kedaluwarsa_lewat ?? 0
+  const tanpaHarga = cards?.penjualan_tanpa_harga ?? 0
 
   return (
     <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4">
@@ -97,19 +90,10 @@ export default function DashboardPage() {
           <h1 className="mt-1.5 text-3xl font-semibold tracking-tight text-foreground">
             {sapaan(sekarang.getHours())}{user?.nama ? `, ${user.nama.split(' ')[0]}` : ''}
           </h1>
-          {loadingSummary ? (
-            <p className="mt-2 text-[15px] text-muted-foreground">Memuat ringkasan stok</p>
-          ) : dataGagal ? (
+          {dataGagal && !loadingSummary && (
             <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-              Data stok belum bisa dimuat, jadi ringkasannya belum bisa dipercaya. Coba lagi lewat tombol di atas.
+              Data stok belum bisa dimuat, jadi ringkasannya belum bisa dipercaya. Muat ulang halaman untuk mencoba lagi.
             </p>
-          ) : (
-            <div className="mt-2 space-y-1 text-[15px] leading-relaxed text-muted-foreground">
-              {catatanHariIni.length > 0 && (
-                <p><span className="font-medium text-foreground">Hari ini:</span> {catatanHariIni.join(', ')}.</p>
-              )}
-              <p><span className="font-medium text-foreground">Perlu perhatian:</span> {catatanPerhatian}.</p>
-            </div>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -134,36 +118,98 @@ export default function DashboardPage() {
         total={dataGagal ? null : (cards?.total_obat ?? 0)}
         isLoading={loadingSummary}
         action={
+          isAdmin && (
           <Link
             href="/reorder"
             className="inline-flex h-10 items-center justify-center rounded-xl bg-primary-foreground px-4 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-foreground/90 focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
           >
             Lihat daftar reorder
           </Link>
+          )
         }
       />
 
-      {/* ── Empat angka ──────────────────────────────────────────────── */}
-      <StatTile className="col-span-6 lg:col-span-3" label="Total obat" value={dataGagal ? null : (cards?.total_obat ?? 0)} sublabel="jenis terdaftar" icon={Pill} isLoading={loadingSummary} />
-      <StatTile className="col-span-6 lg:col-span-3" label="Penjualan hari ini" value={dataGagal ? null : (cards?.penjualan_hari_ini ?? 0)} sublabel="unit terjual" icon={ShoppingCart} isLoading={loadingSummary} />
-      <StatTile className="col-span-6 lg:col-span-3" label="Transaksi hari ini" value={dataGagal ? null : (cards?.transaksi_hari_ini ?? 0)} sublabel="masuk dan keluar" icon={ArrowLeftRight} isLoading={loadingSummary} />
-      <StatTile className="col-span-6 lg:col-span-3" label="Akan expired" value={dataGagal ? null : expiring} sublabel="dalam 90 hari" icon={CalendarX} isLoading={loadingSummary} />
+      {/* ── Angka berbeda; tiap ubin menuju halaman asalnya. Staf tanpa ubin uang, jadi tiga ubin selebar sepertiga. ── */}
+      {isAdmin && (
+        <StatTile
+          className={kolomUbin}
+          href="/barang-keluar"
+          label="Pendapatan hari ini"
+          value={dataGagal ? null : (cards?.pendapatan_hari_ini ?? null)}
+          teks={cards?.pendapatan_hari_ini !== undefined && !dataGagal ? formatRupiah(cards.pendapatan_hari_ini) : undefined}
+          sublabel={
+            <>
+              {cards?.penjualan_transaksi ?? 0} penjualan
+              {tanpaHarga > 0 && <span className="block">{tanpaHarga} belum ber-harga</span>}
+            </>
+          }
+          icon={Banknote}
+          isLoading={loadingSummary}
+        />
+      )}
+      <StatTile
+        className={kolomUbin}
+        href="/laporan?tab=kedaluarsa"
+        label="Akan kedaluwarsa"
+        value={dataGagal ? null : expiring}
+        sublabel={
+          <>
+            dalam 90 hari
+            {lewat > 0 && <span className="block font-medium text-danger-700">{lewat} batch sudah lewat</span>}
+          </>
+        }
+        icon={CalendarX}
+        isLoading={loadingSummary}
+      />
+      <StatTile
+        className={kolomUbin}
+        href={isAdmin ? '/reorder?kondisi=segera' : undefined}
+        label="Habis dalam 7 hari"
+        value={dataGagal ? null : (cards?.obat_segera_habis ?? null)}
+        sublabel="belum habis, stok tinggal sedikit"
+        icon={Hourglass}
+        isLoading={loadingSummary}
+      />
 
-      {/* ── Stok menipis + akan expired ──────────────────────────────── */}
-      <StokMenipisCard className="col-span-12 lg:col-span-7" data={stokMenipis} isLoading={loadingSummary} isError={dataGagal} totalReorder={cards?.obat_reorder} />
-      <DaftarExpiredCard className="col-span-12 lg:col-span-5" data={daftarExpired} isLoading={loadingSummary} isError={dataGagal} totalUrgent={totalUrgent} />
+      {/* ── Kedaluwarsa + yang baru terjadi hari ini ─────────────────── */}
+      {/* Kartu bertinggi tetap; isinya yang bisa digulir. */}
+      <DaftarExpiredCard
+        className="col-span-12 h-[27rem] lg:col-span-7"
+        lewat={daftarLewat}
+        totalLewat={lewat}
+        akan={daftarExpired}
+        totalAkan={totalUrgent}
+        isLoading={loadingSummary}
+        isError={dataGagal}
+      />
+      <AktivitasHariIni className="col-span-12 h-[27rem] lg:col-span-5" />
 
-      {/* ── Tren permintaan + keluar hari ini ────────────────────────── */}
-      <Panel title="Tren permintaan, 6 bulan terakhir" className="col-span-12 lg:col-span-8">
-        {loadingTren ? (
-          <div className="h-60 rounded-xl bg-muted motion-safe:animate-pulse" aria-hidden="true" />
-        ) : gagalTren ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">Grafik belum bisa dimuat. Coba lagi lewat tombol di atas.</p>
-        ) : (
-          <TrenPermintaanChart data={tren ?? []} />
-        )}
-      </Panel>
-      <AktivitasHariIni className="col-span-12 lg:col-span-4" />
+      {/* ── Uang: hanya admin ────────────────────────────────────────── */}
+      {isAdmin && (
+        <>
+          <Panel title="Pembelian dan penjualan, 6 bulan terakhir" className="col-span-12 lg:col-span-8">
+            {loadingGrafik ? (
+              <div className="h-60 rounded-xl bg-muted motion-safe:animate-pulse" aria-hidden="true" />
+            ) : gagalGrafik ? (
+              <p className="py-16 text-center text-sm text-muted-foreground">Grafik belum bisa dimuat. Muat ulang halaman untuk mencoba lagi.</p>
+            ) : (
+              <PembelianPenjualanChart data={grafik ?? []} />
+            )}
+          </Panel>
+          {/* Di layar lebar tinggi kartu mengikuti grafik di sebelahnya (absolute), bukan isinya; di bawah lg tingginya tetap. */}
+          <div className="relative col-span-12 h-[27rem] lg:col-span-4 lg:h-auto">
+            <TerlarisCard className="h-full lg:absolute lg:inset-0" data={terlaris} isLoading={loadingSummary} isError={dataGagal} />
+          </div>
+          {perlu && (
+            <PerluDilengkapiCard
+              className="col-span-12"
+              penjualanTanpaHarga={perlu.penjualan_tanpa_harga}
+              obatTanpaSupplier={perlu.obat_tanpa_supplier}
+              batchTanpaNomor={perlu.batch_tanpa_nomor}
+            />
+          )}
+        </>
+      )}
 
       {/* ── Dialogs ─────────────────────────────────────────────────── */}
 

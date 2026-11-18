@@ -1,18 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Pencil, Trash2, Plus, Eye, CalendarX, SearchX, PackageOpen, TriangleAlert, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
+import Istilah from '@/components/shared/Istilah'
+import TabelSkeleton, { type KolomSkeleton } from '@/components/shared/TabelSkeleton'
+import { useCariTertunda, useFilterUrl } from '@/components/shared/useFilterUrl'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { StatTile, ReorderTile } from '@/components/dashboard/StatTile'
 import Panel from '@/components/dashboard/Panel'
 import PageHeader from '@/components/shared/PageHeader'
-import { FilterBar, SearchField, FILTER_SELECT } from '@/components/shared/FilterBar'
+import { FilterBar, SearchField } from '@/components/shared/FilterBar'
 import Pagination from '@/components/shared/Pagination'
 import StateMessage from '@/components/shared/StateMessage'
 import { denganAsal } from '@/components/shared/useAsalHalaman'
@@ -53,26 +52,6 @@ function EstimasiHabis({ hari }: { hari: number | null }) {
       </span>
     )
   return <span className="text-muted-foreground">{hari} hari</span>
-}
-
-// Istilah teknis di kepala kolom: dapat difokus dengan keyboard dan punya penjelasan singkat.
-function IstilahKepala({ istilah, arti }: { istilah: string; arti: string }) {
-  return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            className="cursor-help rounded-sm underline decoration-dotted underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {istilah}
-            <span className="sr-only">: {arti}</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent sideOffset={6}>{arti}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
 }
 
 // ─── Sel: nilai kalkulasi (ROP, EOQ) ─────────────────────────────────────────
@@ -130,38 +109,24 @@ function KepalaUrut({
   )
 }
 
-// Kerangka pemuatan: jumlah kolom dan jumlah baris sama dengan isi yang akan datang.
-function SkeletonRows() {
-  return (
-    <>
-      {Array.from({ length: BATAS_HALAMAN }).map((_, i) => (
-        <TableRow key={i} className="hover:bg-transparent">
-          <TableCell className="py-3 pl-5">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="mt-1.5 h-3 w-20" />
-          </TableCell>
-          <TableCell className={`py-3 ${KOLOM.kategori}`}><Skeleton className="h-4 w-20" /></TableCell>
-          <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-16" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.rop}`}><Skeleton className="ml-auto h-4 w-14" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.eoq}`}><Skeleton className="ml-auto h-4 w-14" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.estHabis}`}><Skeleton className="ml-auto h-4 w-14" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.expired}`}><Skeleton className="h-4 w-16" /></TableCell>
-          <TableCell className={`py-3 ${KOLOM.status}`}><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
-          <TableCell className="py-3 pr-4"><Skeleton className="ml-auto h-8 w-20" /></TableCell>
-        </TableRow>
-      ))}
-    </>
-  )
-}
+const KOLOM_SKELETON: KolomSkeleton[] = [
+  { garis: ['w-40', 'w-20'] },
+  { garis: ['w-20'], kelas: KOLOM.kategori },
+  { garis: ['w-16'], kanan: true },
+  { garis: ['w-14'], kanan: true, kelas: KOLOM.rop },
+  { garis: ['w-14'], kanan: true, kelas: KOLOM.eoq },
+  { garis: ['w-14'], kanan: true, kelas: KOLOM.estHabis },
+  { garis: ['w-16'], kelas: KOLOM.expired },
+  { garis: ['w-24'], bentuk: 'badge', kelas: KOLOM.status },
+  { garis: ['w-20'], bentuk: 'tombol' },
+]
 
 export default function ObatTable() {
   const sekarang = useNow().getTime()
   const isAdmin = useAuthStore((s) => s.user?.role === 'admin')
   // Filter, urutan, dan halaman disimpan di URL (?q=&kategori=&status=&expired=&urut=&arah=&hal=)
   // supaya tidak hilang saat kembali dari halaman detail dan bisa dibagikan sebagai tautan.
-  const router = useRouter()
-  const pathname = usePathname()
-  const sp = useSearchParams()
+  const { sp, pathname, ubahParam } = useFilterUrl()
   const search = sp.get('q') ?? ''
   const kategori = sp.get('kategori') ?? ''
   const statusUrl = sp.get('status') ?? ''
@@ -173,28 +138,8 @@ export default function ObatTable() {
   const arah: 'asc' | 'desc' = sp.get('arah') === 'desc' ? 'desc' : 'asc'
   const page = Math.max(1, parseInt(sp.get('hal') ?? '1', 10) || 1)
 
-  const ubahParam = useCallback(
-    (patch: Record<string, string | null>, opsi: { resetHalaman?: boolean } = {}) => {
-      const next = new URLSearchParams(sp.toString())
-      for (const [k, v] of Object.entries(patch)) {
-        if (v) next.set(k, v)
-        else next.delete(k)
-      }
-      if (opsi.resetHalaman !== false) next.delete('hal')
-      const qs = next.toString()
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-    },
-    [sp, router, pathname]
-  )
-
   // Kolom cari memakai state lokal supaya ketikan tidak tertinggal; ke URL (dan ke API) setelah jeda 300 ms.
-  const [cari, setCari] = useState(search)
-  useEffect(() => {
-    // Bandingkan setelah dirapikan: spasi saja dianggap kosong, supaya tidak mengulang pembaruan URL.
-    if ((cari.trim() ? cari : '') === search) return
-    const t = setTimeout(() => ubahParam({ q: cari.trim() ? cari : null }), 300)
-    return () => clearTimeout(t)
-  }, [cari, search, ubahParam])
+  const [cari, setCari] = useCariTertunda(search, ubahParam)
 
   function urutPer(kunci: Urutan) {
     if (urutan !== kunci) ubahParam({ urut: kunci, arah: 'asc' })
@@ -334,38 +279,42 @@ export default function ObatTable() {
             value={cari}
             onChange={setCari}
           />
-          <Select value={kategori || 'semua'} onValueChange={(v) => ubahParam({ kategori: v === 'semua' ? null : v })}>
-            <SelectTrigger className={`${FILTER_SELECT} col-span-2 sm:col-span-1 sm:w-48`} aria-label="Filter kategori">
-              <SelectValue placeholder="Semua kategori" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua kategori{kategoriOpsi.length > 0 ? ` (${allObat.length})` : ''}</SelectItem>
-              {kategoriOpsi.map((k) => (
-                <SelectItem key={k.nama} value={k.nama}>{k.nama}{k.jumlah !== null ? ` (${k.jumlah})` : ''}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={status || 'semua'} onValueChange={(v) => ubahParam({ status: v === 'semua' ? null : v })}>
-            <SelectTrigger className={`${FILTER_SELECT} sm:w-40`} aria-label="Filter status stok">
-              <SelectValue placeholder="Semua status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua status</SelectItem>
-              <SelectItem value="AMAN">Aman</SelectItem>
-              <SelectItem value="MENDEKATI_ROP">Mendekati ROP</SelectItem>
-              <SelectItem value="HARUS_REORDER">Harus reorder</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={expired || 'semua'} onValueChange={(v) => ubahParam({ expired: v === 'semua' ? null : v })}>
-            <SelectTrigger className={`${FILTER_SELECT} sm:w-44`} aria-label="Filter expired">
-              <SelectValue placeholder="Semua expired" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua expired</SelectItem>
-              <SelectItem value="akan">Akan expired (90 hari)</SelectItem>
-              <SelectItem value="lewat">Sudah expired</SelectItem>
-            </SelectContent>
-          </Select>
+          <PilihanCombobox
+            aria-label="Filter kategori"
+            className="col-span-2 sm:col-span-1 sm:w-48"
+            options={[
+              { value: '', label: `Semua kategori${kategoriOpsi.length > 0 ? ` (${allObat.length})` : ''}` },
+              ...kategoriOpsi.map((k) => ({ value: k.nama, label: `${k.nama}${k.jumlah !== null ? ` (${k.jumlah})` : ''}` })),
+            ]}
+            value={kategori}
+            onChange={(v) => ubahParam({ kategori: v || null })}
+            noun="kategori"
+          />
+          <PilihanCombobox
+            aria-label="Filter status stok"
+            className="sm:w-40"
+            options={[
+              { value: '', label: 'Semua status' },
+              { value: 'AMAN', label: 'Aman' },
+              { value: 'MENDEKATI_ROP', label: 'Mendekati ROP' },
+              { value: 'HARUS_REORDER', label: 'Harus reorder' },
+            ]}
+            value={status}
+            onChange={(v) => ubahParam({ status: v || null })}
+            noun="status"
+          />
+          <PilihanCombobox
+            aria-label="Filter expired"
+            className="sm:w-44"
+            options={[
+              { value: '', label: 'Semua expired' },
+              { value: 'akan', label: 'Akan expired (90 hari)' },
+              { value: 'lewat', label: 'Sudah expired' },
+            ]}
+            value={expired}
+            onChange={(v) => ubahParam({ expired: v || null })}
+            noun="expired"
+          />
           {adaFilter && (
             <Button type="button" variant="ghost" className="col-span-2 h-10 rounded-xl px-3 text-primary sm:col-span-1" onClick={aturUlangFilter}>
               Atur ulang
@@ -389,10 +338,10 @@ export default function ObatTable() {
                 <TableHead className={`${KEPALA} ${KOLOM.kategori}`}>Kategori</TableHead>
                 <KepalaUrut label="Stok" kunci="stok" urutan={urutan} arah={arah} onUrut={urutPer} className="text-right" />
                 <TableHead className={`${KEPALA} text-right ${KOLOM.rop}`}>
-                  <IstilahKepala istilah="ROP" arti="Titik pesan ulang. Pesan obat bila stok sama dengan atau di bawah angka ini." />
+                  <Istilah istilah="ROP" arti="Titik pesan ulang. Pesan obat bila stok sama dengan atau di bawah angka ini." />
                 </TableHead>
                 <TableHead className={`${KEPALA} text-right ${KOLOM.eoq}`}>
-                  <IstilahKepala istilah="EOQ" arti="Jumlah pesanan yang disarankan, agar biaya pesan dan simpan paling hemat." />
+                  <Istilah istilah="EOQ" arti="Jumlah pesanan yang disarankan, agar biaya pesan dan simpan paling hemat." />
                 </TableHead>
                 <KepalaUrut label="Est. habis" kunci="estimasi" urutan={urutan} arah={arah} onUrut={urutPer} className={`text-right ${KOLOM.estHabis}`} />
                 <KepalaUrut label="Expired" kunci="expired" urutan={urutan} arah={arah} onUrut={urutPer} className={KOLOM.expired} />
@@ -402,7 +351,7 @@ export default function ObatTable() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <SkeletonRows />
+                <TabelSkeleton kolom={KOLOM_SKELETON} baris={BATAS_HALAMAN} />
               ) : isError ? null : (
                 obatList.map((obat) => (
                   <TableRow key={obat.id}>

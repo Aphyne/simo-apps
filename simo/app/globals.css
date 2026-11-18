@@ -96,7 +96,7 @@
 }
 
 /* Token semantik SIMO (T-D2): alias ke skala warna bawaan Tailwind, nilai identik.
-   Belum dipakai komponen; migrasi kelas dilakukan di Tahap B. Lihat docs/spec/design-system.md bagian 3. */
+   Belum dipakai komponen; migrasi kelas dilakukan di Tahap B. Lihat docs/DESIGN.md (bagian 1). */
 @theme inline {
   /* Brand (alias blue) */
   --color-brand-50: var(--color-blue-50);

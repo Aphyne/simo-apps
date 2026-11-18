@@ -1,26 +1,14 @@
-'use client'
-
-import { useUserList } from '@/hooks/useUsers'
-import UserStatCards from '@/components/users/UserStatCards'
+import { Suspense } from 'react'
 import UserTable from '@/components/users/UserTable'
 import AdminOnly from '@/components/layout/AdminOnly'
 
-function IsiUsers() {
-  const { data, isLoading } = useUserList()
-  const users = data ?? []
-
-  return (
-    <div className="space-y-6">
-      <UserStatCards users={users} />
-      <UserTable users={users} isLoading={isLoading} />
-    </div>
-  )
-}
-
+// UserTable membaca filter dari URL (useSearchParams), jadi harus dibungkus Suspense agar build produksi tidak gagal.
 export default function UsersPage() {
   return (
     <AdminOnly>
-      <IsiUsers />
+      <Suspense fallback={<div className="mx-auto max-w-7xl py-16 text-center text-sm text-muted-foreground" role="status">Memuat user</div>}>
+        <UserTable />
+      </Suspense>
     </AdminOnly>
   )
 }

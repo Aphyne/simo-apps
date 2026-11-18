@@ -8,8 +8,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 // dengan filternya; tombol "Ubah data" di detail membawa alamat detail). Lebih andal daripada riwayat
 // peramban: tetap benar bila halaman dibuka di tab baru atau dari situs lain.
 //
-// Hanya alamat di dalam /obat yang diterima. Nilai lain (alamat luar, "//", skema) diabaikan dan jatuh ke `cadangan`.
-const ALAMAT_ASAL_AMAN = /^\/obat(\/[A-Za-z0-9_-]+)*(\?[^#\s]*)?$/
+// Hanya alamat di dalam /obat dan /supplier yang diterima. Nilai lain (alamat luar, "//", skema) diabaikan dan jatuh ke `cadangan`.
+const ALAMAT_ASAL_AMAN = /^\/(obat|supplier)(\/[A-Za-z0-9_-]+)*(\?[^#\s]*)?$/
 
 export function bacaAsal(dari: string | null): string | null {
   if (!dari) return null

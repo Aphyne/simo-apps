@@ -83,8 +83,8 @@ export default function BarangMasukPerFaktur({ kelompok, isLoading, isError, onR
                 <TableCell className="py-3 font-mono text-xs text-muted-foreground">{k.noFaktur ?? 'Tanpa no. faktur'}</TableCell>
                 <TableCell className="hidden py-3 tabular-nums md:table-cell"><JatuhTempoCell tanggal={k.jatuhTempo} /></TableCell>
                 <TableCell className="whitespace-nowrap py-3 text-right tabular-nums">
-                  <span className="font-semibold text-foreground">{k.rows.length}</span>
-                  <span className="ml-1 text-xs text-muted-foreground">obat</span>
+                  <span className="font-semibold text-foreground">{k.rows.length}</span>{' '}
+                  <span className="text-xs text-muted-foreground">obat</span>
                 </TableCell>
                 <TableCell className="hidden whitespace-nowrap py-3 text-right tabular-nums xl:table-cell">
                   {k.tanpaHarga === k.rows.length ? <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span> : formatRupiah(k.totalSebelumPPN)}

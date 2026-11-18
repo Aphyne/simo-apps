@@ -1,9 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, X, Eye, Download, MessageCircle, AlertCircle, Trash2 } from 'lucide-react'
+import { ShoppingCart, X, Eye, Download, MessageCircle, TriangleAlert, Trash2, Info } from 'lucide-react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import Panel from '@/components/dashboard/Panel'
+import IconAction from '@/components/shared/IconAction'
+import StateMessage from '@/components/shared/StateMessage'
 import type { ReorderAlertItem } from '@/hooks/useObat'
 import {
   buatPesanPengantar,
@@ -13,6 +29,7 @@ import {
   type IdentitasApotek,
 } from '@/lib/reorder'
 import { buatPdfSuratPesanan } from '@/lib/reorderPdf'
+import { muatLogoApotek } from '@/lib/logoApotek'
 
 export interface ItemKeranjang {
   item: ReorderAlertItem
@@ -37,27 +54,32 @@ interface Props {
 
 // Input jumlah yang boleh dikosongkan sementara saat mengetik (hapus lalu ketik angka baru).
 // Nilai ke keranjang hanya diperbarui kalau isinya bilangan bulat >= 1; saat selesai (blur)
-// isian yang kosong/tidak valid dikembalikan ke jumlah terakhir yang sah.
+// isian yang kosong/tidak valid dikembalikan ke jumlah terakhir yang sah. Selama isian tidak sah, alasannya ditulis.
 function InputJumlah({ label, jumlah, onUbah }: { label: string; jumlah: number; onUbah: (n: number) => void }) {
   const [teks, setTeks] = useState<string | null>(null) // null = tidak sedang mengedit
+  const tidakSah = teks !== null && !(teks !== '' && Number.isInteger(Number(teks)) && Number(teks) >= 1)
 
   return (
-    <input
-      type="number"
-      inputMode="numeric"
-      min={1}
-      aria-label={label}
-      value={teks ?? String(jumlah)}
-      onFocus={(e) => e.target.select()}
-      onChange={(e) => {
-        const v = e.target.value
-        setTeks(v)
-        const n = Math.floor(Number(v))
-        if (v !== '' && Number.isFinite(n) && n >= 1) onUbah(n)
-      }}
-      onBlur={() => setTeks(null)}
-      className="w-16 border border-line-strong rounded-lg px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-    />
+    <span className="flex flex-col items-end gap-1">
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={1}
+        aria-label={label}
+        aria-invalid={tidakSah || undefined}
+        value={teks ?? String(jumlah)}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => {
+          const v = e.target.value
+          setTeks(v)
+          const n = Number(v)
+          if (v !== '' && Number.isInteger(n) && n >= 1) onUbah(n)
+        }}
+        onBlur={() => setTeks(null)}
+        className="h-10 w-20 rounded-xl text-right text-sm tabular-nums"
+      />
+      {tidakSah && <span role="alert" className="text-xs text-destructive">Isi bilangan bulat, minimal 1</span>}
+    </span>
   )
 }
 
@@ -84,6 +106,12 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
   const [sibuk, setSibuk] = useState<number | null>(null)
   const grup = kelompokkan(isi)
 
+  // Logo apotek dimuat sekali di awal supaya pembuatan PDF tetap sinkron (tanpa menunda Lihat/PDF/Kirim).
+  const logoRef = useRef<string | null>(null)
+  useEffect(() => {
+    muatLogoApotek().then((l) => { logoRef.current = l })
+  }, [])
+
   function bikinPdf(g: GrupKeranjang) {
     if (!apotek) {
       toast.error('Identitas apotek belum termuat, coba lagi sebentar')
@@ -93,6 +121,7 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
       apotek,
       supplier: { id: g.supplierId, nama: g.nama, alamat: g.alamat },
       items: g.isi.map((k) => ({ nama: k.item.nama, jumlah: k.jumlah, satuan: k.item.satuan_pesan })),
+      logo: logoRef.current,
     })
     return { pdf, apotek }
   }
@@ -134,107 +163,108 @@ export default function ReorderKeranjang({ isi, apotek, onUbahJumlah, onHapus, o
     }
   }
 
+  // Mengosongkan dua obat atau lebih meminta konfirmasi (jumlah per obat sudah diatur satu per satu); satu obat langsung.
+  const tombolKosongkan = isi.length > 0 && (() => {
+    const tombol = (
+      <Button variant="ghost" size="lg" className="h-10 rounded-xl px-3 text-muted-foreground" onClick={isi.length >= 2 ? undefined : onKosongkan}>
+        <Trash2 data-icon="inline-start" />
+        Kosongkan
+      </Button>
+    )
+    if (isi.length < 2) return tombol
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>{tombol}</AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kosongkan keranjang?</AlertDialogTitle>
+            <AlertDialogDescription>{isi.length} obat beserta jumlah yang sudah Anda atur akan dikeluarkan dari keranjang.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={onKosongkan} className="bg-destructive text-white hover:bg-destructive/90">Kosongkan</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )
+  })()
+
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden lg:sticky lg:top-6">
-      <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line-subtle">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-success-100 flex items-center justify-center flex-shrink-0">
-            <ShoppingCart className="w-5 h-5 text-success-600" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-fg-secondary">Keranjang Reorder</h2>
-            <p className="text-xs text-fg-muted mt-0.5">{isi.length} obat · {grup.length} supplier</p>
-          </div>
-        </div>
-        {isi.length > 0 && (
-          <button onClick={onKosongkan} className="flex items-center gap-1 text-xs text-fg-muted hover:text-danger-600 transition-colors">
-            <Trash2 className="w-3.5 h-3.5" /> Kosongkan
-          </button>
-        )}
-      </div>
+    <div id="keranjang" className="scroll-mt-4 xl:sticky xl:top-4">
+      <Panel title="Keranjang reorder" count={isi.length} action={tombolKosongkan || undefined} bodyClassName="px-0 pb-0">
+        <div className="xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto">
+          {isi.length === 0 && (
+            <StateMessage
+              icon={ShoppingCart}
+              title="Keranjang masih kosong"
+              description="Tambahkan obat dari daftar, atau pakai Tambah semua."
+              className="border-t border-border"
+            />
+          )}
 
-      <div className="max-h-[calc(100vh-11rem)] overflow-y-auto">
-        {isi.length === 0 && (
-          <div className="text-center py-10 px-5 text-fg-muted text-sm">
-            Keranjang masih kosong.
-            <span className="block text-xs mt-1">Tambahkan obat dari daftar di sebelah kiri.</span>
-          </div>
-        )}
+          {grup.map((g) => {
+            const adaWa = !!normalisasiWa(g.whatsapp)
+            const lagiKirim = sibuk === g.supplierId
+            return (
+              <section key={g.supplierId} className="border-t border-border px-5 py-4" aria-label={`Pesanan untuk ${g.nama}`}>
+                <h3 className="text-sm font-semibold text-foreground">{g.nama}</h3>
+                {adaWa ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">WhatsApp {g.whatsapp}</p>
+                ) : (
+                  <p className="mt-2 flex items-start gap-2 rounded-xl bg-warning-50 px-3 py-2 text-xs font-medium text-warning-700">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <span>
+                      Nomor WhatsApp belum diisi, jadi WhatsApp terbuka tanpa tujuan dan Anda memilih kontaknya sendiri.{' '}
+                      <Link href="/supplier" target="_blank" rel="noopener" className="underline underline-offset-2">
+                        Isi nomor supplier<span className="sr-only"> (buka di tab baru, keranjang tetap tersimpan di tab ini)</span>
+                      </Link>
+                    </span>
+                  </p>
+                )}
 
-        {grup.map((g) => {
-          const adaWa = !!normalisasiWa(g.whatsapp)
-          const lagiKirim = sibuk === g.supplierId
-          return (
-            <section key={g.supplierId} className="px-5 py-4 border-b border-line-subtle last:border-b-0">
-              <div className="mb-3">
-                <h3 className="text-sm font-semibold text-fg">{g.nama}</h3>
-                <p className="text-xs mt-0.5">
-                  {adaWa ? (
-                    <span className="text-success-700 font-medium">WhatsApp {g.whatsapp}</span>
-                  ) : (
-                    <span className="text-warning-700 font-medium">Nomor WhatsApp belum diisi</span>
-                  )}
-                </p>
-              </div>
+                <ul className="mt-3 space-y-1">
+                  {g.isi.map(({ item, jumlah }) => (
+                    <li key={item.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1">
+                      <span className="min-w-0 flex-1 basis-40">
+                        <span className="block text-sm font-medium leading-snug text-foreground">{item.nama}</span>
+                        <span className="block text-xs text-muted-foreground">Saran sistem: {item.saran_jumlah} {item.satuan_pesan} (dari {item.basis_saran})</span>
+                      </span>
+                      <span className="ml-auto flex items-center gap-2">
+                        <InputJumlah label={`Jumlah pesan ${item.nama}`} jumlah={jumlah} onUbah={(n) => onUbahJumlah(item.id, n)} />
+                        <span className="w-10 truncate text-xs text-muted-foreground">{item.satuan_pesan}</span>
+                        <IconAction label={`Keluarkan ${item.nama} dari keranjang`} onClick={() => onHapus(item.id)}>
+                          <X />
+                        </IconAction>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
 
-              {!adaWa && (
-                <div className="flex items-start gap-2 mb-3 rounded-lg bg-warning-50 border border-warning-100 px-3 py-2 text-xs text-warning-700">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>
-                    WhatsApp akan terbuka tanpa tujuan, pilih kontaknya sendiri.{' '}
-                    <Link href="/supplier" className="underline font-medium">Isi nomor supplier</Link>
-                  </span>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button variant="outline" size="lg" className="h-10 rounded-xl px-3" onClick={() => pratinjau(g)}>
+                    <Eye data-icon="inline-start" />
+                    Lihat
+                  </Button>
+                  <Button variant="outline" size="lg" className="h-10 rounded-xl px-3" onClick={() => unduh(g)}>
+                    <Download data-icon="inline-start" />
+                    PDF
+                  </Button>
+                  <Button size="lg" className="h-10 flex-1 rounded-xl px-4" onClick={() => kirim(g)} disabled={lagiKirim}>
+                    <MessageCircle data-icon="inline-start" />
+                    {lagiKirim ? 'Menyiapkan...' : 'Kirim via WhatsApp'}
+                  </Button>
                 </div>
-              )}
+              </section>
+            )
+          })}
 
-              <ul className="space-y-2 mb-3">
-                {g.isi.map(({ item, jumlah }) => (
-                  <li key={item.id} className="flex items-center gap-2">
-                    <span className="flex-1 min-w-0 text-sm text-fg leading-snug">{item.nama}</span>
-                    <InputJumlah
-                      label={`Jumlah pesan ${item.nama}`}
-                      jumlah={jumlah}
-                      onUbah={(n) => onUbahJumlah(item.id, n)}
-                    />
-                    <span className="text-xs text-fg-muted w-10 truncate">{item.satuan_pesan}</span>
-                    <button
-                      onClick={() => onHapus(item.id)}
-                      aria-label={`Hapus ${item.nama} dari keranjang`}
-                      className="text-fg-muted hover:text-danger-600 hover:bg-surface-muted rounded-lg p-1.5"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => pratinjau(g)}
-                  className="flex items-center gap-1.5 border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-3 py-2 text-xs font-medium"
-                  title="Lihat PDF di tab baru"
-                >
-                  <Eye className="w-3.5 h-3.5" /> Lihat
-                </button>
-                <button
-                  onClick={() => unduh(g)}
-                  className="flex items-center gap-1.5 border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-3 py-2 text-xs font-medium"
-                >
-                  <Download className="w-3.5 h-3.5" /> PDF
-                </button>
-                <button
-                  onClick={() => kirim(g)}
-                  disabled={lagiKirim}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-success-600 hover:bg-success-700 disabled:opacity-60 text-fg-inverse font-medium rounded-lg px-3 py-2 text-xs"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  {lagiKirim ? 'Menyiapkan...' : 'Kirim via WhatsApp'}
-                </button>
-              </div>
-            </section>
-          )
-        })}
-      </div>
+          {/* Aturan kepatuhan, tepat di tempat surat disiapkan. Selalu tampil, juga saat keranjang kosong. */}
+          <p className="flex items-start gap-2 border-t border-border px-5 py-4 text-sm text-muted-foreground">
+            <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            Obat prekursor/OOT memakai Surat Pesanan khusus. Jangan dipesan dari sini.
+          </p>
+        </div>
+      </Panel>
     </div>
   )
 }

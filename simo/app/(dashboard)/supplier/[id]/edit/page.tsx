@@ -1,74 +1,107 @@
 'use client'
 
-import { use, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, use, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { SearchX, TriangleAlert } from 'lucide-react'
 import SupplierForm from '@/components/supplier/SupplierForm'
+import PageHeader from '@/components/shared/PageHeader'
+import StateMessage from '@/components/shared/StateMessage'
+import KonfirmasiBuang from '@/components/shared/KonfirmasiBuang'
+import { useAsalHalaman } from '@/components/shared/useAsalHalaman'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSupplierById, useUpdateSupplier } from '@/hooks/useSupplier'
-import { useAuthStore } from '@/store/auth.store'
+import AdminOnly from '@/components/layout/AdminOnly'
 import type { SupplierFormData } from '@/types/supplier'
 
-export default function EditSupplierPage({ params }: { params: Promise<{ id: string }> }) {
+function IsiEditSupplierPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
-  const isHydrated = useAuthStore((s) => s.isHydrated)
-  const isAdmin = useAuthStore((s) => s.isAdmin())
-  const { data: supplier, isLoading } = useSupplierById(id)
+  const { data: supplier, isLoading, isError, refetch } = useSupplierById(id)
   const updateMutation = useUpdateSupplier(id)
 
-  useEffect(() => {
-    if (isHydrated && !isAdmin) {
-      router.replace('/dashboard')
-    }
-  }, [isHydrated, isAdmin, router])
+  // Kembali ke halaman ASAL (daftar beserta filternya, dibawa lewat ?dari=); cadangannya daftar supplier.
+  const { kembali } = useAsalHalaman('/supplier')
+  const [kotor, setKotor] = useState(false)
+  const [buangTerbuka, setBuangTerbuka] = useState(false)
 
   async function handleSubmit(data: SupplierFormData) {
     await updateMutation.mutateAsync(data)
-    window.location.href = '/supplier'
+    kembali()
   }
 
-  if (!isHydrated || !isAdmin) {
-    return null
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-4" aria-busy="true" aria-label="Memuat data supplier">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-5 rounded-2xl bg-card p-6">
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <div className="grid gap-5 md:grid-cols-2">
+            <Skeleton className="h-10 rounded-xl" />
+            <Skeleton className="h-10 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Gagal memuat dibedakan dari "tidak ditemukan": yang pertama bukan berarti supplier-nya tidak ada.
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-2xl bg-card">
+        <StateMessage
+          icon={TriangleAlert}
+          title="Data supplier belum bisa dimuat"
+          description="Ini bukan berarti supplier-nya tidak ada. Periksa koneksi, lalu coba lagi."
+          action={<Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={() => refetch()}>Coba lagi</Button>}
+        />
+      </div>
+    )
+  }
+
+  if (!supplier) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-2xl bg-card">
+        <StateMessage
+          icon={SearchX}
+          title="Supplier tidak ditemukan"
+          description="Supplier ini mungkin sudah dihapus. Kembali ke daftar untuk memilih supplier lain."
+          action={<Button variant="outline" className="h-10 rounded-xl px-4" asChild><Link href="/supplier">Ke daftar supplier</Link></Button>}
+        />
+      </div>
+    )
   }
 
   return (
-    <div>
-      <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
-        {/* Card header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-line-subtle">
-          <Link
-            href="/supplier"
-            className="text-fg-subtle hover:text-fg-tertiary hover:bg-surface-muted rounded-lg p-1.5 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div>
-            <h1 className="text-sm font-semibold text-fg">Edit Supplier</h1>
-            <p className="text-xs text-fg-muted mt-0.5">{supplier?.nama ?? 'Memuat data...'}</p>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="px-6 pt-4 pb-6">
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-14 animate-pulse bg-surface-muted rounded-xl" />
-              ))}
-            </div>
-          ) : !supplier ? (
-            <p className="text-center py-10 text-fg-muted text-sm">Supplier tidak ditemukan</p>
-          ) : (
-            <SupplierForm
-              defaultValues={supplier}
-              onSubmit={handleSubmit}
-              isLoading={updateMutation.isPending}
-              submitLabel="Simpan Perubahan"
-            />
-          )}
-        </div>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-4">
+      <PageHeader
+        title={`Ubah ${supplier.nama}`}
+        backLabel="Kembali"
+        onBack={() => (kotor ? setBuangTerbuka(true) : kembali())}
+        description="Lead time dan biaya pesan dipakai untuk menghitung ROP dan EOQ obat dari supplier ini."
+      />
+      <section className="rounded-2xl bg-card p-5 sm:p-6">
+        <SupplierForm
+          defaultValues={supplier}
+          onSubmit={handleSubmit}
+          isLoading={updateMutation.isPending}
+          submitLabel="Simpan perubahan"
+          onBatal={kembali}
+          onDirtyChange={setKotor}
+        />
+      </section>
+      <KonfirmasiBuang open={buangTerbuka} onOpenChange={setBuangTerbuka} onBuang={kembali} />
     </div>
+  )
+}
+
+export default function EditSupplierPage(props: { params: Promise<{ id: string }> }) {
+  // useSearchParams (lewat useAsalHalaman) wajib dibungkus Suspense agar build produksi tidak gagal.
+  return (
+    <AdminOnly>
+      <Suspense fallback={null}>
+        <IsiEditSupplierPage {...props} />
+      </Suspense>
+    </AdminOnly>
   )
 }

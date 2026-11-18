@@ -7,7 +7,7 @@ import Panel from '@/components/dashboard/Panel'
 import Segmented from '@/components/shared/Segmented'
 import StateMessage from '@/components/shared/StateMessage'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import { tanggalLokal } from '@/lib/barangKeluar'
 import { formatAngka, formatRupiah } from '@/lib/utils'
 import type { BarangKeluar } from '@/types/obat'
@@ -106,14 +106,14 @@ export default function BarangKeluarTrendChart({ allList, isLoading, isError, on
           ]}
         />
         {mode === 'bulanan' && (
-          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-            <SelectTrigger className="h-10 w-28 rounded-xl data-[size=default]:h-10" aria-label="Tahun grafik">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {availableYears.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <PilihanCombobox
+            aria-label="Tahun grafik"
+            className="w-28"
+            options={availableYears.map((y) => ({ value: String(y), label: String(y) }))}
+            value={String(selectedYear)}
+            onChange={(v) => setSelectedYear(Number(v))}
+            noun="tahun"
+          />
         )}
       </div>
       <p className="mt-2 text-sm text-muted-foreground">Khusus penjualan; retur, rusak, dan kedaluarsa tidak dihitung.</p>

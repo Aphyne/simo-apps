@@ -7,22 +7,30 @@ export interface LaporanStokItem {
   id: number; kode: string; nama: string; kategori: string; satuan: string
   stok: number; eoq: number | null; safety_stock: number | null; rop: number | null
   total_biaya: number | null; expired_terdekat: string | null; demand_harian: number | null
+  // Harga beli per satuan; kolom numeric Postgres tiba sebagai teks. 0 atau kosong berarti belum diisi.
+  harga_beli: number | string | null
 }
 
 export interface LaporanBarangMasukItem {
   id: number; tanggal: string; kode: string; nama_obat: string; satuan: string; kategori: string
   jumlah_dus: number; jumlah_satuan: number; nama_supplier: string | null
   no_faktur: string | null; catatan: string | null; nama_user: string | null; role_user: string | null
+  // Harga beli per satuan sesudah PPN; null bila belum diisi.
+  harga_beli: number | string | null
 }
 
 export interface LaporanBarangKeluarItem {
   id: number; tanggal: string; kode: string; nama_obat: string; satuan: string; kategori: string
   jumlah: number; keterangan: string; stok_sebelum: number; stok_sesudah: number
   catatan: string | null; nama_user: string | null; role_user: string | null
+  // Harga jual per satuan saat dicatat; null bila belum diisi.
+  harga_jual: number | string | null
 }
 
 export interface LaporanKedaluarsaItem {
   id: number; kode: string; nama: string; kategori: string; satuan: string
+  // Nomor batch yang paling cepat expired (null bila batch dicatat tanpa nomor atau tidak ada data batch).
+  no_batch?: string | null
   stok: number; expired_terdekat: string; sisa_hari: number
 }
 

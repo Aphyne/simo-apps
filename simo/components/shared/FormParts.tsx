@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react'
+'use client'
+
+import { useState, type ReactNode } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { FieldDescription, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -76,6 +79,27 @@ export function InputSatuan({
           {akhiran}
         </span>
       )}
+    </div>
+  )
+}
+
+// Input password dengan tombol tampilkan/sembunyikan (40px, bisa difokus keyboard): pengguna boleh memeriksa apa yang
+// diketik, terutama saat password dibuat untuk orang lain. Pembungkus Input shadcn, jadi cocok dengan register() dari
+// react-hook-form.
+export function InputPassword({ className, ...props }: Omit<React.ComponentProps<typeof Input>, 'type'>) {
+  const [tampil, setTampil] = useState(false)
+  return (
+    <div className="relative">
+      <Input type={tampil ? 'text' : 'password'} autoComplete="new-password" className={cn('h-10 rounded-xl pr-11', className)} {...props} />
+      <button
+        type="button"
+        onClick={() => setTampil((v) => !v)}
+        aria-label={tampil ? 'Sembunyikan password' : 'Tampilkan password'}
+        aria-pressed={tampil}
+        className="absolute right-0.5 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {tampil ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+      </button>
     </div>
   )
 }

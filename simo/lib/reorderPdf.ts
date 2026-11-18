@@ -29,8 +29,10 @@ export function buatPdfSuratPesanan(params: {
   supplier: TujuanSupplier
   items: ItemPesanan[]
   tanggal?: Date
+  // Logo apotek sebagai data URL PNG (lib/logoApotek.ts), ditaruh di kiri kop seperti surat cetak. Tanpa logo, kop sama seperti sebelumnya.
+  logo?: string | null
 }): HasilPdf {
-  const { apotek, supplier, items } = params
+  const { apotek, supplier, items, logo } = params
   const tanggal = params.tanggal ?? new Date()
   const nomor = nomorSurat(supplier.id, tanggal)
 
@@ -54,8 +56,16 @@ export function buatPdfSuratPesanan(params: {
   }
   doc.setFont(HURUF, 'normal')
   doc.setFontSize(11)
-  const alamat = doc.splitTextToSize(apotek.alamat, lebar - MARGIN * 2 - 20) as string[]
+  // Dengan logo di kiri, alamat dipersempit supaya tidak menabrak logo.
+  const alamat = doc.splitTextToSize(apotek.alamat, lebar - MARGIN * 2 - (logo ? 46 : 20)) as string[]
   doc.text(alamat, tengah, y, { align: 'center' })
+  // Logo (persegi 19mm, rata kiri margin): tepi bawahnya sejajar dengan bagian bawah baris alamat terakhir.
+  // +1.5mm = turunan huruf (g, j) dikurangi tepi kosong gambar sekitar 0.6mm.
+  if (logo) {
+    const LOGO = 19
+    const dasarAlamat = y + (alamat.length - 1) * 5
+    doc.addImage(logo, 'PNG', MARGIN, dasarAlamat + 1.5 - LOGO, LOGO, LOGO)
+  }
   y += alamat.length * 5 + 1
   // garis ganda (tebal di atas, tipis di bawah) seperti kop surat cetak
   doc.setLineWidth(0.9)

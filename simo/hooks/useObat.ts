@@ -197,3 +197,15 @@ export function useHitungUlang() {
     },
   })
 }
+
+// Kategori dan satuan yang sudah dipakai obat. Kunci di bawah ['obat'], jadi otomatis segar setelah obat dibuat/diubah.
+export function useObatOpsi() {
+  return useQuery({
+    queryKey: ['obat', 'opsi'],
+    queryFn: async () => {
+      const res = await api.get('/obat/opsi')
+      return res.data.data as { kategori: string[]; satuan: string[] }
+    },
+    staleTime: 60_000,
+  })
+}

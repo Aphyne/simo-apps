@@ -6,7 +6,7 @@ import Panel from '@/components/dashboard/Panel'
 import Segmented from '@/components/shared/Segmented'
 import StateMessage from '@/components/shared/StateMessage'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import { formatAngka } from '@/lib/utils'
 import { useNow } from '@/hooks/useNow'
 import type { BarangMasuk } from '@/types/obat'
@@ -86,23 +86,23 @@ export default function BarangMasukPerObatChart({ allList, isLoading, isError, o
           ]}
         />
         {mode === 'bulanan' && (
-          <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
-            <SelectTrigger className="h-10 w-36 rounded-xl data-[size=default]:h-10" aria-label="Bulan peringkat">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {MONTHS.map((name, i) => <SelectItem key={name} value={String(i)}>{name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <PilihanCombobox
+            aria-label="Bulan peringkat"
+            className="w-36"
+            options={MONTHS.map((name, idx) => ({ value: String(idx), label: name }))}
+            value={String(selectedMonth)}
+            onChange={(v) => setSelectedMonth(Number(v))}
+            noun="bulan"
+          />
         )}
-        <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-          <SelectTrigger className="h-10 w-28 rounded-xl data-[size=default]:h-10" aria-label="Tahun peringkat">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {availableYears.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <PilihanCombobox
+          aria-label="Tahun peringkat"
+          className="w-28"
+          options={availableYears.map((y) => ({ value: String(y), label: String(y) }))}
+          value={String(selectedYear)}
+          onChange={(v) => setSelectedYear(Number(v))}
+          noun="tahun"
+        />
       </div>
 
       {isError ? (

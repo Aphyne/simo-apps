@@ -39,7 +39,7 @@ export default function DashboardLayout({
       <Sidebar open={menuOpen} onClose={tutupMenu} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
-        <main className="flex-1 px-4 pb-8 pt-2 sm:px-8 bg-background overflow-auto">
+        <main className="flex-1 px-4 pb-8 pt-2 sm:px-8 bg-background overflow-x-clip">
           <GlobalErrorBanner />
           {children}
         </main>

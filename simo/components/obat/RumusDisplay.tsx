@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import Istilah from '@/components/shared/Istilah'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { formatRupiah, formatAngka } from '@/lib/utils'
 import type { DetailPerhitungan, LangkahPerhitungan } from '@/types/obat'
@@ -11,6 +12,8 @@ type ModalKey = 'eoq' | 'ss' | 'rop' | 'tc' | null
 interface Param {
   label: string
   nilai: string
+  // Penjelasan sehari-hari untuk istilah ini; bila ada, labelnya menjadi istilah yang bisa dijelaskan (shared/Istilah).
+  arti?: string
 }
 
 // Daftar parameter: label abu di atas, nilai di bawah. Tanpa kotak per parameter.
@@ -19,7 +22,7 @@ function ParamList({ items, className }: { items: Param[]; className?: string })
     <dl className={className ?? 'grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4'}>
       {items.map((p) => (
         <div key={p.label} className="min-w-0">
-          <dt className="text-sm text-muted-foreground">{p.label}</dt>
+          <dt className="text-sm text-muted-foreground">{p.arti ? <Istilah istilah={p.label} arti={p.arti} /> : p.label}</dt>
           <dd className="mt-0.5 break-words text-base font-medium tabular-nums text-foreground">{p.nilai}</dd>
         </div>
       ))}
@@ -126,13 +129,13 @@ export default function RumusDisplay({ data, satuan = 'unit' }: { data: DetailPe
   const alasan = alasanKosong(input)
   const adaKosong = [langkah_eoq.hasil, langkah_safety_stock.hasil, langkah_tc.hasil].some((h) => h === null)
 
-  const pD = { label: 'Penjualan setahun (D)', nilai: `${formatAngka(input.D, 0)} ${satuan}/tahun` }
-  const pdHarian = { label: 'Penjualan per hari (d)', nilai: `${formatAngka(input.demand_harian, 2)} ${satuan}/hari` }
-  const pSigma = { label: 'Naik turun penjualan (σ)', nilai: `${formatAngka(input.sigma, 4)} ${satuan}/hari` }
-  const pS = { label: 'Biaya sekali pesan (S)', nilai: input.S > 0 ? formatRupiah(input.S) : 'Belum diisi' }
-  const pH = { label: 'Biaya simpan (H)', nilai: input.H > 0 ? `${formatRupiah(input.H)}/${satuan}/tahun` : 'Belum diisi' }
-  const pLT = { label: 'Lama pengiriman (LT)', nilai: input.LT > 0 ? `${input.LT} hari` : 'Belum diisi' }
-  const pZ = { label: 'Tingkat layanan (Z)', nilai: formatAngka(Number(input.Z), 2) }
+  const pD = { label: 'Penjualan setahun (D)', nilai: `${formatAngka(input.D, 0)} ${satuan}/tahun`, arti: 'Perkiraan jumlah obat yang terjual dalam setahun, dihitung dari penjualan harian.' }
+  const pdHarian = { label: 'Penjualan per hari (d)', nilai: `${formatAngka(input.demand_harian, 2)} ${satuan}/hari`, arti: 'Rata-rata obat yang terjual per hari, dari penjualan 30 hari terakhir.' }
+  const pSigma = { label: 'Naik turun penjualan (standar deviasi, σ)', nilai: `${formatAngka(input.sigma, 4)} ${satuan}/hari`, arti: 'Standar deviasi: seberapa jauh penjualan harian biasanya menyimpang dari rata-ratanya. Makin besar, makin tidak menentu penjualannya, sehingga butuh stok pengaman lebih banyak.' }
+  const pS = { label: 'Biaya sekali pesan (S)', nilai: input.S > 0 ? formatRupiah(input.S) : 'Belum diisi', arti: 'Biaya setiap kali memesan ke supplier. Terisi dari Barang masuk: biaya per faktur dibagi rata ke obat yang ada di faktur itu.' }
+  const pH = { label: 'Biaya simpan (H)', nilai: input.H > 0 ? `${formatRupiah(input.H)}/${satuan}/tahun` : 'Belum diisi', arti: 'Biaya menyimpan satu satuan obat selama setahun. Bawaannya 20% dari harga beli.' }
+  const pLT = { label: 'Lama pengiriman (LT)', nilai: input.LT > 0 ? `${input.LT} hari` : 'Belum diisi', arti: 'Lead time: jumlah hari dari memesan sampai barang tiba, dari data supplier.' }
+  const pZ = { label: 'Tingkat layanan (Z)', nilai: formatAngka(Number(input.Z), 2), arti: 'Angka pengali dari service level, mis. 95% menjadi 1,65. Makin tinggi tingkat layanan, makin besar Z dan stok pengamannya.' }
 
   const cards: {
     key: ModalKey
@@ -236,7 +239,15 @@ export default function RumusDisplay({ data, satuan = 'unit' }: { data: DetailPe
 
       {/* ── Dialog cara menghitung ───────────────────────────────────────── */}
       <Dialog open={openModal !== null} onOpenChange={(open) => { if (!open) setOpenModal(null) }}>
-        <DialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-6 sm:max-w-lg">
+        <DialogContent
+          className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-6 sm:max-w-lg"
+          // Fokus awal ke dialog itu sendiri, bukan ke istilah pertama: istilah membuka tooltip saat difokus, jadi tooltip
+          // muncul sendiri dan Escape pertama hanya menutup tooltip, bukan dialog.
+          onOpenAutoFocus={(e) => {
+            e.preventDefault()
+            ;(e.currentTarget as HTMLElement).focus()
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="pr-8 text-base font-semibold">{activeCard?.judul}</DialogTitle>
             <DialogDescription className="text-sm leading-relaxed">{activeCard?.definisi}</DialogDescription>

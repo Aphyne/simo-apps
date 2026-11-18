@@ -5,7 +5,7 @@ import { useForm, useWatch, Controller, type FieldErrors } from 'react-hook-form
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import { FormActions, InputSatuan, Opsional, Wajib } from '@/components/shared/FormParts'
 import { useUpdateBarangKeluar } from '@/hooks/useBarangKeluar'
 import { useObatSemua } from '@/hooks/useObat'
@@ -162,20 +162,17 @@ export default function BarangKeluarEditForm({ item, onSuccess, onBatal, onDirty
             control={control}
             rules={{ required: 'Pilih keterangan' }}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger
-                  id="keterangan"
-                  aria-required="true"
-                  aria-invalid={!!errors.keterangan}
-                  aria-describedby={errors.keterangan ? 'keterangan-error' : undefined}
-                  className="h-10 w-full rounded-xl data-[size=default]:h-10"
-                >
-                  <SelectValue placeholder="Pilih keterangan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {KETERANGAN_KELUAR.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <PilihanCombobox
+                id="keterangan"
+                options={KETERANGAN_KELUAR.map((k) => ({ value: k, label: k }))}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Pilih keterangan"
+                noun="keterangan"
+                error={!!errors.keterangan}
+                aria-required="true"
+                aria-describedby={errors.keterangan ? 'keterangan-error' : undefined}
+              />
             )}
           />
           <FieldError id="keterangan-error">{errors.keterangan?.message}</FieldError>

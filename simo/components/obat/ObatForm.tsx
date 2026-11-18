@@ -5,13 +5,7 @@ import { useForm, useWatch, type FieldErrors } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +19,8 @@ import {
 import KonfirmasiBuang from '@/components/shared/KonfirmasiBuang'
 import { FormActions } from '@/components/shared/FormParts'
 import { KATEGORI_OBAT, SATUAN_OBAT } from '@/lib/constants'
+import { gabungOpsi, MAKS_KATEGORI, MAKS_SATUAN, rapikanKategori, rapikanSatuan } from '@/lib/opsiObat'
+import { useObatOpsi } from '@/hooks/useObat'
 import type { ObatFormData } from '@/types/obat'
 import type { Obat } from '@/types/obat'
 
@@ -92,9 +88,12 @@ export default function ObatForm({ defaultValues, onSubmit, onSimpanLagi, onBata
   const satuanBerubah = Boolean(satuanAwal && satuanValue && satuanValue !== satuanAwal)
   const perDusBerubah = Boolean(perDusAwal && perDusValue && Number(perDusValue) !== Number(perDusAwal))
 
-  // Nilai yang sudah tersimpan tetapi tidak ada di daftar baku tetap bisa dipilih (supaya pilihan tidak tampil kosong).
-  const kategoriLuarDaftar = kategoriValue && !(KATEGORI_OBAT as readonly string[]).includes(kategoriValue)
-  const satuanLuarDaftar = satuanValue && !(SATUAN_OBAT as readonly string[]).includes(satuanValue)
+  // Daftar baku + yang sudah dipakai obat lain. Nilai baru hanya bisa dibuat di form TAMBAH (tanpa defaultValues);
+  // form Ubah hanya memilih yang sudah ada (keputusan Boss 18 Nov 2026).
+  const bolehBuatBaru = !defaultValues
+  const opsiDb = useObatOpsi().data
+  const opsiKategori = gabungOpsi(KATEGORI_OBAT, opsiDb?.kategori)
+  const opsiSatuan = gabungOpsi(SATUAN_OBAT, opsiDb?.satuan)
 
   // Konfirmasi: mengubah satuan mengubah arti semua angka stok dan batch yang sudah ada.
   // Muncul SETELAH validasi lolos dan sebelum data dikirim.
@@ -192,42 +191,36 @@ export default function ObatForm({ defaultValues, onSubmit, onSimpanLagi, onBata
 
         <Field data-invalid={!!errors.kategori}>
           <FieldLabel htmlFor="kategori">Kategori <Wajib /></FieldLabel>
-          <Select value={kategoriValue} onValueChange={(v) => setValue('kategori', v, { shouldValidate: true, shouldDirty: true })}>
-            <SelectTrigger
-              id="kategori"
-              aria-required="true"
-              aria-invalid={!!errors.kategori}
-              aria-describedby={errors.kategori ? 'kategori-error' : undefined}
-              className="h-10 w-full rounded-xl data-[size=default]:h-10"
-            >
-              <SelectValue placeholder="Pilih kategori" />
-            </SelectTrigger>
-            <SelectContent>
-              {KATEGORI_OBAT.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-              {kategoriLuarDaftar && <SelectItem value={kategoriValue}>{kategoriValue}</SelectItem>}
-            </SelectContent>
-          </Select>
+          <PilihanCombobox
+            id="kategori"
+            options={opsiKategori}
+            value={kategoriValue}
+            onChange={(v) => setValue('kategori', v, { shouldValidate: true, shouldDirty: true })}
+            placeholder="Pilih kategori"
+            noun="kategori"
+            tambahBaru={bolehBuatBaru ? { rapikan: rapikanKategori, maks: MAKS_KATEGORI } : undefined}
+            error={!!errors.kategori}
+            aria-required="true"
+            aria-describedby={errors.kategori ? 'kategori-error' : undefined}
+          />
           <input type="hidden" {...register('kategori', { required: 'Kategori wajib dipilih' })} />
           <FieldError id="kategori-error">{errors.kategori?.message}</FieldError>
         </Field>
 
         <Field data-invalid={!!errors.satuan}>
           <FieldLabel htmlFor="satuan">Satuan terkecil <Wajib /></FieldLabel>
-          <Select value={satuanValue} onValueChange={(v) => setValue('satuan', v, { shouldValidate: true, shouldDirty: true })}>
-            <SelectTrigger
-              id="satuan"
-              aria-required="true"
-              aria-invalid={!!errors.satuan}
-              aria-describedby={errors.satuan ? 'satuan-error' : 'satuan-hint'}
-              className="h-10 w-full rounded-xl data-[size=default]:h-10"
-            >
-              <SelectValue placeholder="Pilih satuan" />
-            </SelectTrigger>
-            <SelectContent>
-              {SATUAN_OBAT.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              {satuanLuarDaftar && <SelectItem value={satuanValue}>{satuanValue}</SelectItem>}
-            </SelectContent>
-          </Select>
+          <PilihanCombobox
+            id="satuan"
+            options={opsiSatuan}
+            value={satuanValue}
+            onChange={(v) => setValue('satuan', v, { shouldValidate: true, shouldDirty: true })}
+            placeholder="Pilih satuan"
+            noun="satuan"
+            tambahBaru={bolehBuatBaru ? { rapikan: rapikanSatuan, maks: MAKS_SATUAN } : undefined}
+            error={!!errors.satuan}
+            aria-required="true"
+            aria-describedby={errors.satuan ? 'satuan-error' : 'satuan-hint'}
+          />
           <input type="hidden" {...register('satuan', { required: 'Satuan wajib dipilih' })} />
           {errors.satuan ? (
             <FieldError id="satuan-error">{errors.satuan.message}</FieldError>

@@ -6,7 +6,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import ObatCombobox from '@/components/ui/ObatCombobox'
 import IconAction from '@/components/shared/IconAction'
 import { FormActions, FormSection, InputSatuan, Opsional, Wajib } from '@/components/shared/FormParts'
@@ -213,22 +213,17 @@ export default function BarangMasukForm({ onSuccess, onBatal, onDirtyChange }: P
               control={control}
               rules={{ required: 'Pilih supplier' }}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    id="supplier"
-                    aria-required="true"
-                    aria-invalid={!!errors.supplier_id_str}
-                    aria-describedby={errors.supplier_id_str ? 'supplier-error' : undefined}
-                    className="h-10 w-full rounded-xl data-[size=default]:h-10"
-                  >
-                    <SelectValue placeholder="Pilih supplier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(supplierList ?? []).map((s) => (
-                      <SelectItem key={s.id} value={String(s.id)}>{s.nama}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <PilihanCombobox
+                  id="supplier"
+                  options={(supplierList ?? []).map((s) => ({ value: String(s.id), label: s.nama }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Pilih supplier"
+                  noun="supplier"
+                  error={!!errors.supplier_id_str}
+                  aria-required="true"
+                  aria-describedby={errors.supplier_id_str ? 'supplier-error' : undefined}
+                />
               )}
             />
             <FieldError id="supplier-error">{errors.supplier_id_str?.message}</FieldError>

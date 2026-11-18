@@ -1,6 +1,14 @@
 'use client'
 
-import { Plus, X, ListPlus } from 'lucide-react'
+import { Check, ListPlus, Plus, X, TriangleAlert, SearchX, PackageCheck } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
+import StatusBadge from '@/components/ui/StatusBadge'
+import Panel from '@/components/dashboard/Panel'
+import Istilah from '@/components/shared/Istilah'
+import { FilterBar, SearchField } from '@/components/shared/FilterBar'
+import { TabelData, type KolomData } from '@/components/shared/TabelData'
+import { formatAngka } from '@/lib/utils'
 import type { ReorderAlertItem } from '@/hooks/useObat'
 
 export interface FilterSupplier {
@@ -10,14 +18,29 @@ export interface FilterSupplier {
 }
 
 interface Props {
-  items: ReorderAlertItem[] // sudah terfilter sesuai supplier terpilih
+  items: ReorderAlertItem[] // sudah terfilter sesuai supplier dan kata kunci
   filters: FilterSupplier[]
   filterAktif: string
   onFilter: (key: string) => void
+  cari: string
+  onCari: (teks: string) => void
+  adaFilter: boolean
+  onAturUlang: () => void
   diKeranjang: (id: number) => boolean
   onToggle: (item: ReorderAlertItem) => void
   onTambahSemua: (items: ReorderAlertItem[]) => void
   isLoading: boolean
+  isError: boolean
+  onCobaLagi: () => void
+  // Jumlah obat di keranjang; dipakai tautan "Keranjang" yang hanya tampil di layar sempit (keranjang ada di bawah daftar).
+  jumlahKeranjang: number
+}
+
+// Kolom tampil bertahap menurut lebar konten (bukan lebar layar): sidebar 256px muncul mulai lg, dan daftar berdampingan
+// dengan keranjang mulai xl. Selalu: Obat, Saran pesan, Aksi. md: Status (di bawah md ikut di bawah nama). 2xl: Stok dan ROP.
+const KOLOM = {
+  status: 'hidden md:table-cell',
+  stok: 'hidden 2xl:table-cell',
 }
 
 export default function ReorderObatList({
@@ -25,122 +48,158 @@ export default function ReorderObatList({
   filters,
   filterAktif,
   onFilter,
+  cari,
+  onCari,
+  adaFilter,
+  onAturUlang,
   diKeranjang,
   onToggle,
   onTambahSemua,
   isLoading,
+  isError,
+  onCobaLagi,
+  jumlahKeranjang,
 }: Props) {
   const bisaDitambah = items.filter((it) => it.supplier_id !== null && !diKeranjang(it.id))
+  const tautanKeranjang = (
+    <a
+      href="#keranjang"
+      className="inline-flex h-10 items-center rounded-xl px-2 text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring xl:hidden"
+    >
+      Keranjang ({jumlahKeranjang})
+    </a>
+  )
+
+  const kolom: KolomData<ReorderAlertItem>[] = [
+    {
+      id: 'obat', judul: 'Obat', skeleton: ['w-40', 'w-24'],
+      sel: (it) => {
+        const supplier = it.supplier_nama ?? it.nama_supplier
+        return (
+          <>
+            <span className="block font-medium text-foreground">{it.nama}</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              <span className="font-mono">{it.kode}</span>
+              {' · '}
+              {supplier ?? 'Supplier belum diatur'}
+            </span>
+            <span className="mt-1.5 block md:hidden">
+              <StatusBadge status="HARUS_REORDER" stok={it.stok} />
+            </span>
+            {/* Penanda terlihat (ikon + teks, bukan hanya warna latar) supaya jelas obat mana yang sudah dipilih. */}
+            {diKeranjang(it.id) && (
+              <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary">
+                <Check className="size-3.5" aria-hidden="true" />
+                Di keranjang
+              </span>
+            )}
+          </>
+        )
+      },
+    },
+    {
+      id: 'status', judul: 'Status', kelas: KOLOM.status, skeleton: 'w-20',
+      sel: (it) => <StatusBadge status="HARUS_REORDER" stok={it.stok} />,
+    },
+    {
+      id: 'stok',
+      judul: <>Stok / <Istilah istilah="ROP" arti="Titik pesan ulang: stok di bawah angka ini berarti saatnya memesan" /></>,
+      kanan: true, kelas: KOLOM.stok, skeleton: 'w-16',
+      sel: (it) => (
+        <span className="tabular-nums">
+          <span className="block font-medium text-foreground">{formatAngka(it.stok, 0)} / {formatAngka(it.rop, 2)}</span>
+          <span className="block text-xs text-muted-foreground">{it.satuan}</span>
+        </span>
+      ),
+    },
+    {
+      id: 'saran', judul: 'Saran pesan', kanan: true, skeleton: 'w-14',
+      sel: (it) => (
+        <span className="tabular-nums">
+          <span className="block font-medium text-foreground">{formatAngka(it.saran_jumlah, 0)} {it.satuan_pesan}</span>
+          <span className="block text-xs text-muted-foreground">dari {it.basis_saran}</span>
+        </span>
+      ),
+    },
+    {
+      id: 'aksi', judul: <span className="sr-only">Aksi</span>, kanan: true, aksi: true, skeleton: 'w-24',
+      sel: (it) => {
+        const ada = diKeranjang(it.id)
+        if (it.supplier_id === null) {
+          return (
+            <span className="inline-flex items-center justify-end gap-1.5 text-xs font-medium text-warning-700">
+              <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+              Catat stok masuk dulu
+            </span>
+          )
+        }
+        return (
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-10 min-w-28 rounded-xl px-3"
+            onClick={() => onToggle(it)}
+            aria-label={ada ? `Keluarkan ${it.nama} dari keranjang` : `Tambah ${it.nama} ke keranjang`}
+          >
+            {ada ? <X data-icon="inline-start" /> : <Plus data-icon="inline-start" />}
+            {ada ? 'Batalkan' : 'Tambah'}
+          </Button>
+        )
+      },
+    },
+  ]
 
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-line-subtle space-y-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-sm font-semibold text-fg-secondary">Obat yang Perlu Dipesan</h2>
-            <p className="text-xs text-fg-muted mt-0.5">Stok sudah di bawah ROP. Klik Tambah untuk memasukkan ke keranjang.</p>
-          </div>
-          <button
-            onClick={() => onTambahSemua(bisaDitambah)}
-            disabled={bisaDitambah.length === 0}
-            className="flex items-center gap-1.5 border border-line-strong text-fg-secondary hover:bg-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed rounded-lg px-3 py-2 text-sm"
-          >
-            <ListPlus className="w-4 h-4" />
-            Tambah semua ({bisaDitambah.length})
-          </button>
-        </div>
+    <Panel title="Obat yang perlu dipesan" count={isLoading || isError ? undefined : items.length} action={tautanKeranjang} bodyClassName="px-0 pb-0">
+      <FilterBar className="grid grid-cols-2 px-5 pb-4 sm:flex sm:flex-wrap">
+        <SearchField value={cari} onChange={onCari} placeholder="Cari nama atau kode obat" label="Cari obat" className="col-span-2 sm:max-w-xs" />
+        <PilihanCombobox
+          aria-label="Filter supplier"
+          className="col-span-2 sm:w-56"
+          options={filters.map((f) => ({ value: f.key, label: `${f.key === 'semua' ? 'Semua supplier' : f.label} (${f.jumlah})` }))}
+          value={filterAktif}
+          onChange={onFilter}
+          noun="supplier"
+        />
+        {adaFilter && (
+          <Button variant="ghost" size="lg" className="h-10 rounded-xl px-3 text-muted-foreground" onClick={onAturUlang}>
+            Atur ulang
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          size="lg"
+          className="col-span-2 h-10 rounded-xl px-4 sm:ml-auto"
+          onClick={() => onTambahSemua(bisaDitambah)}
+          disabled={bisaDitambah.length === 0}
+        >
+          <ListPlus data-icon="inline-start" />
+          Tambah semua ({bisaDitambah.length})
+        </Button>
+      </FilterBar>
 
-        {/* Filter supplier */}
-        <div className="flex items-center gap-2 flex-wrap" role="tablist" aria-label="Filter supplier">
-          {filters.map((f) => {
-            const aktif = f.key === filterAktif
-            return (
-              <button
-                key={f.key}
-                role="tab"
-                aria-selected={aktif}
-                onClick={() => onFilter(f.key)}
-                className={
-                  aktif
-                    ? 'px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-600 text-white border border-brand-600'
-                    : 'px-3 py-1.5 rounded-lg text-xs font-medium border border-line text-gray-600 hover:bg-surface-muted transition-colors'
-                }
-              >
-                {f.label} <span className={aktif ? 'text-brand-100' : 'text-fg-muted'}>({f.jumlah})</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line">
-              {['Obat', 'Status', 'Stok / ROP', 'Saran Pesan', ''].map((h, i) => (
-                <th key={i} className={`text-xs font-semibold text-fg-muted uppercase tracking-wide py-3 px-3 ${i === 2 || i === 3 ? 'text-right' : 'text-left'}`}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr><td colSpan={5} className="py-6 px-3"><div className="animate-pulse bg-surface-muted rounded-xl h-24" /></td></tr>
-            )}
-            {!isLoading && items.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-10 text-fg-muted text-sm">Tidak ada obat yang perlu dipesan untuk filter ini.</td></tr>
-            )}
-            {items.map((it) => {
-              const habis = it.stok === 0
-              const ada = diKeranjang(it.id)
-              const tanpaSupplier = it.supplier_id === null
-              return (
-                <tr key={it.id} className={`border-b border-line-subtle hover:bg-surface-subtle transition-colors ${ada ? 'bg-brand-50/40' : ''}`}>
-                  <td className="py-3 px-3">
-                    <span className="block font-medium text-fg">{it.nama}</span>
-                    <span className="text-xs text-fg-muted">
-                      {it.supplier_nama ?? it.nama_supplier ?? 'Supplier belum diatur'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${habis ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                      {habis ? 'Habis' : 'Reorder'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right tabular-nums text-fg-secondary whitespace-nowrap">
-                    <span className={`font-semibold ${habis ? 'text-red-600' : 'text-gray-900'}`}>{it.stok}</span>
-                    {' / '}
-                    {Math.ceil(it.rop)} {it.satuan}
-                  </td>
-                  <td className="py-3 px-3 text-right tabular-nums text-fg-secondary whitespace-nowrap">
-                    <span className="font-semibold text-fg">{it.saran_jumlah}</span> {it.satuan_pesan}
-                    <span className="block text-xs text-fg-muted">dari {it.basis_saran}</span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    {tanpaSupplier ? (
-                      <span className="text-xs text-warning-700 font-medium">Catat Stok Masuk dulu</span>
-                    ) : (
-                      <button
-                        onClick={() => onToggle(it)}
-                        aria-pressed={ada}
-                        className={
-                          ada
-                            ? 'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium border border-line-strong text-fg-tertiary hover:bg-danger-50 hover:text-danger-600 hover:border-danger-200 transition-colors'
-                            : 'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium border border-brand-600 text-brand-600 hover:bg-brand-50 transition-colors'
-                        }
-                      >
-                        {ada ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                        {ada ? 'Batalkan' : 'Tambah'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      {/* Semua baris ditampilkan sekaligus (tanpa paginasi): daftar ini dipakai untuk memilih obat ke keranjang. */}
+      <TabelData
+        kolom={kolom}
+        baris={items}
+        kunci={(it) => it.id}
+        isLoading={isLoading}
+        isError={isError}
+        onCobaLagi={onCobaLagi}
+        judulGagal="Daftar obat belum bisa dimuat"
+        keteranganGagal="Ini bukan berarti semua stok aman. Periksa sambungan lalu coba lagi."
+        kosong={{
+          icon: adaFilter ? SearchX : PackageCheck,
+          judul: adaFilter ? 'Tidak ada obat yang cocok' : 'Tidak ada obat yang perlu dipesan',
+          keterangan: adaFilter ? 'Ubah kata kunci atau pilih supplier lain.' : 'Semua stok masih di atas titik pesan ulang (ROP).',
+          aksi: adaFilter ? <Button variant="outline" size="lg" className="h-10 rounded-xl px-4" onClick={onAturUlang}>Atur ulang filter</Button> : undefined,
+        }}
+        kelasBaris={(it) => (diKeranjang(it.id) ? 'bg-accent/50' : undefined)}
+        halaman={null}
+        perHalaman={Infinity}
+        onHalaman={() => {}}
+        noun="obat perlu dipesan"
+      />
+    </Panel>
   )
 }

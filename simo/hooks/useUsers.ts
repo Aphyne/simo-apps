@@ -48,7 +48,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...payload }: { id: number; nama: string; role: string; is_active: boolean; email?: string }) => {
+    mutationFn: async ({ id, ...payload }: { id: number; nama: string; role: string; is_active: boolean; email?: string; username?: string }) => {
       const res = await api.put(`/users/${id}`, payload)
       return res.data.data as UserItem
     },

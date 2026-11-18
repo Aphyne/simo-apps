@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 
 // Panel kesalahan satu-halaman, dipakai error.tsx dan not-found.tsx (gaya kartu putih
-// sesuai docs/FE-AGENT.md: kartu putih, ikon dalam lingkaran tint, tombol utama biru).
+// sesuai docs/DESIGN.md (v1, belum dimigrasi): kartu putih, ikon dalam lingkaran tint, tombol utama biru).
 export default function ErrorPanel({
   judul,
   pesan,

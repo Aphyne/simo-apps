@@ -122,8 +122,10 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       )}
     >
       {/* Brand */}
-      <div className="px-6 h-16 flex items-center gap-2.5">
-        <Image src="/logo.png" alt="" width={30} height={30} className="flex-shrink-0" />
+      {/* px-7 sejajar dengan ikon menu (px-4 wadah + px-3 item). Gambar logo punya tepi kosong sekitar 17% di tiap sisi,
+          jadi -ml-1.5 mengembalikan tepi kiri lambangnya ke garis yang sama dengan ikon. */}
+      <div className="px-7 h-16 flex items-center gap-2">
+        <Image src="/logo.png" alt="" width={40} height={40} className="-ml-1.5 flex-shrink-0" />
         <p className="text-lg font-bold text-foreground tracking-tight">SIMO</p>
         <button
           ref={closeRef}

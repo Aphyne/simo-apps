@@ -24,7 +24,9 @@ export default function LoginPage() {
       window.location.replace(hasil.user.role === 'superadmin' ? '/pemantauan' : '/dashboard')
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
-      setErrorMsg(e?.response?.data?.message ?? 'Login gagal. Periksa username dan password.')
+      const pesan = e?.response?.data?.message ?? 'Login gagal. Periksa username dan password.'
+      // Pesan server sengaja tidak membedakan username salah dan password salah; petunjuk tambahan hanya soal kapital.
+      setErrorMsg(pesan === 'Username atau password salah' ? `${pesan}. Periksa juga huruf besar dan kecil pada username.` : pesan)
     }
   }
 
@@ -68,6 +70,10 @@ export default function LoginPage() {
               <input
                 placeholder="Masukkan username"
                 autoComplete="username"
+                // Username membedakan huruf besar dan kecil: keyboard HP tidak boleh membesarkan huruf pertama atau mengoreksi.
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 autoFocus
                 className="border border-line-strong rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 {...register('username', { required: 'Username wajib diisi' })}

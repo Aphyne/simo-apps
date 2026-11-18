@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -5,21 +7,23 @@ interface StatTileProps {
   label: string
   // null = data gagal dimuat; tampil "-", bukan 0 (0 berarti memang nol)
   value: number | null
-  sublabel: string
+  sublabel: ReactNode
   icon: LucideIcon
   isLoading?: boolean
+  // Varian penuh: bila diisi, seluruh ubin menjadi tautan ke halaman asal angkanya (Dashboard sebagai pintu ke halaman lain).
+  href?: string
   // Varian ringkas untuk halaman daftar: baris label, lalu angka dan keterangan sejajar. Sekitar 106px tinggi.
   compact?: boolean
   // Hanya varian ringkas: bila diisi, seluruh ubin menjadi tombol (misalnya memfilter tabel); selected = filter sedang aktif.
   onSelect?: () => void
   selected?: boolean
-  // Hanya varian ringkas: teks yang ditampilkan menggantikan angka (mis. "Habis" untuk estimasi stok 0).
+  // Teks yang ditampilkan menggantikan angka (mis. "Habis" untuk estimasi stok 0, atau "Rp 1.250.000"; varian penuh memakai ukuran lebih kecil).
   teks?: string
   className?: string
 }
 
 // Ubin angka: label kecil di atas, angka besar di bawah. Tanpa kotak ikon, tanpa warna latar.
-export function StatTile({ label, value, sublabel, icon: Icon, isLoading, compact, onSelect, selected, teks, className }: StatTileProps) {
+export function StatTile({ label, value, sublabel, icon: Icon, isLoading, href, compact, onSelect, selected, teks, className }: StatTileProps) {
   if (compact) {
     const kelas = cn(
       'flex flex-col justify-between gap-1 rounded-2xl bg-card p-4 text-left',
@@ -47,8 +51,8 @@ export function StatTile({ label, value, sublabel, icon: Icon, isLoading, compac
       </Akar>
     )
   }
-  return (
-    <div className={cn('flex flex-col justify-between gap-3.5 rounded-2xl bg-card p-4', className)}>
+  const isi = (
+    <>
       <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <Icon className="size-4 shrink-0" aria-hidden="true" />
         {label}
@@ -57,14 +61,23 @@ export function StatTile({ label, value, sublabel, icon: Icon, isLoading, compac
         {isLoading ? (
           <span className="block h-10 w-20 rounded-lg bg-muted motion-safe:animate-pulse" aria-hidden="true" />
         ) : (
-          <p className="text-4xl font-semibold leading-none tracking-tight tabular-nums text-foreground">
-            {value === null ? <>-<span className="sr-only"> Data tidak tersedia</span></> : value.toLocaleString('id-ID')}
+          <p className={cn('font-semibold leading-none tracking-tight tabular-nums text-foreground', teks !== undefined ? 'break-words text-3xl' : 'text-4xl')}>
+            {teks ?? (value === null ? <>-<span className="sr-only"> Data tidak tersedia</span></> : value.toLocaleString('id-ID'))}
           </p>
         )}
         <p className="mt-2 text-sm text-muted-foreground">{sublabel}</p>
       </div>
-    </div>
+    </>
   )
+  const kelasPenuh = cn('flex flex-col justify-between gap-3.5 rounded-2xl bg-card p-4', className)
+  if (href) {
+    return (
+      <Link href={href} className={cn(kelasPenuh, 'outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring')}>
+        {isi}
+      </Link>
+    )
+  }
+  return <div className={kelasPenuh}>{isi}</div>
 }
 
 interface ReorderTileProps {

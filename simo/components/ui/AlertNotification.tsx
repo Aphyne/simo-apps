@@ -1,92 +1,126 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
-import { Bell, ShoppingCart } from 'lucide-react'
+import { Bell, CircleCheck, TriangleAlert } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
+import StatusBadge from '@/components/ui/StatusBadge'
 import { useReorderAlerts } from '@/hooks/useObat'
+import { useAuthStore } from '@/store/auth.store'
+import { urutKeparahan } from '@/lib/reorderAlert'
+import { formatAngka } from '@/lib/utils'
 
+// Berapa obat yang ditulis di panel. Sisanya ada di halaman Reorder; panel menyebut "N teratas" dan menautkan semuanya.
+const MAKS_BARIS = 5
+
+// Lonceng notifikasi di header: obat yang stoknya sudah di bawah titik pesan ulang (ROP). Lonceng selalu tampil (dulu hilang
+// saat tidak ada peringatan, sehingga gagal memuat terlihat sama dengan aman). Angka merah hanya bila ada yang perlu dipesan.
 export default function AlertNotification() {
-  const [open, setOpen] = useState(false)
-  const { data: alerts = [] } = useReorderAlerts()
+  const { data: alerts = [], isLoading, isError, refetch } = useReorderAlerts()
+  const isAdmin = useAuthStore((s) => s.isAdmin())
 
-  if (alerts.length === 0) return null
+  const urut = useMemo(() => [...alerts].sort(urutKeparahan), [alerts])
+  const tampil = urut.slice(0, MAKS_BARIS)
+  const jumlah = alerts.length
+  const habis = alerts.filter((a) => a.stok <= 0).length
+
+  const labelLonceng = isError
+    ? 'Notifikasi, daftar obat belum bisa dimuat'
+    : jumlah > 0
+      ? `Notifikasi, ${jumlah} obat perlu dipesan ulang`
+      : 'Notifikasi, tidak ada obat yang perlu dipesan'
 
   return (
-    <div className="relative">
-      {/* Bell button */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="relative p-2 rounded-lg text-fg-muted hover:text-warning-600 hover:bg-warning-50 transition-colors"
-        aria-label={`${alerts.length} obat perlu dipesan ulang`}
-      >
-        <Bell className="w-5 h-5" />
-        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-danger-500 text-fg-inverse text-[10px] font-bold rounded-full flex items-center justify-center">
-          {alerts.length > 9 ? '9+' : alerts.length}
-        </span>
-      </button>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={labelLonceng}
+          className="relative flex size-11 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted data-[state=open]:text-foreground"
+        >
+          <Bell className="size-5" aria-hidden="true" />
+          {jumlah > 0 && (
+            <span aria-hidden="true" className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-semibold tabular-nums text-white">
+              {jumlah > 99 ? '99+' : jumlah}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-11 z-40 w-80 rounded-xl border border-line bg-surface shadow-xl overflow-hidden">
+      <PopoverContent className="w-[22rem] max-w-[calc(100vw-2rem)]" aria-label="Notifikasi stok">
+        <div className="px-5 pb-3 pt-4">
+          <h2 className="text-[15px] font-semibold text-foreground">Perlu dipesan ulang</h2>
+          {!isLoading && !isError && jumlah > 0 && (
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {jumlah} obat di bawah titik pesan ulang{habis > 0 ? `, ${habis} sudah habis` : ''}.
+            </p>
+          )}
+        </div>
 
-            {/* Header */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-line-subtle">
-              <p className="text-sm font-semibold text-fg">Reorder Alert</p>
-              <span className="bg-danger-100 text-danger-700 text-xs font-semibold px-1.5 py-0.5 rounded-full">
-                {alerts.length}
-              </span>
-            </div>
-
-            {/* Alert list */}
-            <ul className="max-h-[360px] overflow-y-auto p-2 space-y-2">
-              {alerts.map((alert) => {
-                const isKritis = alert.stok === 0
-
-                return (
-                  <li key={alert.id} className="rounded-xl border border-line-subtle bg-surface p-3 space-y-2 shadow-sm">
-                    {/* Badge */}
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold tracking-wide px-2 py-0.5 rounded-full ${
-                      isKritis ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isKritis ? 'bg-red-500' : 'bg-orange-500'}`} />
-                      {isKritis ? 'STOK HABIS' : 'REORDER ALERT'}
-                    </span>
-
-                    {/* Nama & info */}
-                    <div>
-                      <p className="text-sm font-semibold text-fg leading-snug">{alert.nama}</p>
-                      <p className="text-xs text-fg-muted mt-0.5">
-                        Stok sisa <span className="font-semibold text-danger-600">{alert.stok}</span> {alert.satuan}
-                        <span className="text-gray-300 mx-1">·</span>
-                        ROP {Math.ceil(alert.rop)} {alert.satuan}
-                      </p>
-                      <p className="text-xs text-fg-muted mt-0.5">
-                        Supplier:{' '}
-                        <span className="font-medium text-fg-secondary">
-                          {alert.supplier_nama ?? alert.nama_supplier ?? 'belum diatur'}
-                        </span>
-                      </p>
-                    </div>
-                  </li>
-                )
-              })}
+        {isLoading ? (
+          <div className="space-y-3 px-5 pb-5" aria-busy="true" aria-label="Memuat notifikasi">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56" />
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div role="alert" className="flex flex-col items-center gap-2 px-5 pb-6 pt-2 text-center">
+            <TriangleAlert className="size-6 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">Daftar belum bisa dimuat</p>
+            <p className="text-sm text-muted-foreground">Ini bukan berarti stok aman. Periksa koneksi, lalu coba lagi.</p>
+            <Button variant="outline" size="lg" className="mt-1 h-10 rounded-xl px-4" onClick={() => refetch()}>Coba lagi</Button>
+          </div>
+        ) : jumlah === 0 ? (
+          <div role="status" className="flex flex-col items-center gap-2 px-5 pb-6 pt-2 text-center">
+            <CircleCheck className="size-6 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">Tidak ada obat yang perlu dipesan</p>
+            <p className="text-sm text-muted-foreground">Semua stok masih di atas titik pesan ulang.</p>
+          </div>
+        ) : (
+          <>
+            {/* Baris datar dipisah garis tipis (bukan kartu di dalam kartu). Habis dahulu, lalu yang paling tipis. */}
+            <ul className="max-h-[22rem] overflow-y-auto border-t border-border">
+              {tampil.map((a) => (
+                <li key={a.id} className="border-b border-border px-5 py-3 last:border-b-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 text-sm font-medium leading-snug text-foreground">{a.nama}</p>
+                    <span className="shrink-0"><StatusBadge status="HARUS_REORDER" stok={a.stok} /></span>
+                  </div>
+                  <p className="mt-0.5 text-sm tabular-nums text-muted-foreground">
+                    Stok <span className="font-medium text-foreground">{formatAngka(a.stok, 0)}</span> dari ROP {formatAngka(a.rop, 2)} {a.satuan}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {a.supplier_nama ?? a.nama_supplier ?? (
+                      <span className="inline-flex items-center gap-1 font-medium text-warning-700">
+                        <TriangleAlert className="size-3.5" aria-hidden="true" />
+                        Supplier belum diatur
+                      </span>
+                    )}
+                  </p>
+                </li>
+              ))}
             </ul>
 
-            {/* Menuju keranjang reorder (pemesanan per supplier via WhatsApp) */}
-            <div className="p-2 border-t border-line-subtle">
-              <Link
-                href="/reorder"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-1.5 w-full bg-success-600 hover:bg-success-700 text-fg-inverse text-xs font-medium rounded-lg py-2 transition-colors"
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                Buka Keranjang Reorder
-              </Link>
+            <div className="border-t border-border p-3">
+              {jumlah > MAKS_BARIS && (
+                <p className="px-2 pb-2 text-sm text-muted-foreground">{MAKS_BARIS} teratas dari {jumlah} obat.</p>
+              )}
+              {isAdmin ? (
+                <Button size="lg" className="h-10 w-full rounded-xl px-4" asChild>
+                  <Link href="/reorder">{jumlah > MAKS_BARIS ? `Lihat semua ${jumlah} di Reorder` : 'Buka Reorder'}</Link>
+                </Button>
+              ) : (
+                <p className="px-2 pb-1 text-sm text-muted-foreground">Pemesanan dilakukan oleh admin.</p>
+              )}
             </div>
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
   )
 }

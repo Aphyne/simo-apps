@@ -1,8 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import { useResetPassword, UserItem } from '@/hooks/useUsers'
+import { useForm } from 'react-hook-form'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import KonfirmasiBuang from '@/components/shared/KonfirmasiBuang'
+import { FormActions, InputPassword, Wajib } from '@/components/shared/FormParts'
+import { useResetPassword, type UserItem } from '@/hooks/useUsers'
+
+// Sama dengan backend (userController): minimal 8 karakter dan tidak boleh sama dengan username.
+const PASSWORD_MIN = 8
+
+interface FormValues {
+  password: string
+  konfirmasi: string
+}
 
 interface Props {
   user: UserItem
@@ -10,54 +23,111 @@ interface Props {
 }
 
 export default function ResetPasswordModal({ user, onClose }: Props) {
-  const [password, setPassword] = useState('')
-  const [konfirmasi, setKonfirmasi] = useState('')
   const reset = useResetPassword()
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setError,
+    clearErrors,
+    trigger,
+    formState: { errors, isDirty, isSubmitting },
+  } = useForm<FormValues>({ shouldFocusError: false, defaultValues: { password: '', konfirmasi: '' } })
+  const [buangTerbuka, setBuangTerbuka] = useState(false)
 
-  function handleSubmit(e: { preventDefault(): void }) {
-    e.preventDefault()
-    if (password !== konfirmasi) return alert('Password dan konfirmasi tidak cocok')
-    reset.mutate({ id: user.id, password_baru: password }, { onSuccess: onClose })
+  function mintaTutup() {
+    if (isDirty) setBuangTerbuka(true)
+    else onClose()
+  }
+
+  async function simpan(data: FormValues) {
+    clearErrors('root.server')
+    try {
+      await reset.mutateAsync({ id: user.id, password_baru: data.password })
+      onClose()
+    } catch (err) {
+      const galat = err as { response?: { data?: { message?: string } } }
+      setError('root.server', { message: galat?.response?.data?.message ?? 'Password belum bisa diganti. Periksa koneksi, lalu coba lagi.' })
+    }
+  }
+
+  function fokusGalat(galat: typeof errors) {
+    const id = galat.password ? 'password-baru' : galat.konfirmasi ? 'konfirmasi' : null
+    if (!id) return
+    const el = document.getElementById(id)
+    el?.focus()
+    el?.scrollIntoView({ block: 'center' })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-surface shadow-2xl">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h2 className="text-sm font-semibold text-fg">Reset Password</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-fg-subtle hover:bg-surface-muted transition-colors">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4 p-5">
-          <p className="text-sm text-fg-muted">
-            Reset password untuk <span className="font-semibold text-fg-secondary">{user.nama}</span>{' '}
-            <span className="font-mono text-xs text-fg-muted">({user.username})</span>
+    <Dialog open onOpenChange={(o) => { if (!o) mintaTutup() }}>
+      <DialogContent className="gap-5 p-5 sm:max-w-sm">
+        <DialogHeader className="gap-1.5 pr-8">
+          <DialogTitle className="text-lg font-semibold">Reset password</DialogTitle>
+          <DialogDescription>
+            Password baru untuk <span className="font-medium text-foreground">{user.nama}</span>{' '}
+            <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">{user.username}</span>.
+            Sesi yang sedang berjalan akan berakhir.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(simpan, fokusGalat)} noValidate className="space-y-5">
+          <p className="text-sm text-muted-foreground">
+            <span className="text-destructive" aria-hidden="true">*</span> Wajib diisi
           </p>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-fg-secondary">Password Baru</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-              placeholder="Minimal 6 karakter"
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-fg-secondary">Konfirmasi Password</label>
-            <input type="password" value={konfirmasi} onChange={e => setKonfirmasi(e.target.value)} required
-              placeholder="Ulangi password baru"
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose}
-              className="border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-4 py-2 text-sm transition-colors">
-              Batal
-            </button>
-            <button type="submit" disabled={reset.isPending}
-              className="bg-danger-600 hover:bg-danger-700 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm disabled:opacity-60 transition-colors">
-              {reset.isPending ? 'Menyimpan...' : 'Reset Password'}
-            </button>
-          </div>
+
+          <FieldGroup className="gap-5">
+            <Field data-invalid={!!errors.password}>
+              <FieldLabel htmlFor="password-baru">Password baru <Wajib /></FieldLabel>
+              <InputPassword
+                id="password-baru"
+                aria-required="true"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-baru-error' : 'password-baru-hint'}
+                {...register('password', {
+                  required: 'Password baru wajib diisi',
+                  minLength: { value: PASSWORD_MIN, message: `Password minimal ${PASSWORD_MIN} karakter` },
+                  validate: (v) => v.toLowerCase() !== user.username.toLowerCase() || 'Password tidak boleh sama dengan username',
+                  onChange: () => { if (getValues('konfirmasi')) void trigger('konfirmasi') },
+                })}
+              />
+              {errors.password ? (
+                <FieldError id="password-baru-error">{errors.password.message}</FieldError>
+              ) : (
+                <FieldDescription id="password-baru-hint">Minimal {PASSWORD_MIN} karakter dan tidak sama dengan username.</FieldDescription>
+              )}
+            </Field>
+
+            <Field data-invalid={!!errors.konfirmasi}>
+              <FieldLabel htmlFor="konfirmasi">Ulangi password baru <Wajib /></FieldLabel>
+              <InputPassword
+                id="konfirmasi"
+                aria-required="true"
+                aria-invalid={!!errors.konfirmasi}
+                aria-describedby={errors.konfirmasi ? 'konfirmasi-error' : undefined}
+                {...register('konfirmasi', {
+                  required: 'Ulangi password baru',
+                  validate: (v) => v === getValues('password') || 'Password dan pengulangannya belum sama',
+                })}
+              />
+              <FieldError id="konfirmasi-error">{errors.konfirmasi?.message}</FieldError>
+            </Field>
+          </FieldGroup>
+
+          {errors.root?.server?.message && (
+            <FieldError className="rounded-xl bg-destructive/10 px-4 py-3">{errors.root.server.message}</FieldError>
+          )}
+
+          <FormActions>
+            <Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={mintaTutup}>Batal</Button>
+            <Button type="submit" disabled={isSubmitting} className="h-10 min-w-32 rounded-xl px-4">
+              {isSubmitting ? 'Menyimpan...' : 'Reset password'}
+            </Button>
+          </FormActions>
         </form>
-      </div>
-    </div>
+
+        <KonfirmasiBuang open={buangTerbuka} onOpenChange={setBuangTerbuka} onBuang={onClose} />
+      </DialogContent>
+    </Dialog>
   )
 }

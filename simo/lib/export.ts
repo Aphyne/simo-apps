@@ -1,16 +1,70 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
+import { muatLogoApotek } from './logoApotek'
 
 const APOTEK = 'Apotek Rezky Medika'
 
+type Sel = string | number
+
+// ── Gaya bersama (selaras dengan design system v2: tabel datar, kepala abu, garis tipis) ─────────────
+const WARNA = {
+  teks: [15, 23, 42] as [number, number, number],
+  abu: [100, 116, 139] as [number, number, number],
+  garis: [226, 232, 240] as [number, number, number],
+  latarTotal: [241, 245, 249] as [number, number, number],
+}
+const MARGIN_X = 14
+
+// Font standar PDF (Helvetica) tidak punya panah "↳"; diganti tanda hubung supaya tidak muncul sebagai kotak.
+const bersihkan = (c: Sel) => (typeof c === 'string' ? c.replace(/↳/g, '-') : c)
+
+// Kolom yang semua isinya angka atau rupiah ditulis rata kanan (kepalanya ikut).
+const lazimAngka = (c: Sel) => typeof c === 'number' || /^(Rp\s?)?-?[\d.,]+$/.test(String(c).trim())
+function kolomKanan(kolom: string[], baris: Sel[][]) {
+  const kanan: Record<number, { halign: 'right' }> = {}
+  kolom.forEach((_, ci) => {
+    if (baris.length > 0 && baris.every((r) => lazimAngka(r[ci] ?? '') || String(r[ci] ?? '').trim() === '-')) kanan[ci] = { halign: 'right' }
+  })
+  return kanan
+}
+
+// Kop: logo di kiri, nama apotek dan alamat center, garis tipis di bawahnya. Mengembalikan posisi y berikutnya.
+function gambarKop(doc: jsPDF, namaApotek: string, alamatApotek: string, logo: string | null): number {
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const center = pageWidth / 2
+  if (logo) doc.addImage(logo, 'PNG', MARGIN_X, 9, 17, 17)
+
+  doc.setTextColor(...WARNA.teks)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14)
+  doc.text(namaApotek.toUpperCase(), center, 16, { align: 'center' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(...WARNA.abu)
+  doc.text(alamatApotek, center, 22, { align: 'center' })
+
+  doc.setDrawColor(...WARNA.garis)
+  doc.setLineWidth(0.3)
+  doc.line(MARGIN_X, 29, pageWidth - MARGIN_X, 29)
+  doc.setTextColor(...WARNA.teks)
+  return 29
+}
+
+// Gaya tabel datar: tanpa latar kepala dan tanpa garis tegak; kepala abu, garis tipis antar baris.
+function gayaTabel(ukuran: number) {
+  return {
+    theme: 'plain' as const,
+    styles: { fontSize: ukuran, cellPadding: 2, overflow: 'linebreak' as const, textColor: WARNA.teks, lineColor: WARNA.garis, lineWidth: { bottom: 0.2 } },
+    headStyles: { textColor: WARNA.abu, fontStyle: 'bold' as const, fontSize: ukuran, lineWidth: { bottom: 0.4 }, lineColor: WARNA.garis },
+    footStyles: { fillColor: WARNA.latarTotal, textColor: WARNA.teks, fontStyle: 'bold' as const, lineWidth: { top: 0.4 }, lineColor: WARNA.garis },
+  }
+}
+
 // ── PDF: Kartu Stok ─────────────────────────────────────────────────────────
-// Layout khusus meniru kartu stok fisik: logo kecil di pojok kiri-atas (lepas
-// dari teks), nama apotek + garis + alamat + "KARTU STOK" semua center
-// berurutan ke bawah, lalu info obat (Kode/Nama/Kemasan/Satuan/Tanggal) rata
-// kiri di bawahnya. Dipisah dari exportPDF generic supaya 6 laporan lain (yang
-// masih pakai layout lama) tidak ikut berubah sampai header baru ini
-// difinalkan dan diterapkan ke semuanya.
+// Kop yang sama dengan laporan lain, lalu "KARTU STOK" center dan info obat (Kode/Nama/Kemasan/Satuan/Tanggal)
+// rata kiri di bawahnya.
 export interface KartuStokInfo {
   namaApotek: string
   alamatApotek: string
@@ -21,56 +75,22 @@ export interface KartuStokInfo {
   tanggalFilter: string
 }
 
-export function exportKartuStokPDF(
+export async function exportKartuStokPDF(
   info: KartuStokInfo,
   kolom: string[],
-  baris: (string | number)[][],
+  baris: Sel[][],
 ) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
-  const center = pageWidth / 2
-  const marginX = 14
+  const logo = await muatLogoApotek()
 
-  // ── Logo generik (lingkaran + simbol plus) di pojok kiri-atas, lepas ───────
-  // Pusat lingkaran sejajar baseline teks nama apotek (y=16), radius 4mm supaya
-  // tepi bawah logo (y=16+4=20) tidak menyentuh garis horizontal di y=22.
-  const iconR = 4
-  const iconCx = marginX + iconR
-  const iconCy = 15
-  doc.setFillColor(37, 99, 235)
-  doc.circle(iconCx, iconCy, iconR, 'F')
-  doc.setDrawColor(255, 255, 255)
-  doc.setLineWidth(0.7)
-  doc.line(iconCx - 2, iconCy, iconCx + 2, iconCy)
-  doc.line(iconCx, iconCy - 2, iconCx, iconCy + 2)
-  doc.setDrawColor(0, 0, 0)
+  let y = gambarKop(doc, info.namaApotek, info.alamatApotek, logo)
 
-  // ── Nama apotek (center) ────────────────────────────────────────────────────
-  let y = 16
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text(info.namaApotek.toUpperCase(), center, y, { align: 'center' })
-
-  // ── Garis lurus penuh ────────────────────────────────────────────────────────
-  y += 6
-  doc.setLineWidth(0.3)
-  doc.line(marginX, y, pageWidth - marginX, y)
-
-  // ── Alamat (center) ──────────────────────────────────────────────────────────
-  y += 5
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100)
-  doc.text(info.alamatApotek, center, y, { align: 'center' })
-  doc.setTextColor(0)
-
-  // ── Judul "KARTU STOK" (center) ─────────────────────────────────────────────
-  y += 8
+  y += 9
   doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
-  doc.text('KARTU STOK', center, y, { align: 'center' })
+  doc.text('KARTU STOK', pageWidth / 2, y, { align: 'center' })
 
-  // ── Info obat, rata kiri ─────────────────────────────────────────────────────
   y += 9
   doc.setFontSize(9)
   const infoLines: [string, string][] = [
@@ -81,131 +101,84 @@ export function exportKartuStokPDF(
     ['Tanggal', info.tanggalFilter],
   ]
   for (const [label, value] of infoLines) {
-    doc.setFont('helvetica', 'bold')
-    doc.text(label, marginX, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(`: ${value}`, marginX + 26, y)
+    doc.setTextColor(...WARNA.abu)
+    doc.text(label, MARGIN_X, y)
+    doc.setTextColor(...WARNA.teks)
+    doc.text(`: ${value}`, MARGIN_X + 26, y)
     y += 5
   }
 
-  // Lebar kolom proporsional: Tanggal/Masuk/Keluar/Sisa/Expired sempit (isi
-  // pendek), Keterangan & Dicatat Oleh lebih lebar tapi tetap boleh wrap ke
-  // bawah (overflow linebreak) kalau isinya kepanjangan, bukan makan tempat.
-  const tableAreaWidth = pageWidth - marginX * 2
+  // Lebar kolom proporsional: Tanggal/Masuk/Keluar/Sisa/Expired sempit (isi pendek), Keterangan dan Dicatat Oleh
+  // lebih lebar tapi tetap boleh wrap ke bawah kalau isinya kepanjangan.
+  const tableAreaWidth = pageWidth - MARGIN_X * 2
+  const lebar = [0.14, 0.22, 0.08, 0.08, 0.08, 0.14, 0.26]
+  const kanan = kolomKanan(kolom, baris)
   autoTable(doc, {
+    ...gayaTabel(9),
     head: [kolom],
-    body: baris,
+    body: baris.map((r) => r.map(bersihkan)),
     startY: y + 4,
-    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
     tableWidth: tableAreaWidth,
-    columnStyles: {
-      0: { cellWidth: tableAreaWidth * 0.11 }, // Tanggal
-      1: { cellWidth: tableAreaWidth * 0.24 }, // Keterangan
-      2: { cellWidth: tableAreaWidth * 0.08 }, // Masuk
-      3: { cellWidth: tableAreaWidth * 0.08 }, // Keluar
-      4: { cellWidth: tableAreaWidth * 0.08 }, // Sisa
-      5: { cellWidth: tableAreaWidth * 0.11 }, // Expired
-      6: { cellWidth: tableAreaWidth * 0.30 }, // Dicatat Oleh
-    },
-    margin: { left: marginX, right: marginX },
+    columnStyles: Object.fromEntries(lebar.map((w, i) => [i, { cellWidth: tableAreaWidth * w, ...(kanan[i] ?? {}) }])),
+    margin: { left: MARGIN_X, right: MARGIN_X },
   })
 
   doc.save(`Kartu_Stok_${info.kodeObat}_${Date.now()}.pdf`)
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
-// Header seragam untuk semua laporan: logo kecil lepas di pojok kiri-atas,
-// nama apotek + garis + alamat center berurutan ke bawah, lalu judul laporan
-// center, baru keterangan filter + tanggal cetak rata kiri sebelum tabel —
-// sama persis pola exportKartuStokPDF supaya seluruh dokumen laporan konsisten.
-export function exportPDF(
+// Kop seragam untuk semua laporan, lalu judul laporan center, lalu keterangan filter + tanggal cetak rata kiri
+// sebelum tabel.
+export async function exportPDF(
   judul: string,
   kolom: string[],
-  baris: (string | number)[][],
+  baris: Sel[][],
   catatan?: string,
-  kaki?: (string | number)[][],
+  kaki?: Sel[][],
   namaApotek: string = APOTEK,
   alamatApotek: string = '',
 ) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
-  const center = pageWidth / 2
-  const marginX = 14
+  const logo = await muatLogoApotek()
 
   const tgl = new Date().toLocaleDateString('id-ID', {
     day: '2-digit', month: 'long', year: 'numeric',
   })
 
-  // ── Logo generik (lingkaran + simbol plus) di pojok kiri-atas, lepas ───────
-  // Pusat lingkaran sejajar baseline teks nama apotek (y=16), radius 4mm supaya
-  // tepi bawah logo (y=16+4=20) tidak menyentuh garis horizontal di y=22.
-  const iconR = 4
-  const iconCx = marginX + iconR
-  const iconCy = 15
-  doc.setFillColor(37, 99, 235)
-  doc.circle(iconCx, iconCy, iconR, 'F')
-  doc.setDrawColor(255, 255, 255)
-  doc.setLineWidth(0.7)
-  doc.line(iconCx - 2, iconCy, iconCx + 2, iconCy)
-  doc.line(iconCx, iconCy - 2, iconCx, iconCy + 2)
-  doc.setDrawColor(0, 0, 0)
+  let y = gambarKop(doc, namaApotek, alamatApotek, logo)
 
-  // ── Nama apotek (center) ────────────────────────────────────────────────────
-  let y = 16
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text(namaApotek.toUpperCase(), center, y, { align: 'center' })
-
-  // ── Garis lurus penuh ────────────────────────────────────────────────────────
-  y += 6
-  doc.setLineWidth(0.3)
-  doc.line(marginX, y, pageWidth - marginX, y)
-
-  // ── Alamat (center) ──────────────────────────────────────────────────────────
-  y += 5
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100)
-  doc.text(alamatApotek, center, y, { align: 'center' })
-  doc.setTextColor(0)
-
-  // ── Judul laporan (center) ──────────────────────────────────────────────────
-  y += 8
+  y += 9
   doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
-  doc.text(judul.toUpperCase(), center, y, { align: 'center' })
+  doc.text(judul.toUpperCase(), pageWidth / 2, y, { align: 'center' })
 
-  // ── Keterangan filter + tanggal cetak, rata kiri ────────────────────────────
   y += 8
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100)
+  doc.setTextColor(...WARNA.abu)
   if (catatan) {
-    doc.text(catatan, marginX, y)
+    doc.text(catatan, MARGIN_X, y)
     y += 5
   }
-  doc.text(`Dicetak: ${tgl}`, marginX, y)
-  doc.setTextColor(0)
+  doc.text(`Dicetak: ${tgl}`, MARGIN_X, y)
+  doc.setTextColor(...WARNA.teks)
 
+  const kanan = kolomKanan(kolom, baris)
   autoTable(doc, {
+    // Portrait jauh lebih sempit dari landscape (lebar tabel ~182mm): font dikecilkan dan overflow 'linebreak'
+    // (word-wrap dalam sel) supaya kolom banyak (sampai 10+) tetap muat tanpa terpotong.
+    ...gayaTabel(6.5),
     head: [kolom],
-    body: baris,
-    ...(kaki && kaki.length > 0 ? {
-      foot: kaki,
-      footStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
-      showFoot: 'lastPage',
-    } : {}),
+    body: baris.map((r) => r.map(bersihkan)),
+    ...(kaki && kaki.length > 0 ? { foot: kaki.map((r) => r.map(bersihkan)), showFoot: 'lastPage' as const } : {}),
     startY: y + 4,
-    // Portrait jauh lebih sempit dari landscape (lebar tabel ~182mm) — font
-    // dikecilkan dan overflow dibuat 'linebreak' (word-wrap dalam sel) supaya
-    // kolom banyak (sampai 10+) tetap muat tanpa terpotong, bukan dipotong diam-diam.
-    styles: { fontSize: 6.5, cellPadding: 1.5, overflow: 'linebreak' },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold', fontSize: 6.5 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
+    columnStyles: kanan,
+    // columnStyles tidak berlaku untuk baris kaki, jadi angka total diratakan kanan di sini.
+    didParseCell: (d) => { if (d.section === 'foot' && kanan[d.column.index]) d.cell.styles.halign = 'right' },
     tableWidth: 'auto',
-    margin: { left: marginX, right: marginX },
+    margin: { left: MARGIN_X, right: MARGIN_X },
   })
 
   doc.save(`${judul.replace(/\s+/g, '_')}_${Date.now()}.pdf`)
@@ -215,8 +188,8 @@ export function exportPDF(
 export function exportExcel(
   namaFile: string,
   kolom: string[],
-  baris: (string | number)[][],
-  kaki?: (string | number)[][],
+  baris: Sel[][],
+  kaki?: Sel[][],
 ) {
   const allRows = kaki && kaki.length > 0 ? [...baris, ...kaki] : baris
   const ws = XLSX.utils.aoa_to_sheet([kolom, ...allRows])
