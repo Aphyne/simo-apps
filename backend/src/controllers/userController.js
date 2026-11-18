@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
 const { hapusCacheUser, cabutTokenUser } = require('../middleware/authMiddleware');
 const { balasHttpError } = require('../utils/validasi');
+const { normalisasiUsername, usernameValid, PESAN_USERNAME } = require('../utils/username');
 
 const PASSWORD_MIN = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,10 +37,14 @@ async function createUser(req, res) {
   if (typeof username !== 'string' || typeof password !== 'string' || typeof nama !== 'string') {
     return res.status(400).json({ success: false, message: 'Data tidak valid' });
   }
+  const usernameNorm = normalisasiUsername(username);
+  if (!usernameValid(usernameNorm)) {
+    return res.status(400).json({ success: false, message: PESAN_USERNAME });
+  }
   if (password.length < PASSWORD_MIN) {
     return res.status(400).json({ success: false, message: `Password minimal ${PASSWORD_MIN} karakter` });
   }
-  if (password.toLowerCase() === username.toLowerCase()) {
+  if (password.toLowerCase() === usernameNorm.toLowerCase()) {
     return res.status(400).json({ success: false, message: 'Password tidak boleh sama dengan username' });
   }
   if (email && (typeof email !== 'string' || !EMAIL_RE.test(email))) {
@@ -49,7 +54,7 @@ async function createUser(req, res) {
     const hashed = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
       'INSERT INTO users (username, password, nama, role, email) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, nama, email, role, is_active, created_at',
-      [username, hashed, nama, role, email || null]
+      [usernameNorm, hashed, nama, role, email || null]
     );
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
@@ -65,7 +70,7 @@ async function createUser(req, res) {
 // PUT /api/users/:id
 async function updateUser(req, res) {
   const { id } = req.params;
-  const { nama, role, is_active, email } = req.body;
+  const { username, nama, role, is_active, email } = req.body;
   if (!nama || !role) {
     return res.status(400).json({ success: false, message: 'Nama dan role wajib diisi' });
   }
@@ -79,6 +84,17 @@ async function updateUser(req, res) {
     return res.status(400).json({ success: false, message: 'Nama atau email tidak valid' });
   }
   const diriSendiri = req.user.id === parseInt(id);
+  // Username boleh diganti admin untuk akun LAIN (mis. salah ketik); akun sendiri tidak. Tanpa `username` di badan
+  // permintaan, username lama dipertahankan.
+  const usernameNorm = username === undefined ? undefined : normalisasiUsername(username);
+  if (usernameNorm !== undefined) {
+    if (!usernameValid(usernameNorm)) {
+      return res.status(400).json({ success: false, message: PESAN_USERNAME });
+    }
+    if (diriSendiri && usernameNorm !== req.user.username) {
+      return res.status(400).json({ success: false, message: 'Tidak bisa mengubah username akun sendiri' });
+    }
+  }
   if (diriSendiri && is_active === false) {
     return res.status(400).json({ success: false, message: 'Tidak bisa menonaktifkan akun sendiri' });
   }
@@ -89,9 +105,10 @@ async function updateUser(req, res) {
     // is_active tidak dikirim → status lama dipertahankan (sebelumnya otomatis jadi aktif lagi
     // sehingga akun nonaktif bisa hidup kembali hanya karena nama diedit — temuan QA AUTH-08).
     const { rows } = await pool.query(
-      `UPDATE users SET nama=$1, role=$2, is_active=COALESCE($3::boolean, is_active), email=$4, updated_at=NOW()
+      `UPDATE users SET nama=$1, role=$2, is_active=COALESCE($3::boolean, is_active), email=$4,
+                        username=COALESCE($6::text, username), updated_at=NOW()
        WHERE id=$5 AND role <> 'superadmin' RETURNING id, username, nama, email, role, is_active, created_at`,
-      [nama, role, is_active === undefined ? null : is_active, email || null, id]
+      [nama, role, is_active === undefined ? null : is_active, email || null, id, usernameNorm === undefined ? null : usernameNorm]
     );
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
@@ -99,6 +116,9 @@ async function updateUser(req, res) {
     hapusCacheUser(id);
     res.json({ success: true, data: rows[0] });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ success: false, message: 'Username atau email sudah digunakan' });
+    }
     if (balasHttpError(err, res)) return;
     console.error('users.update:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });

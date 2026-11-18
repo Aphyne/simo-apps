@@ -33,20 +33,15 @@ function resolveBiayaSimpanPct(pct) {
 // dibagi rata ke tiap obat BERBEDA yang ada dalam faktur yang sama (jumlahObatUnik),
 // supaya total biaya pesan tidak melebih-hitung saat EOQ dihitung per obat.
 // 2 baris batch untuk obat yang sama dihitung sebagai 1 obat, bukan 2.
-// Biaya per faktur diambil dari supplier faktur itu (supplier.biaya_pesan). Bila supplier belum
-// diisi (0), jatuh ke pengaturan biaya_pesan_per_faktur, lalu 5000.
+// Biaya per faktur HANYA diambil dari supplier faktur itu (supplier.biaya_pesan). Tidak ada lagi cadangan diam-diam dari
+// pengaturan atau angka bawaan (dihapus 18 Nov 2026 atas keputusan Boss): supplier yang biayanya belum diisi (0) memberi
+// biaya pesan 0, sehingga EOQ obatnya tampil "belum bisa dihitung" (jalur S = 0 di eoqService) dan Boss tahu harus mengisinya.
 async function hitungBiayaPesanPerObat(client, jumlahObatUnik, supplierId) {
-  let biayaPerFaktur = null;
+  let biayaPerFaktur = 0;
   if (supplierId) {
     const { rows: sup } = await client.query('SELECT biaya_pesan FROM supplier WHERE id = $1', [supplierId]);
     const b = sup.length ? parseFloat(sup[0].biaya_pesan) : NaN;
     if (Number.isFinite(b) && b > 0) biayaPerFaktur = b;
-  }
-  if (biayaPerFaktur === null) {
-    const { rows } = await client.query(
-      "SELECT value FROM pengaturan WHERE key = 'biaya_pesan_per_faktur'"
-    );
-    biayaPerFaktur = rows.length ? parseFloat(rows[0].value) : 5000;
   }
   const n = jumlahObatUnik > 0 ? jumlahObatUnik : 1;
   return parseFloat((biayaPerFaktur / n).toFixed(4));

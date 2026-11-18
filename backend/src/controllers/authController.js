@@ -4,6 +4,7 @@ const { OAuth2Client } = require('google-auth-library');
 const pool = require('../db/pool');
 const { catat } = require('../services/aktivitasService');
 const { cabutTokenUser } = require('../middleware/authMiddleware');
+const { normalisasiUsername } = require('../utils/username');
 
 // Hash tiruan (cost 10, sama dengan hash password asli) agar waktu respons login tetap sama
 // walaupun username tidak ditemukan.
@@ -19,9 +20,11 @@ async function login(req, res) {
   }
 
   try {
+    // Spasi di ujung dan spasi ganda dirapikan; huruf besar dan kecil DIBEDAKAN (keputusan Boss, 18 Nov 2026).
+    const usernameCari = normalisasiUsername(username);
     const { rows } = await pool.query(
       'SELECT id, username, nama, role, password FROM users WHERE username = $1 AND is_active = true',
-      [username]
+      [usernameCari]
     );
 
     if (rows.length === 0) {

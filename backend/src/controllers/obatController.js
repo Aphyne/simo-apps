@@ -137,6 +137,42 @@ function rapikanNama(nama) {
     .join(' ');
 }
 
+// Kategori dan satuan boleh nilai baru (tidak ada daftar di server), tetapi dirapikan agar tidak lahir duplikat yang
+// hanya beda huruf besar/kecil atau spasi: nilai yang sama (tanpa membedakan huruf) memakai ejaan yang SUDAH ADA di
+// tabel obat; nilai benar-benar baru dirapikan (kategori: huruf pertama tiap kata dikapitalkan, singkatan tetap;
+// satuan: huruf kecil semua).
+const MAKS_KATEGORI = 40;
+const MAKS_SATUAN = 30;
+async function samakanOpsi(kolom, mentah) {
+  const teks = String(mentah ?? '').trim().replace(/\s+/g, ' ');
+  if (!teks) return '';
+  const KOLOM = { kategori: 'kategori', satuan: 'satuan' }[kolom];
+  const { rows } = await pool.query(`SELECT ${KOLOM} AS v FROM obat WHERE LOWER(${KOLOM}) = LOWER($1) LIMIT 1`, [teks]);
+  if (rows.length) return rows[0].v;
+  return kolom === 'satuan'
+    ? teks.toLowerCase()
+    : teks.replace(/(^|[\s\-/(])([a-z])/g, (_, pemisah, huruf) => pemisah + huruf.toUpperCase());
+}
+function periksaOpsi(kategori, satuan) {
+  if (kategori.length > MAKS_KATEGORI) return `Kategori maksimal ${MAKS_KATEGORI} karakter`;
+  if (satuan.length > MAKS_SATUAN) return `Satuan maksimal ${MAKS_SATUAN} karakter`;
+  return null;
+}
+
+// GET /api/obat/opsi: kategori dan satuan yang sudah dipakai obat (untuk melengkapi daftar baku di form dan filter).
+async function getOpsi(req, res) {
+  try {
+    const [kat, sat] = await Promise.all([
+      pool.query(`SELECT DISTINCT kategori AS v FROM obat WHERE kategori IS NOT NULL AND TRIM(kategori) <> '' ORDER BY kategori`),
+      pool.query(`SELECT DISTINCT satuan AS v FROM obat WHERE satuan IS NOT NULL AND TRIM(satuan) <> '' ORDER BY satuan`),
+    ]);
+    res.json({ success: true, data: { kategori: kat.rows.map((r) => r.v), satuan: sat.rows.map((r) => r.v) } });
+  } catch (err) {
+    console.error('obat.getOpsi:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
+
 // Batas wajar input angka obat. Menolak NaN / Infinity / negatif / teks sebelum masuk database.
 const SPEC_OBAT = {
   satuan_per_dus: { min: 1, max: 100000, int: true, label: 'Isi per dus' },
@@ -210,6 +246,11 @@ async function create(req, res) {
   const stok_awal = parseInt(stok) || 0;
 
   try {
+    const kategoriRapi = await samakanOpsi('kategori', kategori);
+    const satuanRapi = await samakanOpsi('satuan', satuan);
+    const salahOpsi = periksaOpsi(kategoriRapi, satuanRapi);
+    if (salahOpsi) return res.status(400).json({ success: false, message: salahOpsi });
+
     const kembar = await cariNamaKembar(nama);
     if (kembar) {
       return res.status(409).json({ success: false, field: 'nama', message: pesanNamaKembar(kembar) });
@@ -255,7 +296,7 @@ async function create(req, res) {
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
       RETURNING *`,
       [
-        kode, nama, kategori, satuan,
+        kode, nama, kategoriRapi, satuanRapi,
         satuan_per_dus || 1, harga_beli || 0, harga_jual || 0, 0,
         demand_harian || 0, demand_tahunan || 0, std_dev_demand || 0,
         bpDefault, biaya_simpan || 0,
@@ -313,11 +354,13 @@ async function update(req, res) {
     }
 
     const nama = body.nama === undefined ? o.nama : rapikanNama(body.nama);
-    const kategori = pilih(body.kategori, o.kategori);
-    const satuan = pilih(body.satuan, o.satuan);
+    const kategori = body.kategori === undefined ? o.kategori : await samakanOpsi('kategori', body.kategori);
+    const satuan = body.satuan === undefined ? o.satuan : await samakanOpsi('satuan', body.satuan);
     if (!nama || !kategori || !satuan) {
       return res.status(400).json({ success: false, message: 'Nama, kategori, dan satuan wajib diisi' });
     }
+    const salahOpsi = periksaOpsi(kategori, satuan);
+    if (salahOpsi) return res.status(400).json({ success: false, message: salahOpsi });
 
     // Cek nama kembar hanya bila nama berubah: obat yang sudah terlanjur kembar tetap bisa diubah data lainnya.
     const namaLamaRapi = String(o.nama ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -517,4 +560,4 @@ async function getBatchSummary(req, res) {
   }
 }
 
-module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary };
+module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary, getOpsi };

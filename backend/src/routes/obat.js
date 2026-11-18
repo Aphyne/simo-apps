@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary } = require('../controllers/obatController');
+const { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary, getOpsi } = require('../controllers/obatController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleMiddleware');
 
@@ -10,6 +10,7 @@ router.use(verifyToken);
 
 router.get('/', getAll);
 router.get('/reorder-alert', getReorderAlert);
+router.get('/opsi', getOpsi);
 router.get('/:id/perhitungan', requireRole('admin'), getPerhitungan);
 router.get('/:id/batch-summary', getBatchSummary);
 router.get('/:id', getById);

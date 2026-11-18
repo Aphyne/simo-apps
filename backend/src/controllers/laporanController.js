@@ -12,7 +12,7 @@ async function getLaporanStok(req, res) {
     const { rows } = await pool.query(`
       SELECT id, kode, nama, kategori, satuan, stok,
              eoq, safety_stock, rop, total_biaya,
-             expired_terdekat, demand_harian
+             expired_terdekat, demand_harian, harga_beli
       FROM obat
       ${where}
       ORDER BY kategori ASC, nama ASC
@@ -38,7 +38,7 @@ async function getLaporanBarangMasuk(req, res) {
 
     const { rows } = await pool.query(`
       SELECT bm.id, bm.tanggal, bm.jumlah_dus, bm.jumlah_satuan,
-             bm.no_faktur, bm.catatan,
+             bm.no_faktur, bm.catatan, bm.harga_beli,
              o.kode, o.nama AS nama_obat, o.satuan, o.kategori,
              s.nama AS nama_supplier,
              u.nama AS nama_user, u.role AS role_user
@@ -71,7 +71,7 @@ async function getLaporanBarangKeluar(req, res) {
 
     const { rows } = await pool.query(`
       SELECT bk.id, bk.tanggal, bk.jumlah, bk.keterangan, bk.catatan,
-             bk.stok_sebelum, bk.stok_sesudah,
+             bk.stok_sebelum, bk.stok_sesudah, bk.harga_jual,
              o.kode, o.nama AS nama_obat, o.satuan, o.kategori,
              u.nama AS nama_user, u.role AS role_user
       FROM barang_keluar bk
@@ -100,6 +100,7 @@ async function getLaporanKedaluarsa(req, res) {
     const { rows } = await pool.query(`
       WITH batch_masuk AS (
         SELECT obat_id, expired_batch,
+          STRING_AGG(DISTINCT no_batch, ', ') FILTER (WHERE no_batch IS NOT NULL) AS no_batch,
           SUM(jumlah_satuan)::int AS total_masuk
         FROM barang_masuk
         WHERE expired_batch IS NOT NULL
@@ -114,7 +115,7 @@ async function getLaporanKedaluarsa(req, res) {
       ),
       batch_calc AS (
         SELECT
-          bm.obat_id, bm.expired_batch,
+          bm.obat_id, bm.expired_batch, bm.no_batch,
           GREATEST(0,
             bm.total_masuk - GREATEST(0,
               COALESCE(tk.total_keluar, 0) -
@@ -129,13 +130,14 @@ async function getLaporanKedaluarsa(req, res) {
       ),
       nearest_batch AS (
         SELECT DISTINCT ON (obat_id)
-          obat_id, estimasi_sisa
+          obat_id, no_batch, estimasi_sisa
         FROM batch_calc
         WHERE expired_batch >= (NOW() AT TIME ZONE 'Asia/Jakarta')::date AND estimasi_sisa > 0
         ORDER BY obat_id, expired_batch ASC
       )
       SELECT
         o.id, o.kode, o.nama, o.kategori, o.satuan,
+        nb.no_batch,
         COALESCE(nb.estimasi_sisa, o.stok) AS stok,
         o.expired_terdekat,
         (o.expired_terdekat - (NOW() AT TIME ZONE 'Asia/Jakarta')::date) AS sisa_hari
