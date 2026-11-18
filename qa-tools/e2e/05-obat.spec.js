@@ -197,8 +197,8 @@ test.describe('Data Obat: alur admin', () => {
     await page.getByRole('button', { name: 'Simpan dan tambah lagi' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'sudah ditambahkan' })).toContainText('Kategori dan satuan tetap');
     await expect(page.locator('#nama')).toHaveValue('');
-    await expect(page.locator('#kategori')).toContainText('Analgesik');
-    await expect(page.locator('#satuan')).toContainText('botol');
+    await expect(page.locator('#kategori')).toHaveValue('Analgesik');
+    await expect(page.locator('#satuan')).toHaveValue('botol');
     await expect(page.locator('#satuan_per_dus')).toHaveValue('1');
     expect(await page.evaluate(() => document.activeElement && document.activeElement.id)).toBe('nama');
   });

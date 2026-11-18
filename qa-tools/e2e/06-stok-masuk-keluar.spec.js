@@ -69,7 +69,7 @@ test.describe('Stok Masuk dan Stok Keluar', () => {
     // tombol Catat di kepala halaman (bukan di kepala panel riwayat)
     const tombol = page.getByRole('button', { name: 'Catat stok masuk' }).first();
     await expect(tombol).toBeVisible();
-    for (const label of ['Total transaksi', 'Transaksi bulan ini', 'Satuan masuk bulan ini', 'Terakhir masuk']) {
+    for (const label of ['Pembelian bulan ini', 'Faktur bulan ini', 'Terakhir masuk']) {
       await expect(page.getByText(label, { exact: true })).toBeVisible();
     }
     await expect(page.getByText('Riwayat stok masuk')).toBeVisible();
@@ -243,7 +243,7 @@ test.describe('Stok Masuk dan Stok Keluar', () => {
   });
 
   test('masuk: sidebar tetap di tempatnya saat dropdown Semua waktu terbuka (desktop)', async ({ page }, info) => {
-    test.skip(info.project.name !== 'desktop-1366', 'Sidebar tetap hanya di layar lebar; di HP berupa drawer');
+    test.skip(!info.project.name.startsWith('desktop-1366'), 'Sidebar tetap hanya di layar lebar; di HP berupa drawer');
     await page.goto('/barang-masuk');
     await tenang(page);
     await page.evaluate(() => window.scrollTo(0, 600));
@@ -307,7 +307,7 @@ test.describe('Stok Masuk dan Stok Keluar', () => {
     await tenang(page);
     await expect(page.getByRole('heading', { name: 'Stok keluar' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Catat stok keluar' }).first()).toBeVisible();
-    for (const label of ['Transaksi hari ini', 'Transaksi bulan ini', 'Penjualan hari ini', 'Penjualan bulan ini']) {
+    for (const label of ['Penjualan hari ini', 'Penjualan bulan ini', 'Keluar bukan penjualan']) {
       await expect(page.getByText(label, { exact: true })).toBeVisible();
     }
     await expect(page.getByText('Riwayat stok keluar')).toBeVisible();
@@ -321,7 +321,7 @@ test.describe('Stok Masuk dan Stok Keluar', () => {
     await page.getByRole('button', { name: 'Catat stok keluar' }).first().click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: 'Catat stok keluar' })).toBeVisible();
-    await expect(page.locator('#keterangan')).toContainText('Penjualan');
+    await expect(page.locator('#keterangan')).toHaveValue('Penjualan');
     await expect(page.locator('#obat-keluar')).toBeFocused();
     await expect(page.locator('#tanggal')).toHaveValue(ymd(0));
     // tanpa isian apa pun, Batal menutup langsung (keterangan bawaan bukan isian)
@@ -377,7 +377,7 @@ test.describe('Stok Masuk dan Stok Keluar', () => {
     await dialog.getByRole('button', { name: 'Simpan dan catat lagi' }).click();
     await expect(dialog.getByText(/tersimpan dan stok sudah berkurang/)).toBeVisible();
     await expect(dialog.getByText('Daftar obat (0)')).toBeVisible();
-    await expect(page.locator('#keterangan')).toContainText('Penjualan'); // dipertahankan
+    await expect(page.locator('#keterangan')).toHaveValue('Penjualan'); // dipertahankan
     expect(await stokObat(page, d.a.id)).toBe(47);
     expect(await stokObat(page, d.b.id)).toBe(16);
     await dialog.getByRole('button', { name: 'Batal' }).click();
@@ -485,7 +485,7 @@ test.describe('Stok Masuk dan Stok Keluar', () => {
     await page.getByRole('button', { name: 'Catat stok keluar' }).first().click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: 'Catat stok keluar' })).toBeVisible();
-    await expect(page.locator('#keterangan')).toContainText('Penjualan');
+    await expect(page.locator('#keterangan')).toHaveValue('Penjualan');
     await dialog.getByRole('button', { name: 'Batal' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });

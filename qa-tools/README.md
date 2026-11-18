@@ -40,7 +40,19 @@ node jalankan-e2e.js -- --project=hp-390     # argumen setelah "--" diteruskan k
 
 `jalankan-e2e.js` menyalakan Postgres lokal sementara (port 54329, dibuat bersih tiap run), akun uji (admin, staf1, peneliti; password `password`, hanya di DB lokal), backend uji (8032) dan `next start` (3010, mode produksi), menjalankan uji, lalu mematikan semuanya. Tidak menyentuh Neon/production. Jangan menjalankan `npx playwright test` langsung kecuali stack sudah menyala (alamat lain lewat `SIMO_FE_URL` dan `SIMO_BE_URL`).
 
-Uji di `e2e/` (62 uji = 31 uji x 2 ukuran layar):
+### Membuka laporan hasil uji (web)
+
+Tiap run menulis laporan web ke `hasil/laporan-html/` (diabaikan git; ditimpa tiap run). Isinya per berkas uji: tes lulus/gagal/dilewati, label project, durasi, dan untuk tes gagal ada langkah, galat, serta tangkapan layar. Cara membukanya, dari folder `qa-tools`:
+
+```
+npx playwright show-report hasil/laporan-html
+```
+
+Browser terbuka sendiri; tekan Ctrl+C di terminal untuk menutup. Memantau progres saat uji masih berjalan: `Get-Content hasil\e2e.log -Wait -Tail 20` di PowerShell (bila run dialihkan ke `hasil/e2e.log`: `node jalankan-e2e.js --build > hasil/e2e.log 2>&1`). Tanda di log: `ok` lulus, `x` gagal, `-` dilewati.
+
+Project di `playwright.config.js`: `desktop-1366` dan `hp-390` hanya menjalankan uji tampilan (04) dan berjalan PERTAMA selagi database uji masih bersih; `desktop-1366 alur` lalu `hp-390 alur` menjalankan uji alur (05, 06, dst.). Pemisahan ini mencegah tangkapan HP ikut memotret data sisa uji alur desktop. Satu uji (sidebar tetap saat dropdown dibuka, 06) sengaja dilewati di HP karena sidebar di sana berupa drawer.
+
+Uji di `e2e/` (semua uji dijalankan di dua ukuran layar; terakhir 151 lulus, 1 dilewati sengaja):
 - `00-cek-playwright.spec.js`: Playwright + Chrome berjalan (tanpa aplikasi).
 - `01-login.spec.js`: pesan error login tidak hilang dan tanpa reload, atribut cookie (Lax, tanpa Secure di http, sekitar 7 hari), halaman diproteksi.
 - `02-hak-akses.spec.js`: staf dialihkan dari halaman khusus admin dan tidak melihat tombol Tambah/Edit; admin boleh.
