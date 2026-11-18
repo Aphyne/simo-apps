@@ -1,5 +1,7 @@
 # Serah terima: tahap Design System (diperbarui 10 Nov 2026, menimpa versi awal)
 
+> Catatan 18 Nov 2026: `docs/FE-AGENT.md` dan `docs/spec/design-system.md` yang disebut di dokumen ini sudah dihapus. Acuan desain sekarang `docs/DESIGN.md` dan `docs/design/halaman/`. Folder `docs/design-reference/` masih ada.
+
 Dibaca pertama oleh sesi baru. Tujuan: **mengerjakan tahap Design System** dengan tim agent. Rencana di bawah menimpa urutan lama (versi awal berkas ini).
 
 ## Posisi

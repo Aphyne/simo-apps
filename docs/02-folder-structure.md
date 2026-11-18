@@ -25,8 +25,7 @@ docs/
 ├── 06-business-logic.md      ← rumus EOQ, ROP, SS, TC
 ├── 08-development-roadmap.md ← fase pengembangan
 ├── DESIGN.md                 ← design system (sumber tunggal)
-├── FE-AGENT.md               ← penunjuk ke DESIGN.md untuk agent
-└── design-reference/         ← gambar acuan redesign (Akuris)
+└── design/halaman/           ← keputusan desain khusus tiap halaman (Data Obat, Stok masuk, Stok keluar, Laporan, Reorder, Supplier)
 ```
 
 ---

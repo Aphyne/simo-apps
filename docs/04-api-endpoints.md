@@ -400,6 +400,8 @@ Hasil perbandingan lengkap sebelum vs sesudah.
 
 ## LAPORAN
 
+> Catatan 18 Nov 2026 (bagian ini belum disamakan dengan rute sebenarnya di `backend/src/routes/laporan.js`, mis. `/stok`, `/kartu-stok`): tiga endpoint laporan kini menyertakan kolom harga untuk ubin rupiah di halaman Laporan. `GET /api/laporan/stok` menambah `harga_beli` (per satuan, dari `obat`), `GET /api/laporan/barang-masuk` menambah `harga_beli` (per satuan sesudah PPN dan diskon, `null` bila belum diisi), dan `GET /api/laporan/barang-keluar` menambah `harga_jual` (per satuan saat dicatat). Kolom `numeric` tiba sebagai teks; 0 atau kosong berarti belum diisi. Hanya penambahan kolom SELECT, tanpa migrasi.
+
 ### GET `/api/laporan/stok-harian`
 **Query params:** `tanggal`, `kategori`, `status`
 
@@ -499,3 +501,6 @@ Riwayat pemesanan (barang masuk) per supplier.
 | 409 | Conflict (misal: hapus obat yang masih punya transaksi) |
 | 422 | Unprocessable Entity (validasi gagal) |
 | 500 | Internal Server Error |
+
+### GET /api/obat/opsi (18 Nov 2026)
+Kategori dan satuan yang sudah dipakai obat, untuk melengkapi daftar baku di form dan filter. Semua peran. Respons: `{ success, data: { kategori: string[], satuan: string[] } }`. Pada `POST/PUT /api/obat`, kategori dan satuan dirapikan server: nilai yang sama (tanpa membedakan huruf) memakai ejaan yang sudah ada; nilai baru dirapikan (kategori huruf pertama tiap kata dikapitalkan, satuan huruf kecil); maksimal 40 dan 30 karakter.

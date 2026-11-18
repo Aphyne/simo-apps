@@ -36,7 +36,7 @@ Terbuka dan dipilih: T-01 sampai T-08 (di atas).
 | NUM-02 ambang status stok (ROP x1.5 di kode vs x1.2 di dokumen) | Keputusan produk, bukan bug teknis. Perlu Boss memilih angka acuan (dan skripsi menyesuaikan). Diubah sepihak bisa mengubah label stok. |
 | PERF-05 laporan tanpa paginasi, FE-13 `limit: 9999`, impor statis xlsx/jspdf | Mengubah kontrak API dan banyak tabel; risiko regresi sedang. Aman untuk volume apotek saat ini. Jalur tersendiri sesudah deploy. |
 | PERF-08 create tidak transaksional | Barang masuk/keluar sudah memakai transaksi; sisa kasus (DB putus) jarang. Tunggu pengujian beban ulang. |
-| FE-07 mobile, FE-08 modal aksesibel, FE-09 label `htmlFor` | Pekerjaan UI luas (banyak komponen). Perlu jalur Besar dan desain mengikuti FE-AGENT.md. |
+| FE-07 mobile, FE-08 modal aksesibel, FE-09 label `htmlFor` | Pekerjaan UI luas (banyak komponen). Perlu jalur Besar dan desain mengikuti DESIGN.md. |
 | FE-05 pemindahan token dari sessionStorage / CSP | Perubahan arsitektur auth; hanya max-age/Secure yang diambil (T-07). |
 | Ganti bcryptjs ke bcrypt native | Berisiko build di Windows; manfaat kecil. |
 | Upgrade dependensi (Next, jsPDF, axios, dll) | Upgrade major berisiko mematahkan build; mayoritas tidak terjangkau. Jadwal terpisah. |
@@ -145,7 +145,7 @@ Sumber: scratchpad (pgenv/up.js, preload.js, suite.js, fix.js, smoke-prod.js, la
 - AC-T12-4: Hanya `next.config.*` yang diubah (tidak ada perubahan komponen).
 
 ### T-13 Responsif HP
-Wajib baca `docs/FE-AGENT.md` dulu; tanpa skill desain eksternal; desktop tidak berubah.
+Wajib baca `docs/DESIGN.md` dulu; tanpa skill desain eksternal; desktop tidak berubah.
 - AC-T13-1: Pada lebar 390px (juga 360 dan 430) halaman dashboard, obat, monitoring, barang-masuk, barang-keluar, laporan, users memenuhi `document.documentElement.scrollWidth <= clientWidth` (tanpa scroll horizontal halaman).
 - AC-T13-2: Sidebar menjadi drawer di layar kecil dengan tombol menu di Header (buka/tutup, tutup saat pindah halaman atau klik latar); di desktop tetap seperti semula.
 - AC-T13-3: Tabel dalam kartu bisa di-scroll horizontal di dalam kartu; grid kartu menumpuk; form dan modal muat di layar (tidak terpotong, bisa di-scroll).

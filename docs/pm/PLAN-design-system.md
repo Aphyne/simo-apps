@@ -1,5 +1,7 @@
 # PLAN: tahap Design System (jalur SEDANG)
 
+> Catatan 18 Nov 2026: `docs/FE-AGENT.md` dan `docs/spec/design-system.md` yang disebut di dokumen ini sudah dihapus. Acuan desain sekarang `docs/DESIGN.md` dan `docs/design/halaman/`. Folder `docs/design-reference/` masih ada.
+
 - Tanggal: 2026-11-10 | Branch: `refactor/design-system` | Pemilik: Niki
 - Sumber: docs/pm/HANDOFF-DESIGN.md (rencana baru), docs/spec/design-system.md (v1.0, 16 AC)
 - Urutan Tahap A/B: T-D0 (selesai) → T-D2 (sedang) → Tahap B T-D5a..g → T-D1 → T-D3 → T-D4 → uji Tessa.
