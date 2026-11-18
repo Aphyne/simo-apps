@@ -24,7 +24,7 @@ Panggilan memakai SURAT TUGAS (Dari, Untuk, Tugas, Input berupa path, Output, Kr
 3. Uji tulis hanya di Postgres lokal sementara (`qa-tools/`, port 54329); ke Neon hanya baca dan hanya bila perlu.
 4. Jangan cetak/baca nilai rahasia (`backend/.env`, JWT_SECRET, DATABASE_URL, password).
 5. Commit memakai Conventional Commits, TANPA trailer Co-Authored-By/"Claude" (Boss tidak mau Claude tampil sebagai contributor). Jangan commit/push kecuali diminta.
-6. Sebelum menyentuh UI baca panduan desain (`docs/DESIGN.md` bila sudah ada, jika belum `docs/FE-AGENT.md`). Dilarang memakai skill desain eksternal tanpa izin Boss.
+6. Sebelum menyentuh UI baca panduan desain (`docs/DESIGN.md`, dan `docs/design/halaman/*.md` untuk halaman yang akan disentuh). Dilarang memakai skill desain eksternal tanpa izin Boss.
 7. Pertanyaan opini = diskusi dulu, jangan langsung ngoding. Laporkan apa adanya (gagal ditulis gagal, tidak diuji ditulis tidak diuji).
 
 ## Rujukan cepat
