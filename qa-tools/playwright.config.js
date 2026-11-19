@@ -8,7 +8,12 @@ module.exports = defineConfig({
   outputDir: './hasil/playwright',
   snapshotPathTemplate: '{testDir}/__tangkapan__/{testFilePath}/{projectName}-{arg}{ext}',
   // list = ringkasan di terminal; html = laporan web (buka dengan `npx playwright show-report hasil/laporan-html`).
-  reporter: [['list'], ['html', { outputFolder: './hasil/laporan-html', open: 'never' }]],
+  // blob = hasil mentah untuk laporan gabungan (`node jalankan-semua.js` -> hasil/laporan-gabungan).
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: './hasil/laporan-html', open: 'never' }],
+    ['blob', { outputDir: './hasil/blob-e2e', fileName: 'e2e.zip' }],
+  ],
   timeout: 30_000,
   workers: 1, // satu per satu: frontend/backend uji berbagi port dan database lokal
   use: {
