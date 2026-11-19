@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { PackageMinus, Package, Wallet, Coins, Eye, Pencil, Trash2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
+import { PackageMinus, Package, Wallet, Coins, Eye, Pencil, Trash2, Undo2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ import { FilterBar, SearchField } from '@/components/shared/FilterBar'
 import Pagination from '@/components/shared/Pagination'
 import StateMessage from '@/components/shared/StateMessage'
 import IconAction from '@/components/shared/IconAction'
+import DicatatOleh from '@/components/shared/DicatatOleh'
 import KonfirmasiBuang from '@/components/shared/KonfirmasiBuang'
 import BarangKeluarTambahDialog from '@/components/transaksi/BarangKeluarTambahDialog'
 import BarangKeluarEditForm from '@/components/transaksi/BarangKeluarEditForm'
@@ -124,6 +125,7 @@ export default function BarangKeluarTable() {
   // "Transaksi" = satu pencatatan (satu keranjang), sama dengan tampilan Per transaksi; "catatan obat" = satu baris per obat.
   const semuaTransaksi = kelompokkanPerTransaksi(allList)
   const transaksiPenjualanHariIni = semuaTransaksi.filter((k) => k.keterangan === 'Penjualan' && toLocalYMD(k.tanggal) === today).length
+  const transaksiPenjualanBulanIni = semuaTransaksi.filter((k) => k.keterangan === 'Penjualan' && isThisMonth(k.tanggal)).length
   // Penjualan dalam rupiah. Retur, rusak, kedaluarsa, dan lainnya bukan pendapatan; penjualan tanpa harga jual
   // tidak bisa dijumlahkan dan disebut terpisah.
   const penjualanHariIni = allList.filter((item) => toLocalYMD(item.tanggal) === today && item.keterangan === 'Penjualan')
@@ -217,48 +219,63 @@ export default function BarangKeluarTable() {
       {terpotong && (
         <p role="status" className="col-span-12 flex items-start gap-2 rounded-xl bg-warning-50 px-4 py-3 text-sm font-medium text-warning-700">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          Ringkasan, grafik, dan tampilan Per transaksi hanya memuat {formatAngka(allList.length, 0)} catatan terbaru dari {formatAngka(allData?.meta?.total ?? 0, 0)}. Angkanya bisa lebih kecil dari sebenarnya.
+          {isAdmin ? 'Ringkasan, grafik, dan tampilan Per transaksi' : 'Ringkasan dan tampilan Per transaksi'} hanya memuat {formatAngka(allList.length, 0)} catatan terbaru dari {formatAngka(allData?.meta?.total ?? 0, 0)}. Angkanya bisa lebih kecil dari sebenarnya.
         </p>
       )}
 
       {/* ── Ringkasan: tiga ubin ringkas ────────────────────────────────── */}
       <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatTile
-          compact
-          icon={Coins}
-          label="Penjualan hari ini"
-          value={null}
-          teks={gagalAll ? '-' : rupiahUbin(pendapatanHariIni)}
-          sublabel={gagalAll ? '' : hariIniTanpaHarga > 0 ? `${hariIniTanpaHarga} belum berharga` : transaksiPenjualanHariIni === 0 ? 'belum ada penjualan' : `${transaksiPenjualanHariIni} transaksi`}
-          isLoading={ringkasanLoading}
-        />
-        <StatTile
-          compact
-          icon={Wallet}
-          label="Penjualan bulan ini"
-          value={null}
-          teks={gagalAll ? '-' : rupiahUbin(pendapatanBulanIni)}
-          sublabel={gagalAll ? '' : penjualanTanpaHarga > 0 ? `${penjualanTanpaHarga} belum berharga` : selisihBulanLalu === null ? bulanIni : `${selisihBulanLalu >= 0 ? 'naik' : 'turun'} ${Math.abs(selisihBulanLalu)}% dari tgl 1-${now.getDate()} bulan lalu`}
-          isLoading={ringkasanLoading}
-        />
+        {isAdmin ? (
+          <>
+            <StatTile
+              compact
+              icon={Coins}
+              label="Penjualan hari ini"
+              value={null}
+              teks={gagalAll ? '-' : rupiahUbin(pendapatanHariIni)}
+              sublabel={gagalAll ? '' : hariIniTanpaHarga > 0 ? `${hariIniTanpaHarga} belum berharga` : transaksiPenjualanHariIni === 0 ? 'belum ada penjualan' : `${transaksiPenjualanHariIni} transaksi`}
+              isLoading={ringkasanLoading}
+            />
+            <StatTile
+              compact
+              icon={Wallet}
+              label="Penjualan bulan ini"
+              value={null}
+              teks={gagalAll ? '-' : rupiahUbin(pendapatanBulanIni)}
+              sublabel={gagalAll ? '' : penjualanTanpaHarga > 0 ? `${penjualanTanpaHarga} belum berharga` : selisihBulanLalu === null ? bulanIni : `${selisihBulanLalu >= 0 ? 'naik' : 'turun'} ${Math.abs(selisihBulanLalu)}% dari tgl 1-${now.getDate()} bulan lalu`}
+              isLoading={ringkasanLoading}
+            />
+          </>
+        ) : (
+          <>
+            {/* Uang khusus admin: staf melihat jumlah transaksi penjualan saja. */}
+            <StatTile compact icon={Coins} label="Penjualan hari ini" value={angka(transaksiPenjualanHariIni)} sublabel="transaksi" isLoading={ringkasanLoading} />
+            <StatTile compact icon={Wallet} label="Penjualan bulan ini" value={angka(transaksiPenjualanBulanIni)} sublabel="transaksi" isLoading={ringkasanLoading} />
+          </>
+        )}
         <StatTile compact icon={Package} label="Keluar bukan penjualan" value={angka(bukanPenjualanBulanIni)} sublabel="catatan bulan ini: retur, rusak, dll." isLoading={ringkasanLoading} />
       </div>
 
       {/* ── Grafik: tren dan peringkat obat ─────────────────────────────── */}
-      <BarangKeluarTrendChart
-        className="col-span-12 lg:col-span-7"
-        allList={allList}
-        isLoading={ringkasanLoading}
-        isError={gagalAll}
-        onRetry={() => muatUlangAll()}
-      />
-      <BarangKeluarPerObatChart
-        className="col-span-12 lg:col-span-5"
-        allList={allList}
-        isLoading={ringkasanLoading}
-        isError={gagalAll}
-        onRetry={() => muatUlangAll()}
-      />
+      {/* Tren dan peringkat adalah analisis, bukan kerja harian staf: hanya admin. */}
+      {isAdmin && (
+        <>
+        <BarangKeluarTrendChart
+          className="col-span-12 lg:col-span-7"
+          allList={allList}
+          isLoading={ringkasanLoading}
+          isError={gagalAll}
+          onRetry={() => muatUlangAll()}
+        />
+        <BarangKeluarPerObatChart
+          className="col-span-12 lg:col-span-5"
+          allList={allList}
+          isLoading={ringkasanLoading}
+          isError={gagalAll}
+          onRetry={() => muatUlangAll()}
+        />
+        </>
+      )}
 
       {/* ── Riwayat stok keluar ─────────────────────────────────────────── */}
       <Panel title="Riwayat stok keluar" count={perTransaksi ? (ringkasanLoading || gagalAll ? undefined : kelompok.length) : meta?.total} className="col-span-12" bodyClassName="px-0 pb-0">
@@ -370,6 +387,8 @@ export default function BarangKeluarTable() {
                           <span className="block break-words font-medium leading-tight text-foreground group-hover:text-primary">{item.nama_obat}</span>
                           <span className="mt-0.5 block font-mono text-xs text-muted-foreground">{item.kode_obat}</span>
                         </button>
+                        {/* Kolom "Dicatat oleh" baru ada di layar sangat lebar (2xl); di bawah itu nama pencatat ikut di bawah nama obat. */}
+                        <DicatatOleh nama={item.nama_user} role={item.role_user} className="mt-0.5 2xl:hidden" />
                         {/* Di layar sempit kolom Keterangan disembunyikan, jadi badge ikut di bawah nama */}
                         <span className="mt-1.5 block md:hidden"><BadgeKeterangan nilai={item.keterangan} /></span>
                       </TableCell>
@@ -398,7 +417,7 @@ export default function BarangKeluarTable() {
                             <span className="mt-0.5 block text-xs text-muted-foreground">{item.role_user === 'admin' ? 'Admin' : 'Staf'}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground">-<span className="sr-only"> Belum tersedia</span></span>
+                          <span className="text-xs text-muted-foreground">Tidak tercatat</span>
                         )}
                       </TableCell>
                       <TableCell className="py-1.5 pr-3">
@@ -424,6 +443,22 @@ export default function BarangKeluarTable() {
                                 loading={deleteMutation.isPending && deleteMutation.variables === item.id}
                               />
                             </>
+                          )}
+                          {/* Staf: hanya catatan buatannya sendiri yang masih dalam batas waktu (ditentukan backend, 10 menit). */}
+                          {!isAdmin && item.bisa_dibatalkan && (
+                            <ConfirmDialog
+                              trigger={
+                                <IconAction label={`Batalkan stok keluar ${item.nama_obat}`}>
+                                  <Undo2 />
+                                </IconAction>
+                              }
+                              title={`Batalkan stok keluar ${item.nama_obat}?`}
+                              description="Stok obat ditambah lagi sesuai jumlah di baris ini. Pembatalan hanya bisa dalam 10 menit setelah dicatat, dan hanya untuk catatan yang Anda buat sendiri."
+                              confirmLabel="Batalkan catatan"
+                              loadingLabel="Membatalkan..."
+                              onConfirm={() => deleteMutation.mutate(item.id)}
+                              loading={deleteMutation.isPending && deleteMutation.variables === item.id}
+                            />
                           )}
                         </div>
                       </TableCell>
@@ -482,7 +517,7 @@ export default function BarangKeluarTable() {
 
         {/* Total penjualan: hanya bila ada filter aktif dan hasilnya tidak kosong. Bila ringkasan gagal dimuat, tidak
             ditampilkan (bukan Rp 0). Hanya penjualan yang dijumlahkan. */}
-        {adaFilter && !gagalAll && !ringkasanLoading && barisFilter.length > 0 && (
+        {isAdmin && adaFilter && !gagalAll && !ringkasanLoading && barisFilter.length > 0 && (
           <div className="flex flex-col gap-3 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               {perTransaksi ? `Total ${kelompok.length} transaksi` : `Total ${filteredAllList.length} catatan obat`}
@@ -508,7 +543,9 @@ export default function BarangKeluarTable() {
 
       {/* ── Keterangan ───────────────────────────────────────────────────── */}
       <p className="col-span-12 px-1 text-sm text-muted-foreground">
-        Total penjualan hanya menjumlahkan catatan berketerangan Penjualan, dari harga jual yang tercatat saat transaksi. Retur, rusak, kedaluarsa, dan lainnya tidak dihitung. Tanda &quot;-&quot; berarti tidak ada nilai penjualan.
+        {isAdmin
+          ? 'Total penjualan hanya menjumlahkan catatan berketerangan Penjualan, dari harga jual yang tercatat saat transaksi. Retur, rusak, kedaluarsa, dan lainnya tidak dihitung. Tanda "-" berarti tidak ada nilai penjualan.'
+          : 'Harga jual dan total per transaksi membantu menghitung penjualan; pendapatan harian dan bulanan hanya terlihat oleh admin. Tombol Batalkan muncul 10 menit untuk catatan yang Anda buat sendiri.'}
       </p>
 
       {/* ── Dialog ───────────────────────────────────────────────────────── */}

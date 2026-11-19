@@ -97,18 +97,35 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="lg" className="h-10 rounded-xl px-4" onClick={() => setOpenMasuk(true)}>
-            <PackagePlus data-icon="inline-start" />
-            Catat stok masuk
-          </Button>
-          <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenKeluar(true)}>
-            <PackageMinus data-icon="inline-start" />
-            Catat stok keluar
-          </Button>
-          <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenTambahObat(true)}>
-            <Plus data-icon="inline-start" />
-            Tambah obat
-          </Button>
+          {/* Admin: stok masuk (biru) lebih dulu. Staf: stok keluar (penjualan) paling sering dipakai, jadi tombol utama;
+              "Tambah obat" hanya admin (backend menolak staf). */}
+          {isAdmin ? (
+            <>
+              <Button size="lg" className="h-10 rounded-xl px-4" onClick={() => setOpenMasuk(true)}>
+                <PackagePlus data-icon="inline-start" />
+                Catat stok masuk
+              </Button>
+              <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenKeluar(true)}>
+                <PackageMinus data-icon="inline-start" />
+                Catat stok keluar
+              </Button>
+              <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenTambahObat(true)}>
+                <Plus data-icon="inline-start" />
+                Tambah obat
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button size="lg" className="h-10 rounded-xl px-4" onClick={() => setOpenKeluar(true)}>
+                <PackageMinus data-icon="inline-start" />
+                Catat stok keluar
+              </Button>
+              <Button size="lg" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpenMasuk(true)}>
+                <PackagePlus data-icon="inline-start" />
+                Catat stok masuk
+              </Button>
+            </>
+          )}
         </div>
       </section>
 
@@ -117,15 +134,15 @@ export default function DashboardPage() {
         value={dataGagal ? null : reorder}
         total={dataGagal ? null : (cards?.total_obat ?? 0)}
         isLoading={loadingSummary}
+        judul={isAdmin ? 'Perlu reorder' : 'Perlu dilaporkan ke admin'}
         action={
-          isAdmin && (
+          // Admin memesan lewat Reorder. Staf tidak memesan: dia melihat obatnya di Data Obat (filter status yang sama) untuk dilaporkan.
           <Link
-            href="/reorder"
+            href={isAdmin ? '/reorder' : '/obat?status=HARUS_REORDER'}
             className="inline-flex h-10 items-center justify-center rounded-xl bg-primary-foreground px-4 text-sm font-semibold text-primary outline-none transition-colors hover:bg-primary-foreground/90 focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
           >
-            Lihat daftar reorder
+            {isAdmin ? 'Lihat daftar reorder' : 'Lihat obatnya'}
           </Link>
-          )
         }
       />
 
@@ -163,7 +180,7 @@ export default function DashboardPage() {
       />
       <StatTile
         className={kolomUbin}
-        href={isAdmin ? '/reorder?kondisi=segera' : undefined}
+        href={isAdmin ? '/reorder?kondisi=segera' : '/obat?status=HARUS_REORDER'}
         label="Habis dalam 7 hari"
         value={dataGagal ? null : (cards?.obat_segera_habis ?? null)}
         sublabel="belum habis, stok tinggal sedikit"

@@ -41,7 +41,7 @@ export default function TabKartuStok() {
     r.keluar > 0 ? r.keluar : '-',
     r.sisa,
     r.expired_batch ? formatTanggal(r.expired_batch) : '-',
-    r.nama_user ?? '-',
+    r.nama_user ?? 'Tidak tercatat',
   ])
 
   const satuanKapital = selectedObat ? selectedObat.satuan.charAt(0).toUpperCase() + selectedObat.satuan.slice(1) : ''
@@ -80,7 +80,7 @@ export default function TabKartuStok() {
     { id: 'keluar', judul: 'Keluar', kanan: true, skeleton: 'w-10', sel: (r) => <span className="tabular-nums">{r.keluar > 0 ? r.keluar : <span className="text-muted-foreground">-</span>}</span> },
     { id: 'sisa', judul: 'Sisa', kanan: true, skeleton: 'w-12', sel: (r) => <span className="font-semibold tabular-nums text-foreground">{r.sisa}</span> },
     { id: 'exp', judul: 'Expired batch', kelas: 'hidden xl:table-cell', skeleton: 'w-20', sel: (r) => <ExpiredCell tanggal={r.expired_batch} /> },
-    { id: 'oleh', judul: 'Dicatat oleh', kelas: 'hidden 2xl:table-cell', skeleton: 'w-24', sel: (r) => r.nama_user ?? '-' },
+    { id: 'oleh', judul: 'Dicatat oleh', kelas: 'hidden 2xl:table-cell', skeleton: 'w-24', sel: (r) => r.nama_user ?? <span className="text-xs text-muted-foreground">Tidak tercatat</span> },
   ]
 
   const adaFilter = Boolean(f.dari || f.sampai)

@@ -27,7 +27,8 @@ export default function BarangKeluarTransaksiDialog({ transaksi, onClose }: Prop
 
 function Isi({ transaksi }: { transaksi: KelompokTransaksi }) {
   const penjualan = transaksi.keterangan === 'Penjualan'
-  const adaHarga = penjualan && transaksi.tanpaHarga < transaksi.rows.length
+  const tampilUang = penjualan
+  const adaHarga = tampilUang && transaksi.tanpaHarga < transaksi.rows.length
   const jam = jamDicatat(transaksi.dicatat)
   return (
     <>
@@ -49,8 +50,8 @@ function Isi({ transaksi }: { transaksi: KelompokTransaksi }) {
             <TableRow className="hover:bg-transparent">
               <TableHead className={KEPALA}>Obat</TableHead>
               <TableHead className={`${KEPALA} text-right`}>Jumlah</TableHead>
-              {penjualan && <TableHead className={`${KEPALA} text-right`}>Harga jual</TableHead>}
-              {penjualan && <TableHead className={`${KEPALA} text-right`}>Total</TableHead>}
+              {tampilUang && <TableHead className={`${KEPALA} text-right`}>Harga jual</TableHead>}
+              {tampilUang && <TableHead className={`${KEPALA} text-right`}>Total</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -67,12 +68,12 @@ function Isi({ transaksi }: { transaksi: KelompokTransaksi }) {
                     <span className="font-semibold text-foreground">{formatAngka(r.jumlah, 0)}</span>
                     <span className="ml-1 text-xs text-muted-foreground">{r.satuan}</span>
                   </TableCell>
-                  {penjualan && (
+                  {tampilUang && (
                     <TableCell className="whitespace-nowrap py-2.5 text-right tabular-nums text-muted-foreground">
                       {Number(r.harga_jual) > 0 ? formatRupiah(Number(r.harga_jual)) : <>-<span className="sr-only"> Harga belum diisi</span></>}
                     </TableCell>
                   )}
-                  {penjualan && (
+                  {tampilUang && (
                     <TableCell className="whitespace-nowrap py-2.5 text-right font-medium tabular-nums">
                       {nilai !== null ? formatRupiah(nilai) : <span className="font-normal text-muted-foreground">-</span>}
                     </TableCell>

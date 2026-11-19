@@ -1,74 +1,91 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+import { TabelData, type KolomData } from '@/components/shared/TabelData'
 import type { RingkasanUser } from '@/hooks/useAktivitas'
-import { formatWaktu, waktuRelatif } from './format'
+import { ringkasPerangkat, waktuRelatif } from './format'
 
 interface Props {
   users: RingkasanUser[]
   isLoading: boolean
-  onPilihUser: (id: number) => void
+  isError: boolean
+  onCobaLagi: () => void
+  onPilihUser: (u: RingkasanUser) => void
 }
 
-const KOLOM = ['Pengguna', 'Status', 'Terakhir Aktif', 'Login Terakhir', 'Login', 'Halaman', 'Aksi Data', 'Aksi Hari Ini']
-
-export default function PenggunaTable({ users, isLoading, onPilihUser }: Props) {
+// Garis mini aktivitas 7 hari terakhir: tujuh batang setinggi aktivitas harian, hari tanpa aktivitas = batang tipis abu.
+// Angkanya ada di label untuk pembaca layar (role="img").
+function GarisMini({ nilai }: { nilai: number[] }) {
+  const maks = Math.max(1, ...nilai)
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-line-subtle">
-        <h2 className="text-sm font-semibold text-fg-secondary">Ringkasan per Pengguna</h2>
-        <p className="text-xs text-fg-muted mt-0.5">Klik nama untuk memfilter log aktivitas pengguna tersebut</p>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line">
-              {KOLOM.map((h, i) => (
-                <th key={h} className={`text-xs font-semibold text-fg-muted uppercase tracking-wide py-3 px-3 ${i >= 4 ? 'text-right' : 'text-left'}`}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr><td colSpan={8} className="py-6 px-3"><div className="animate-pulse bg-surface-muted rounded-xl h-16" /></td></tr>
-            )}
-            {!isLoading && users.length === 0 && (
-              <tr><td colSpan={8} className="text-center py-10 text-fg-muted text-sm">Belum ada pengguna.</td></tr>
-            )}
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-line-subtle hover:bg-surface-subtle transition-colors">
-                <td className="py-3 px-3">
-                  <button onClick={() => onPilihUser(u.id)} className="text-left group">
-                    <span className="block font-medium text-fg group-hover:text-brand-600">{u.nama}</span>
-                    <span className="text-xs text-fg-muted font-mono">@{u.username}</span>
-                  </button>
-                  <span className={`ml-2 text-xs font-medium px-2.5 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-surface-muted text-fg-tertiary'}`}>
-                    {u.role === 'admin' ? 'Admin' : 'Staf'}
-                  </span>
-                </td>
-                <td className="py-3 px-3">
-                  {u.online ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-700">
-                      <span className="w-2 h-2 rounded-full bg-success-500" /> Online
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-fg-muted">
-                      <span className="w-2 h-2 rounded-full bg-gray-300" /> Offline
-                    </span>
-                  )}
-                </td>
-                <td className="py-3 px-3 text-fg-secondary whitespace-nowrap">{waktuRelatif(u.last_seen_at)}</td>
-                <td className="py-3 px-3 text-xs text-fg-tertiary whitespace-nowrap tabular-nums">{formatWaktu(u.login_terakhir)}</td>
-                <td className="py-3 px-3 text-right tabular-nums text-fg-secondary">{u.jumlah_login}</td>
-                <td className="py-3 px-3 text-right tabular-nums text-fg-secondary">{u.halaman_dibuka}</td>
-                <td className="py-3 px-3 text-right tabular-nums text-fg-secondary">{u.jumlah_aksi}</td>
-                <td className="py-3 px-3 text-right tabular-nums font-medium text-fg">{u.aksi_hari_ini}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <span role="img" aria-label={`Aktivitas 7 hari terakhir, terlama dulu: ${nilai.join(', ')}`} className="inline-flex h-6 items-end gap-0.5">
+      {nilai.map((n, i) => (
+        <span
+          key={i}
+          className={n > 0 ? 'w-1.5 rounded-sm bg-primary' : 'w-1.5 rounded-sm bg-muted'}
+          style={{ height: n > 0 ? `${Math.max(18, (n / maks) * 100)}%` : '12%' }}
+        />
+      ))}
+    </span>
+  )
+}
+
+function Status({ online }: { online: boolean }) {
+  return online ? (
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+      <span className="size-2 rounded-full bg-primary" aria-hidden="true" /> Online
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+      <span className="size-2 rounded-full border border-muted-foreground" aria-hidden="true" /> Offline
+    </span>
+  )
+}
+
+export default function PenggunaTable({ users, isLoading, isError, onCobaLagi, onPilihUser }: Props) {
+  const kolom: KolomData<RingkasanUser>[] = [
+    {
+      id: 'pengguna',
+      judul: 'Pengguna',
+      skeleton: ['w-32', 'w-20'],
+      sel: (u) => (
+        <div className="min-w-0">
+          <button type="button" onClick={() => onPilihUser(u)} className="rounded-md text-left font-medium text-foreground outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring">
+            {u.nama}
+          </button>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="font-mono text-xs text-muted-foreground">@{u.username}</span>
+            <Badge variant="secondary">{u.role === 'admin' ? 'Admin' : 'Staf'}</Badge>
+            {!u.is_active && <Badge variant="outline">Nonaktif</Badge>}
+            <span className="md:hidden"><Status online={u.online} /></span>
+          </div>
+        </div>
+      ),
+    },
+    { id: 'status', judul: 'Status', kelas: 'hidden md:table-cell', skeleton: 'w-16', sel: (u) => <Status online={u.online} /> },
+    { id: 'terakhir', judul: 'Terakhir aktif', kelas: 'hidden xl:table-cell', skeleton: 'w-24', sel: (u) => <span className="whitespace-nowrap text-muted-foreground">{waktuRelatif(u.last_seen_at)}</span> },
+    { id: 'login', judul: 'Login', kanan: true, skeleton: 'w-8', sel: (u) => <span className="tabular-nums">{u.jumlah_login}</span> },
+    { id: 'halaman', judul: 'Halaman', kanan: true, kelas: 'hidden xl:table-cell', skeleton: 'w-8', sel: (u) => <span className="tabular-nums">{u.halaman_dibuka}</span> },
+    { id: 'aksi', judul: 'Aksi data', kanan: true, skeleton: 'w-8', sel: (u) => <span className="font-medium tabular-nums text-foreground">{u.jumlah_aksi}</span> },
+    { id: 'tren', judul: '7 hari', kanan: true, kelas: 'hidden sm:table-cell', skeleton: 'w-14', sel: (u) => <GarisMini nilai={u.tren_7_hari ?? []} /> },
+    { id: 'perangkat', judul: 'Perangkat terakhir', kelas: 'hidden 2xl:table-cell', skeleton: 'w-28', sel: (u) => <span className="whitespace-nowrap text-muted-foreground">{ringkasPerangkat(u.perangkat_terakhir)}</span> },
+  ]
+
+  return (
+    <TabelData
+      kolom={kolom}
+      baris={users}
+      kunci={(u) => u.id}
+      isLoading={isLoading}
+      isError={isError}
+      onCobaLagi={onCobaLagi}
+      judulGagal="Ringkasan pengguna belum bisa dimuat"
+      kosong={{ judul: 'Belum ada pengguna', keterangan: 'Akun admin dan staf yang dibuat di Manajemen User akan muncul di sini.' }}
+      halaman={null}
+      onHalaman={() => {}}
+      perHalaman={Infinity}
+      barisSkeleton={3}
+      noun="pengguna"
+    />
   )
 }

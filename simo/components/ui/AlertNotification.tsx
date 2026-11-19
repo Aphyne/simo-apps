@@ -94,14 +94,17 @@ export default function AlertNotification() {
                   <p className="mt-0.5 text-sm tabular-nums text-muted-foreground">
                     Stok <span className="font-medium text-foreground">{formatAngka(a.stok, 0)}</span> dari ROP {formatAngka(a.rop, 2)} {a.satuan}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {a.supplier_nama ?? a.nama_supplier ?? (
-                      <span className="inline-flex items-center gap-1 font-medium text-warning-700">
-                        <TriangleAlert className="size-3.5" aria-hidden="true" />
-                        Supplier belum diatur
-                      </span>
-                    )}
-                  </p>
+                  {/* Supplier dan pesan ulang adalah urusan admin; staf cukup melihat stoknya. */}
+                  {isAdmin && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {a.supplier_nama ?? a.nama_supplier ?? (
+                        <span className="inline-flex items-center gap-1 font-medium text-warning-700">
+                          <TriangleAlert className="size-3.5" aria-hidden="true" />
+                          Supplier belum diatur
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
@@ -115,7 +118,12 @@ export default function AlertNotification() {
                   <Link href="/reorder">{jumlah > MAKS_BARIS ? `Lihat semua ${jumlah} di Reorder` : 'Buka Reorder'}</Link>
                 </Button>
               ) : (
-                <p className="px-2 pb-1 text-sm text-muted-foreground">Pemesanan dilakukan oleh admin.</p>
+                <>
+                  <p className="px-2 pb-2 text-sm text-muted-foreground">Pemesanan dilakukan oleh admin. Sampaikan daftar ini kepada admin.</p>
+                  <Button size="lg" className="h-10 w-full rounded-xl px-4" asChild>
+                    <Link href="/obat?status=HARUS_REORDER">{jumlah > MAKS_BARIS ? `Lihat semua ${jumlah} di Data Obat` : 'Buka di Data Obat'}</Link>
+                  </Button>
+                </>
               )}
             </div>
           </>

@@ -7,6 +7,7 @@ import { exportPDF, exportExcel } from '@/lib/export'
 import { useNow } from '@/hooks/useNow'
 import { rupiahUbin } from '@/lib/barangKeluar'
 import { formatAngka, formatRupiah, formatTanggal } from '@/lib/utils'
+import { useAuthStore } from '@/store/auth.store'
 import { StatTile } from '@/components/dashboard/StatTile'
 import Panel from '@/components/dashboard/Panel'
 import { FilterBar } from '@/components/shared/FilterBar'
@@ -26,6 +27,8 @@ function nilaiStr(v: number | null | undefined) {
 const perluReorder = (r: LaporanStokItem) => Number(r.rop) > 0 && r.stok <= Number(r.rop)
 
 export default function TabStok() {
+  // Nilai persediaan dan total biaya adalah uang: khusus admin (backend juga tidak mengirim harga dan biaya ke staf).
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const f = useFilterLaporan()
   const [preview, setPreview] = useState(false)
   const { data, isLoading, isError, refetch } = useLaporanStok(f.kategori || undefined, f.obat || undefined)
@@ -42,30 +45,31 @@ export default function TabStok() {
 
   const totalStok  = rows.reduce((s, r) => s + r.stok, 0)
   const totalBiaya = rows.reduce((s, r) => s + (r.total_biaya != null ? Number(r.total_biaya) : 0), 0)
-  const footerBaris: (string | number)[][] = rows.length > 0
+  const buangBiaya = <T,>(a: T[]): T[] => (isAdmin ? a : a.filter((_, i) => i !== 8))
+  const footerBaris: (string | number)[][] = (rows.length > 0
     ? [['TOTAL', '', '', '', totalStok, '', '', '', totalBiaya > 0 ? formatRupiah(totalBiaya) : '-', '']]
-    : []
+    : []).map(buangBiaya)
 
-  const kolomEkspor = ['Kode', 'Nama Obat', 'Kategori', 'Satuan', 'Stok', 'EOQ', 'Safety Stock', 'ROP', 'Total Biaya/Thn', 'Exp. Terdekat']
-  const baris = rows.map(r => [
+  const kolomEkspor = buangBiaya(['Kode', 'Nama Obat', 'Kategori', 'Satuan', 'Stok', 'EOQ', 'Safety Stock', 'ROP', 'Total Biaya/Thn', 'Exp. Terdekat'])
+  const baris = rows.map(r => buangBiaya<string | number>([
     r.kode, r.nama, r.kategori, r.satuan,
     r.stok, nilaiStr(r.eoq), nilaiStr(r.safety_stock), nilaiStr(r.rop),
     r.total_biaya != null ? formatRupiah(r.total_biaya) : '-',
     r.expired_terdekat ? formatTanggal(r.expired_terdekat) : '-',
-  ])
+  ]))
   const keterangan = f.kategori ? `Kategori: ${f.kategori}` : undefined
 
   function handlePDF() { exportPDF('Laporan Stok Obat', kolomEkspor, baris, keterangan, footerBaris, namaApotek, alamatApotek) }
   function handleExcel() {
     const kolomXls = [...kolomEkspor, 'Demand Harian']
-    const barisXls = rows.map(r => [
+    const barisXls = rows.map(r => buangBiaya<string | number>([
       r.kode, r.nama, r.kategori, r.satuan,
       r.stok, r.eoq ?? '', r.safety_stock ?? '', r.rop ?? '',
       r.total_biaya ?? '', r.expired_terdekat ?? '', r.demand_harian ?? '',
-    ])
-    const footerXls: (string | number)[][] = rows.length > 0
+    ]))
+    const footerXls: (string | number)[][] = (rows.length > 0
       ? [['TOTAL', '', '', '', totalStok, '', '', '', totalBiaya > 0 ? totalBiaya : '-', '', '']]
-      : []
+      : []).map(buangBiaya)
     exportExcel('Laporan_Stok_Obat', kolomXls, barisXls, footerXls)
   }
 
@@ -102,16 +106,19 @@ export default function TabStok() {
     { id: 'biaya', judul: 'Total biaya/thn', kanan: true, kelas: 'hidden 2xl:table-cell', skeleton: 'w-24', sel: (r) => <span className="tabular-nums">{r.total_biaya != null ? formatRupiah(r.total_biaya) : '-'}</span> },
   ]
 
+  const kolomTampil = isAdmin ? kolom : kolom.filter((k) => k.id !== 'biaya')
   const adaFilter = Boolean(f.obat || f.kategori)
   const angka = (n: number) => (isError ? null : n)
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+        {isAdmin && (
         <StatTile
           compact icon={Wallet} label="Nilai persediaan" value={null} teks={isError ? '-' : rupiahUbin(nilaiPersediaan)}
           sublabel={isError ? '' : tanpaHargaBeli > 0 ? `${tanpaHargaBeli} obat belum berharga` : 'stok x harga beli'} isLoading={isLoading}
         />
+        )}
         <StatTile compact icon={PackageX} label="Stok habis" value={angka(rows.filter(r => r.stok <= 0).length)} sublabel="pesan lebih dulu" isLoading={isLoading} />
         <StatTile compact icon={PackageSearch} label="Perlu reorder" value={angka(rows.filter(perluReorder).length)} sublabel="stok di bawah ROP" isLoading={isLoading} />
         <StatTile compact icon={CalendarClock} label="Expired 90 hari" value={angka(segeraExpired.length)} sublabel={sudahLewat > 0 ? `${sudahLewat} sudah lewat` : 'obat, belum ada yang lewat'} isLoading={isLoading} />
@@ -124,8 +131,8 @@ export default function TabStok() {
           {adaFilter && <AturUlang onClick={() => f.aturUlang('obat', 'kategori')} />}
         </FilterBar>
         <TabelLaporan
-          kolom={kolom} baris={rows} kunci={(r) => r.id} isLoading={isLoading} isError={isError} onCobaLagi={() => refetch()}
-          footer={[{ label: `Total (${formatAngka(rows.length, 0)} obat)`, nilai: { stok: totalStok.toLocaleString('id-ID'), biaya: totalBiaya > 0 ? formatRupiah(totalBiaya) : '-' } }]}
+          kolom={kolomTampil} baris={rows} kunci={(r) => r.id} isLoading={isLoading} isError={isError} onCobaLagi={() => refetch()}
+          footer={[{ label: `Total (${formatAngka(rows.length, 0)} obat)`, nilai: isAdmin ? { stok: totalStok.toLocaleString('id-ID'), biaya: totalBiaya > 0 ? formatRupiah(totalBiaya) : '-' } : { stok: totalStok.toLocaleString('id-ID') } }]}
           kosong={{ judul: 'Tidak ada obat yang cocok', keterangan: 'Ubah obat atau kategori yang dipilih.', aksi: adaFilter ? <AturUlang onClick={() => f.aturUlang('obat', 'kategori')} /> : undefined }}
           halaman={f.halaman} onHalaman={(n) => f.ubah({ hal: n === 1 ? null : String(n) }, { resetHalaman: false })} noun="obat"
         />

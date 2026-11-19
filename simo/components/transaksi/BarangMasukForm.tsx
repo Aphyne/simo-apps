@@ -17,6 +17,7 @@ import PeringatanExpired, { cekExpired } from '@/components/transaksi/Peringatan
 import HintJumlahDus from '@/components/transaksi/HintJumlahDus'
 import { konversiDus } from '@/lib/barangMasuk'
 import { useNow } from '@/hooks/useNow'
+import { useAuthStore } from '@/store/auth.store'
 import { cn, formatAngka, formatRupiah } from '@/lib/utils'
 import type { Obat } from '@/types/obat'
 
@@ -141,6 +142,8 @@ export default function BarangMasukForm({ onSuccess, onBatal, onDirtyChange }: P
   const watchedItems = useWatch({ control, name: 'items' })
   const sekarangMs = useNow().getTime()
   const watchedPpn = useWatch({ control, name: 'ppn_pct' })
+  // Staf boleh mengisi semua isian harga (hanya menulis), tetapi tidak melihat ringkasan harga/margin.
+  const isAdmin = useAuthStore((s) => s.isAdmin())
 
   async function onSubmit(values: FormValues) {
     clearErrors('root.server')
@@ -423,6 +426,8 @@ export default function BarangMasukForm({ onSuccess, onBatal, onDirtyChange }: P
                     )}
                   </Field>
 
+                  {/* Staf boleh MENGISI harga beli dan harga jual (ikut mencatat faktur) tetapi tidak melihat harga yang sudah tersimpan:
+                      riwayat, rincian, dan laporan tanpa uang untuk staf. Salah ketik: batalkan dalam 10 menit lalu catat ulang. */}
                   <Field>
                     <FieldLabel htmlFor={`${p}-beli`}>Harga beli per dus <Opsional /></FieldLabel>
                     <InputSatuan
@@ -458,6 +463,7 @@ export default function BarangMasukForm({ onSuccess, onBatal, onDirtyChange }: P
                         : 'Kosong = belum diisi.'}
                     </FieldDescription>
                   </Field>
+
                   <Field data-invalid={!!itemErrors?.biaya_simpan_pct}>
                     <FieldLabel htmlFor={`${p}-simpan`}>Biaya simpan (H) <Opsional /></FieldLabel>
                     <InputSatuan
@@ -485,9 +491,11 @@ export default function BarangMasukForm({ onSuccess, onBatal, onDirtyChange }: P
 
                 </FieldGroup>
 
-                <div className="mt-4 empty:hidden">
-                  <HargaRingkas obat={selectedObat} item={item} ppnPct={watchedPpn} />
-                </div>
+                {isAdmin && (
+                  <div className="mt-4 empty:hidden">
+                    <HargaRingkas obat={selectedObat} item={item} ppnPct={watchedPpn} />
+                  </div>
+                )}
               </div>
             )
           })}

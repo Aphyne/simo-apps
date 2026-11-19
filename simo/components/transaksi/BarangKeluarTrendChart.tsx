@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import PilihanCombobox from '@/components/ui/PilihanCombobox'
 import { tanggalLokal } from '@/lib/barangKeluar'
 import { formatAngka, formatRupiah } from '@/lib/utils'
+import { useAuthStore } from '@/store/auth.store'
 import type { BarangKeluar } from '@/types/obat'
 import { useNow } from '@/hooks/useNow'
 
@@ -28,6 +29,8 @@ type Mode = 'mingguan' | 'bulanan'
 
 // Hanya Penjualan yang dihitung: retur, rusak, kedaluarsa, dan lainnya bukan pendapatan.
 export default function BarangKeluarTrendChart({ allList, isLoading, isError, onRetry, className }: Props) {
+  // Penjualan (Rp) adalah uang: khusus admin; staf hanya melihat jumlah satuan.
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const now = useNow()
   const currentYear = now.getFullYear()
 
@@ -138,9 +141,17 @@ export default function BarangKeluarTrendChart({ allList, isLoading, isError, on
       ) : (
         <>
           <p className="mt-4 text-sm text-muted-foreground">
-            <span className="text-base font-semibold tabular-nums text-foreground">{formatRupiah(totalRupiah)}</span> total penjualan dalam {periodeLabel}
-            <span className="tabular-nums"> · {formatAngka(total, 0)} satuan keluar</span>
-            {tanpaHarga > 0 && <span> · {tanpaHarga} catatan belum berharga, belum ikut dihitung</span>}
+            {isAdmin ? (
+              <>
+                <span className="text-base font-semibold tabular-nums text-foreground">{formatRupiah(totalRupiah)}</span> total penjualan dalam {periodeLabel}
+                <span className="tabular-nums"> · {formatAngka(total, 0)} satuan keluar</span>
+                {tanpaHarga > 0 && <span> · {tanpaHarga} catatan belum berharga, belum ikut dihitung</span>}
+              </>
+            ) : (
+              <>
+                <span className="text-base font-semibold tabular-nums text-foreground">{formatAngka(total, 0)}</span> satuan keluar dalam {periodeLabel}
+              </>
+            )}
           </p>
           <div className="mt-3" aria-hidden="true">
             <ResponsiveContainer width="100%" height={220}>
@@ -157,7 +168,7 @@ export default function BarangKeluarTrendChart({ allList, isLoading, isError, on
                       <div className="rounded-xl bg-popover px-3 py-2 text-sm shadow-md ring-1 ring-foreground/10">
                         <p className="mb-1 font-semibold text-foreground">{label}</p>
                         <p className="text-muted-foreground">Keluar: <span className="font-semibold tabular-nums text-foreground">{formatAngka(d.unit, 0)}</span> satuan</p>
-                        <p className="text-muted-foreground">Penjualan: <span className="font-semibold tabular-nums text-foreground">{formatRupiah(d.nilai)}</span></p>
+                        {isAdmin && <p className="text-muted-foreground">Penjualan: <span className="font-semibold tabular-nums text-foreground">{formatRupiah(d.nilai)}</span></p>}
                       </div>
                     )
                   }}
@@ -169,10 +180,10 @@ export default function BarangKeluarTrendChart({ allList, isLoading, isError, on
           {/* Grafik tidak bisa dibaca pembaca layar; tabel ini memuat angka yang sama */}
           <table className="sr-only">
             <caption>Penjualan, {periodeLabel}</caption>
-            <thead><tr><th scope="col">Periode</th><th scope="col">Satuan keluar</th><th scope="col">Penjualan</th></tr></thead>
+            <thead><tr><th scope="col">Periode</th><th scope="col">Satuan keluar</th>{isAdmin && <th scope="col">Penjualan</th>}</tr></thead>
             <tbody>
               {trendData.map((d) => (
-                <tr key={d.label}><th scope="row">{d.label}</th><td>{formatAngka(d.unit, 0)}</td><td>{formatRupiah(d.nilai)}</td></tr>
+                <tr key={d.label}><th scope="row">{d.label}</th><td>{formatAngka(d.unit, 0)}</td>{isAdmin && <td>{formatRupiah(d.nilai)}</td>}</tr>
               ))}
             </tbody>
           </table>

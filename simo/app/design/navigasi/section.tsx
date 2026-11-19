@@ -21,8 +21,8 @@ export function NavigasiSection() {
       <Section title="Sidebar dan header" desc="Gambaran sidebar aplikasi yang sebenarnya." meta="Sidebar.tsx, Header.tsx">
         <div className="flex h-96 overflow-hidden rounded-xl bg-background">
           <aside className="flex w-52 shrink-0 flex-col">
-            <div className="flex h-16 items-center gap-2.5 px-5">
-              <Image src="/logo.png" alt="" width={30} height={30} className="shrink-0" />
+            <div className="flex h-16 items-center gap-2 px-6">
+              <Image src="/logo.png" alt="" width={40} height={40} className="-ml-1.5 shrink-0" />
               <span className="text-lg font-bold tracking-tight">SIMO</span>
             </div>
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2" aria-label="Contoh menu">

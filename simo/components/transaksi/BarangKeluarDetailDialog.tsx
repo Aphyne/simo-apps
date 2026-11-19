@@ -47,7 +47,7 @@ function Isi({ item }: { item: BarangKeluar }) {
           {formatAngka(item.stok_sebelum, 0)} <span aria-hidden="true">→</span><span className="sr-only"> menjadi </span> {formatAngka(item.stok_sesudah, 0)}
           <span className="block text-sm font-normal text-muted-foreground">{item.satuan}</span>
         </Fact>
-        <Fact label="Dicatat oleh">{item.nama_user}</Fact>
+        <Fact label="Dicatat oleh">{item.nama_user ? `${item.nama_user} (${item.role_user === 'admin' ? 'Admin' : 'Staf'})` : <span className="font-normal text-muted-foreground">Tidak tercatat</span>}</Fact>
         {penjualan && (
           <>
             <Fact label={`Harga jual per ${item.satuan}`}>{Number(item.harga_jual) > 0 ? formatRupiah(Number(item.harga_jual)) : BELUM_DIISI}</Fact>

@@ -3,6 +3,7 @@
 import { ChevronDown, Menu } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import AlertNotification from '@/components/ui/AlertNotification'
+import NotifikasiPeneliti from '@/components/ui/NotifikasiPeneliti'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,12 +41,14 @@ export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
         >
           <Menu className="w-5 h-5" aria-hidden="true" />
         </button>
-        <p className="truncate text-sm font-medium text-foreground">Apotek Rezky Medika</p>
+        {/* Ukuran sama dengan teks SIMO di sidebar (text-lg) mulai lg, saat keduanya berdampingan; di layar kecil sidebar jadi drawer, jadi lebih kecil supaya muat. */}
+        <p className="truncate text-base font-medium tracking-tight text-foreground lg:text-lg">Apotek Rezky Medika</p>
       </div>
 
       {/* Kanan — alert + profil */}
       <div className="flex flex-shrink-0 items-center gap-1 rounded-full bg-card p-0.5 pr-2">
-        <AlertNotification />
+        {/* Peneliti tidak mengurus stok: lonceng berisi temuan pemantauan dan tidak membaca data obat. */}
+        {user?.role === 'superadmin' ? <NotifikasiPeneliti /> : user ? <AlertNotification /> : null}
 
         <div className="mx-1 h-5 w-px bg-border" />
 

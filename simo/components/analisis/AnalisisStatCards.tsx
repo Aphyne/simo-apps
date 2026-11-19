@@ -1,84 +1,64 @@
 'use client'
 
-import { TrendingDown, DollarSign, Package } from 'lucide-react'
-import { AnalisisRingkasan } from '@/hooks/useAnalisis'
+import { Banknote, PackageSearch, Wallet } from 'lucide-react'
+import { StatTile } from '@/components/dashboard/StatTile'
+import type { AnalisisRingkasan } from '@/hooks/useAnalisis'
 import { formatRupiah } from '@/lib/utils'
 
 interface Props {
   ringkasan: AnalisisRingkasan | undefined
   isLoading: boolean
+  isError: boolean
 }
 
-export default function AnalisisStatCards({ ringkasan, isLoading }: Props) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse bg-surface-muted rounded-xl h-24" />
-        ))}
-      </div>
-    )
-  }
-
+// Empat ubin: tiga angka pembanding dan satu ubin biru (penghematan), hasil yang menjadi inti analisis.
+// Biaya sebelum dan dengan EOQ ditulis penuh (Rp), bukan disingkat, karena angka ini dikutip ke skripsi.
+export default function AnalisisStatCards({ ringkasan: r, isLoading, isError }: Props) {
+  const tanpa = isError ? '-' : undefined
+  const hemat = r?.persen_hemat_total ?? 0
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {/* Obat Dihitung */}
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-brand-100">
-          <Package className="w-5 h-5 text-brand-600" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-fg-muted font-medium truncate">Obat Dihitung</p>
-          <p className="text-2xl font-bold leading-tight text-fg">
-            {ringkasan?.total_obat_dihitung ?? 0}
-          </p>
-          <p className="text-xs text-fg-muted mt-0.5">jenis obat</p>
-        </div>
-      </div>
+    <section aria-label="Ringkasan perbandingan" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatTile
+        compact
+        label="Obat dibandingkan"
+        icon={PackageSearch}
+        value={isError ? null : r?.total_obat_dihitung ?? null}
+        isLoading={isLoading}
+        sublabel={r ? `dari ${r.total_obat} obat` : ' '}
+      />
+      <StatTile
+        compact
+        label="Biaya sebelum EOQ"
+        icon={Wallet}
+        value={null}
+        teks={tanpa ?? (r ? formatRupiah(r.total_tc_tradisional) : undefined)}
+        isLoading={isLoading}
+        sublabel="per tahun"
+      />
+      <StatTile
+        compact
+        label="Biaya dengan EOQ"
+        icon={Banknote}
+        value={null}
+        teks={tanpa ?? (r ? formatRupiah(r.total_tc_eoq) : undefined)}
+        isLoading={isLoading}
+        sublabel="per tahun"
+      />
 
-      {/* Biaya Sebelum EOQ */}
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-danger-100">
-          <DollarSign className="w-5 h-5 text-danger-500" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-fg-muted font-medium truncate">Biaya Sebelum EOQ</p>
-          <p className="text-lg font-bold leading-tight text-fg">
-            {ringkasan ? formatRupiah(ringkasan.total_tc_tradisional) : '—'}
-          </p>
-          <p className="text-xs text-fg-muted mt-0.5">per tahun</p>
-        </div>
-      </div>
-
-      {/* Biaya Dengan EOQ */}
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-brand-100">
-          <DollarSign className="w-5 h-5 text-brand-600" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-fg-muted font-medium truncate">Biaya Dengan EOQ</p>
-          <p className="text-lg font-bold leading-tight text-fg">
-            {ringkasan ? formatRupiah(ringkasan.total_tc_eoq) : '—'}
-          </p>
-          <p className="text-xs text-fg-muted mt-0.5">per tahun</p>
+      {/* Satu-satunya ubin biru: hasil analisis. */}
+      <div className="flex flex-col justify-between gap-1 rounded-2xl bg-primary p-4 text-primary-foreground">
+        <p className="flex min-h-9 items-center text-sm font-medium">Penghematan per tahun</p>
+        <div>
+          {isLoading ? (
+            <span className="block h-8 w-40 rounded-lg bg-primary-foreground/20 motion-safe:animate-pulse" aria-hidden="true" />
+          ) : (
+            <p className="break-words text-3xl font-semibold leading-none tracking-tight tabular-nums">
+              {isError || !r ? <>-<span className="sr-only"> Data tidak tersedia</span></> : formatRupiah(r.total_penghematan)}
+            </p>
+          )}
+          <p className="mt-2 text-sm">{r && !isError ? `${hemat.toLocaleString('id-ID')}% lebih hemat dari sebelum EOQ` : 'Data belum bisa dimuat'}</p>
         </div>
       </div>
-
-      {/* Total Penghematan */}
-      <div className="rounded-xl border border-success-200 bg-success-50 p-5 shadow-sm flex items-center gap-4">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-success-100">
-          <TrendingDown className="w-5 h-5 text-success-600" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-success-700 font-medium truncate">Total Penghematan</p>
-          <p className="text-lg font-bold leading-tight text-success-700">
-            {ringkasan ? formatRupiah(ringkasan.total_penghematan) : '—'}
-          </p>
-          <p className="text-xs text-success-700 mt-0.5">
-            {ringkasan ? `${ringkasan.persen_hemat_total}% lebih hemat` : ''}
-          </p>
-        </div>
-      </div>
-    </div>
+    </section>
   )
 }

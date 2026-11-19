@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { PackagePlus, ReceiptText, Wallet, Clock, Eye, Pencil, Trash2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
+import { PackagePlus, ReceiptText, Wallet, Clock, Eye, Pencil, Trash2, Undo2, SearchX, PackageOpen, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import PilihanCombobox from '@/components/ui/PilihanCombobox'
@@ -215,12 +215,14 @@ export default function BarangMasukTable() {
       {terpotong && (
         <p role="status" className="col-span-12 flex items-start gap-2 rounded-xl bg-warning-50 px-4 py-3 text-sm font-medium text-warning-700">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          Ringkasan, grafik, dan tampilan Per faktur hanya memuat {formatAngka(allList.length, 0)} catatan terbaru dari {formatAngka(allData?.meta?.total ?? 0, 0)}. Angkanya bisa lebih kecil dari sebenarnya.
+          {isAdmin ? 'Ringkasan, grafik, dan tampilan Per faktur' : 'Ringkasan dan tampilan Per faktur'} hanya memuat {formatAngka(allList.length, 0)} catatan terbaru dari {formatAngka(allData?.meta?.total ?? 0, 0)}. Angkanya bisa lebih kecil dari sebenarnya.
         </p>
       )}
 
       {/* ── Ringkasan: tiga ubin ringkas ────────────────────────────────── */}
-      <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className={`col-span-12 grid grid-cols-1 gap-4 ${isAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+        {/* Uang khusus admin: staf tidak melihat ubin pembelian (backend juga tidak mengirim harga). */}
+        {isAdmin && (
         <StatTile
           compact
           icon={Wallet}
@@ -230,6 +232,7 @@ export default function BarangMasukTable() {
           sublabel={gagalAll ? '' : pembelianTanpaHarga > 0 ? `${pembelianTanpaHarga} belum berharga` : `${bulanIni}, sesudah PPN`}
           isLoading={ringkasanLoading}
         />
+        )}
         <StatTile compact icon={ReceiptText} label="Faktur bulan ini" value={angka(fakturBulanIni.length)} sublabel={`${jenisObatBulanIni} jenis obat`} isLoading={ringkasanLoading} />
         <StatTile
           compact
@@ -243,20 +246,25 @@ export default function BarangMasukTable() {
       </div>
 
       {/* ── Grafik: tren dan peringkat obat ─────────────────────────────── */}
-      <BarangMasukTrendChart
-        className="col-span-12 lg:col-span-7"
-        allList={allList}
-        isLoading={ringkasanLoading}
-        isError={gagalAll}
-        onRetry={() => muatUlangAll()}
-      />
-      <BarangMasukPerObatChart
-        className="col-span-12 lg:col-span-5"
-        allList={allList}
-        isLoading={ringkasanLoading}
-        isError={gagalAll}
-        onRetry={() => muatUlangAll()}
-      />
+      {/* Tren dan peringkat adalah analisis, bukan kerja harian staf: hanya admin. */}
+      {isAdmin && (
+        <>
+        <BarangMasukTrendChart
+          className="col-span-12 lg:col-span-7"
+          allList={allList}
+          isLoading={ringkasanLoading}
+          isError={gagalAll}
+          onRetry={() => muatUlangAll()}
+        />
+        <BarangMasukPerObatChart
+          className="col-span-12 lg:col-span-5"
+          allList={allList}
+          isLoading={ringkasanLoading}
+          isError={gagalAll}
+          onRetry={() => muatUlangAll()}
+        />
+        </>
+      )}
 
       {/* ── Riwayat stok masuk ──────────────────────────────────────────── */}
       <Panel
@@ -341,15 +349,17 @@ export default function BarangMasukTable() {
                 <TableHead className={`${KEPALA} ${KOLOM.supplier}`}>Supplier dan faktur</TableHead>
                 <TableHead className={`${KEPALA} ${KOLOM.batch}`}>Batch dan expired</TableHead>
                 <TableHead className={`${KEPALA} text-right ${KOLOM.stok}`}>Stok berubah</TableHead>
-                <TableHead className={`${KEPALA} text-right ${KOLOM.subtotal}`}>
-                  <span className="block leading-tight">Subtotal<span className="block font-normal">sebelum PPN</span></span>
-                </TableHead>
+                {isAdmin && (
+                  <TableHead className={`${KEPALA} text-right ${KOLOM.subtotal}`}>
+                    <span className="block leading-tight">Subtotal<span className="block font-normal">sebelum PPN</span></span>
+                  </TableHead>
+                )}
                 <TableHead className={`${KEPALA} pr-4 text-right`}>Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TabelSkeleton kolom={KOLOM_SKELETON} baris={BATAS_HALAMAN} />
+                <TabelSkeleton kolom={isAdmin ? KOLOM_SKELETON : KOLOM_SKELETON.filter((k) => k.kelas !== KOLOM.subtotal)} baris={BATAS_HALAMAN} />
               ) : isError ? null : (
                 list.map((item) => (
                   <TableRow key={item.id}>
@@ -394,11 +404,13 @@ export default function BarangMasukTable() {
                         </>
                       )}
                     </TableCell>
-                    <TableCell className={`whitespace-nowrap py-3 text-right tabular-nums ${KOLOM.subtotal}`}>
-                      {item.harga_beli != null
-                        ? formatRupiah((item.harga_beli / (1 + (Number(item.ppn_pct) || 0) / 100)) * item.jumlah_satuan)
-                        : <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className={`whitespace-nowrap py-3 text-right tabular-nums ${KOLOM.subtotal}`}>
+                        {item.harga_beli != null
+                          ? formatRupiah((item.harga_beli / (1 + (Number(item.ppn_pct) || 0) / 100)) * item.jumlah_satuan)
+                          : <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
+                      </TableCell>
+                    )}
                     <TableCell className="py-1.5 pr-3">
                       <div className="flex justify-end gap-1">
                         {/* Nama obat sudah membuka rincian; tombol mata hanya untuk layar lebar, atau untuk staf yang tidak punya aksi lain */}
@@ -427,6 +439,22 @@ export default function BarangMasukTable() {
                               loading={deleteMutation.isPending && deleteMutation.variables === item.id}
                             />
                           </>
+                        )}
+                        {/* Staf: hanya catatan buatannya sendiri yang masih dalam batas waktu (ditentukan backend, 10 menit). */}
+                        {!isAdmin && item.bisa_dibatalkan && (
+                          <ConfirmDialog
+                            trigger={
+                              <IconAction label={`Batalkan stok masuk ${item.nama_obat}`}>
+                                <Undo2 />
+                              </IconAction>
+                            }
+                            title={`Batalkan stok masuk ${item.nama_obat}?`}
+                            description="Stok obat dikurangi lagi sesuai jumlah di baris ini. Pembatalan hanya bisa dalam 10 menit setelah dicatat, dan hanya untuk catatan yang Anda buat sendiri."
+                            confirmLabel="Batalkan catatan"
+                            loadingLabel="Membatalkan..."
+                            onConfirm={() => deleteMutation.mutate(item.id)}
+                            loading={deleteMutation.isPending && deleteMutation.variables === item.id}
+                          />
                         )}
                       </div>
                     </TableCell>
@@ -483,7 +511,7 @@ export default function BarangMasukTable() {
         )}
 
         {/* Total pengeluaran: hanya bila ada filter aktif dan hasilnya tidak kosong. Bila ringkasan gagal dimuat, tidak ditampilkan (bukan Rp 0). */}
-        {adaFilter && !gagalAll && !ringkasanLoading && barisTotal.length > 0 && (
+        {isAdmin && adaFilter && !gagalAll && !ringkasanLoading && barisTotal.length > 0 && (
           <div className="flex flex-col gap-3 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               {perFaktur ? `Total ${kelompok.length} faktur` : `Total ${filteredAllList.length} transaksi`}
@@ -507,7 +535,7 @@ export default function BarangMasukTable() {
 
       {/* ── Keterangan warna ─────────────────────────────────────────────── */}
       <p className="col-span-12 px-1 text-sm text-muted-foreground">
-        Tanggal expired merah dengan tanda segitiga: kurang dari 3 bulan lagi atau sudah lewat. Oranye: 3 sampai 6 bulan. Subtotal dihitung dari harga beli sebelum PPN. Tanda jatuh tempo hanya membaca tanggal; aplikasi belum mencatat apakah faktur sudah dibayar. Tanda &quot;-&quot; berarti data belum diisi.
+        Tanggal expired merah dengan tanda segitiga: kurang dari 3 bulan lagi atau sudah lewat. Oranye: 3 sampai 6 bulan. {isAdmin && 'Subtotal dihitung dari harga beli sebelum PPN. '}{!isAdmin && 'Harga dan subtotal hanya terlihat oleh admin. Tombol Batalkan muncul 10 menit untuk catatan yang Anda buat sendiri. '}Tanda jatuh tempo hanya membaca tanggal; aplikasi belum mencatat apakah faktur sudah dibayar. Tanda &quot;-&quot; berarti data belum diisi.
       </p>
 
       {/* ── Dialog ───────────────────────────────────────────────────────── */}

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import IconAction from '@/components/shared/IconAction'
+import DicatatOleh from '@/components/shared/DicatatOleh'
 import Pagination from '@/components/shared/Pagination'
 import StateMessage from '@/components/shared/StateMessage'
 import { jamDicatat, type KelompokTransaksi } from '@/lib/barangKeluar'
@@ -74,6 +75,7 @@ export default function BarangKeluarPerTransaksi({ kelompok, isLoading, isError,
                   </button>
                   {/* Di layar sempit kolom Keterangan disembunyikan, jadi badge ikut di bawah tanggal */}
                   <span className="mt-1.5 block md:hidden"><Badge variant={k.keterangan === 'Penjualan' ? 'secondary' : 'outline'}>{k.keterangan}</Badge></span>
+                  <DicatatOleh nama={k.namaUser} role={k.roleUser} className="mt-1 xl:hidden" />
                 </TableCell>
                 <TableCell className="hidden py-3 md:table-cell">
                   <Badge variant={k.keterangan === 'Penjualan' ? 'secondary' : 'outline'}>{k.keterangan}</Badge>
@@ -101,7 +103,7 @@ export default function BarangKeluarPerTransaksi({ kelompok, isLoading, isError,
                       <span className="mt-0.5 block text-xs text-muted-foreground">{k.roleUser === 'admin' ? 'Admin' : 'Staf'}</span>
                     </>
                   ) : (
-                    <span className="text-muted-foreground">-<span className="sr-only"> Belum tersedia</span></span>
+                    <span className="text-xs text-muted-foreground">Tidak tercatat</span>
                   )}
                 </TableCell>
                 <TableCell className="py-1.5 pr-3">

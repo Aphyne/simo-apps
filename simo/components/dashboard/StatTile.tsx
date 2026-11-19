@@ -89,17 +89,19 @@ interface ReorderTileProps {
   compact?: boolean
   // Hanya varian ringkas: menggantikan keterangan bawaan ("dari N obat, di bawah ROP") dengan informasi tambahan.
   keterangan?: string
+  // Judul ubin; bawaan "Perlu reorder" (admin). Staf tidak memesan, jadi judulnya "Perlu dilaporkan ke admin".
+  judul?: string
   className?: string
 }
 
 // Satu-satunya ubin berisi warna biru pekat (datar): hal yang paling perlu dikerjakan hari ini.
-export function ReorderTile({ value, total, isLoading, action, compact, keterangan, className }: ReorderTileProps) {
+export function ReorderTile({ value, total, isLoading, action, compact, keterangan, judul = 'Perlu reorder', className }: ReorderTileProps) {
   const rasio = value !== null && total ? Math.min(1, value / total) : 0
   if (compact) {
     return (
       <div className={cn('flex flex-col justify-between gap-1 rounded-2xl bg-primary p-4 text-primary-foreground', className)}>
         <div className="flex min-h-9 items-center justify-between gap-3">
-          <p className="text-sm font-medium">Perlu reorder</p>
+          <p className="text-sm font-medium">{judul}</p>
           {action}
         </div>
         <div className="flex items-baseline gap-2">
@@ -119,7 +121,7 @@ export function ReorderTile({ value, total, isLoading, action, compact, keterang
   }
   return (
     <div className={cn('flex flex-col justify-between gap-3 rounded-2xl bg-primary p-5 text-primary-foreground', className)}>
-      <p className="text-sm font-medium text-primary-foreground">Perlu reorder</p>
+      <p className="text-sm font-medium text-primary-foreground">{judul}</p>
       <div>
         {isLoading ? (
           <span className="block h-14 w-24 rounded-lg bg-primary-foreground/20 motion-safe:animate-pulse" aria-hidden="true" />

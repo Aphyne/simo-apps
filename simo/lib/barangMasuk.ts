@@ -27,6 +27,9 @@ export interface KelompokFaktur {
   ppnPct: number
   // Jatuh tempo faktur (YYYY-MM-DD dari server), null bila belum diisi.
   jatuhTempo: string | null
+  // Pencatat faktur (baris pertama; satu faktur dicatat sekali oleh satu akun).
+  namaUser: string | null
+  roleUser: string | null
   rows: BarangMasuk[]
   totalSebelumPPN: number
   totalSesudahPPN: number
@@ -40,7 +43,7 @@ export function kelompokkanPerFaktur(rows: BarangMasuk[]): KelompokFaktur[] {
     const kunci = r.no_faktur ? `${r.supplier_id ?? ''}|${r.no_faktur}` : `baris|${r.id}`
     let g = peta.get(kunci)
     if (!g) {
-      g = { kunci, tanggal: r.tanggal, namaSupplier: r.nama_supplier, noFaktur: r.no_faktur, ppnPct: Number(r.ppn_pct) || 0, jatuhTempo: r.jatuh_tempo ?? null, rows: [], totalSebelumPPN: 0, totalSesudahPPN: 0, tanpaHarga: 0 }
+      g = { kunci, tanggal: r.tanggal, namaSupplier: r.nama_supplier, noFaktur: r.no_faktur, ppnPct: Number(r.ppn_pct) || 0, jatuhTempo: r.jatuh_tempo ?? null, namaUser: r.nama_user, roleUser: r.role_user, rows: [], totalSebelumPPN: 0, totalSesudahPPN: 0, tanpaHarga: 0 }
       peta.set(kunci, g)
     }
     g.rows.push(r)

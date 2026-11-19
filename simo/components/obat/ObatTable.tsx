@@ -21,7 +21,7 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useObatList, useObatSemua, useDeleteObat } from '@/hooks/useObat'
 import { useAuthStore } from '@/store/auth.store'
-import { cn, formatAngka } from '@/lib/utils'
+import { cn, formatAngka, formatRupiah } from '@/lib/utils'
 import { useNow } from '@/hooks/useNow'
 import { KATEGORI_OBAT } from '@/lib/constants'
 import KategoriDonut from '@/components/obat/KategoriDonut'
@@ -72,6 +72,7 @@ function KalkulasiCell({ value, satuan }: { value: number | null | undefined; sa
 // xl (konten sekitar 960px): + ROP, Est. habis, Expired. 2xl: + Kategori, EOQ.
 const KOLOM = {
   status: 'hidden md:table-cell',
+  harga: 'hidden md:table-cell',
   rop: 'hidden xl:table-cell',
   estHabis: 'hidden xl:table-cell',
   expired: 'hidden xl:table-cell',
@@ -113,6 +114,7 @@ const KOLOM_SKELETON: KolomSkeleton[] = [
   { garis: ['w-40', 'w-20'] },
   { garis: ['w-20'], kelas: KOLOM.kategori },
   { garis: ['w-16'], kanan: true },
+  { garis: ['w-20'], kanan: true, kelas: KOLOM.harga },
   { garis: ['w-14'], kanan: true, kelas: KOLOM.rop },
   { garis: ['w-14'], kanan: true, kelas: KOLOM.eoq },
   { garis: ['w-14'], kanan: true, kelas: KOLOM.estHabis },
@@ -213,20 +215,23 @@ export default function ObatTable() {
       <PageHeader
         className="col-span-12"
         title="Data obat"
-        description="Stok, titik pesan ulang, dan tanggal expired setiap obat di apotek."
+        description={isAdmin ? 'Stok, titik pesan ulang, dan tanggal expired setiap obat di apotek.' : 'Cari obat, cek stok, harga jual, dan tanggal expired.'}
       />
 
       {/* ── Ringkasan: satu baris ringkas, satu ubin biru untuk yang perlu dikerjakan ── */}
-      <KategoriDonut
-        className="col-span-12 md:col-span-6 lg:col-span-4"
-        allObat={allObat}
-        isLoading={ringkasanLoading}
-        isError={gagalAll}
-        kategoriAktif={kategori}
-        onPilihKategori={(k) => ubahParam({ kategori: k === kategori ? null : k })}
-      />
+      {/* Donat kategori adalah gambaran analisis: hanya admin. Staf: batang status stok yang melebar. */}
+      {isAdmin && (
+        <KategoriDonut
+          className="col-span-12 md:col-span-6 lg:col-span-4"
+          allObat={allObat}
+          isLoading={ringkasanLoading}
+          isError={gagalAll}
+          kategoriAktif={kategori}
+          onPilihKategori={(k) => ubahParam({ kategori: k === kategori ? null : k })}
+        />
+      )}
       <StatusStokBar
-        className="col-span-12 md:col-span-6 lg:col-span-4"
+        className={isAdmin ? 'col-span-12 md:col-span-6 lg:col-span-4' : 'col-span-12 md:col-span-6 lg:col-span-8'}
         allObat={allObat}
         isLoading={ringkasanLoading}
         isError={gagalAll}
@@ -236,6 +241,7 @@ export default function ObatTable() {
       <div className="col-span-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1">
         <ReorderTile
           compact
+          judul={isAdmin ? 'Perlu reorder' : 'Perlu dilaporkan ke admin'}
           value={angka(perluReorder)}
           total={gagalAll ? null : totalObat}
           keterangan={`dari ${totalObat} obat${stokHabis > 0 ? `, ${stokHabis} stok sudah habis` : ''}`}
@@ -337,6 +343,7 @@ export default function ObatTable() {
                 <KepalaUrut label="Obat" kunci="nama" urutan={urutan} arah={arah} onUrut={urutPer} className="pl-5" />
                 <TableHead className={`${KEPALA} ${KOLOM.kategori}`}>Kategori</TableHead>
                 <KepalaUrut label="Stok" kunci="stok" urutan={urutan} arah={arah} onUrut={urutPer} className="text-right" />
+                <TableHead className={`${KEPALA} text-right ${KOLOM.harga}`}>Harga jual</TableHead>
                 <TableHead className={`${KEPALA} text-right ${KOLOM.rop}`}>
                   <Istilah istilah="ROP" arti="Titik pesan ulang. Pesan obat bila stok sama dengan atau di bawah angka ini." />
                 </TableHead>
@@ -363,11 +370,18 @@ export default function ObatTable() {
                       {obat.nama_supplier && <span className="mt-0.5 block text-xs text-muted-foreground">{obat.nama_supplier}</span>}
                       {/* Di layar sempit kolom Status disembunyikan, jadi badge ikut di bawah nama */}
                       <span className="mt-1.5 block md:hidden"><StatusBadge status={obat.status} stok={obat.stok} /></span>
+                      {/* Kolom Harga jual juga disembunyikan di layar sempit: harga ikut di bawah nama. */}
+                      {Number(obat.harga_jual) > 0 && (
+                        <span className="mt-1 block text-xs tabular-nums text-muted-foreground md:hidden">{formatRupiah(Number(obat.harga_jual))} per {obat.satuan}</span>
+                      )}
                     </TableCell>
                     <TableCell className={`py-3 text-muted-foreground ${KOLOM.kategori}`}>{obat.kategori}</TableCell>
                     <TableCell className="py-3 text-right tabular-nums">
                       <span className="font-semibold text-foreground">{formatAngka(obat.stok, 0)}</span>
                       <span className="ml-1 text-xs text-muted-foreground">{obat.satuan}</span>
+                    </TableCell>
+                    <TableCell className={`whitespace-nowrap py-3 text-right tabular-nums ${KOLOM.harga}`}>
+                      {Number(obat.harga_jual) > 0 ? formatRupiah(Number(obat.harga_jual)) : <span className="text-muted-foreground">-<span className="sr-only"> Harga jual belum diisi</span></span>}
                     </TableCell>
                     <TableCell className={`py-3 text-right tabular-nums ${KOLOM.rop}`}>
                       <KalkulasiCell value={obat.rop} satuan={obat.satuan} />

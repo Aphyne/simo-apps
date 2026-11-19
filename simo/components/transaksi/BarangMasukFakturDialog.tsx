@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import ExpiredCell from '@/components/shared/ExpiredCell'
+import { useAuthStore } from '@/store/auth.store'
 import JatuhTempoCell from '@/components/transaksi/JatuhTempoCell'
 import { formatAngka, formatRupiah, formatTanggal } from '@/lib/utils'
 import type { KelompokFaktur } from '@/lib/barangMasuk'
@@ -27,6 +28,8 @@ export default function BarangMasukFakturDialog({ faktur, onClose }: Props) {
 }
 
 function Isi({ faktur }: { faktur: KelompokFaktur }) {
+  // Harga, subtotal, dan total adalah uang: khusus admin.
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const adaHarga = faktur.tanpaHarga < faktur.rows.length
   const ppnRp = faktur.totalSesudahPPN - faktur.totalSebelumPPN
   return (
@@ -40,6 +43,12 @@ function Isi({ faktur }: { faktur: KelompokFaktur }) {
           <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">{faktur.noFaktur ?? 'Tanpa no. faktur'}</span>
           <span aria-hidden="true">·</span>
           <span>{faktur.rows.length} obat</span>
+          {faktur.namaUser && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>dicatat oleh {faktur.namaUser} ({faktur.roleUser === 'admin' ? 'Admin' : 'Staf'})</span>
+            </>
+          )}
           {faktur.jatuhTempo && (
             <>
               <span aria-hidden="true">·</span>
@@ -56,12 +65,16 @@ function Isi({ faktur }: { faktur: KelompokFaktur }) {
               <TableHead className={KEPALA}>Obat</TableHead>
               <TableHead className={KEPALA}>Batch dan expired</TableHead>
               <TableHead className={`${KEPALA} text-right`}>Jumlah</TableHead>
-              <TableHead className={`${KEPALA} text-right`}>
-                <span className="block leading-tight">Harga per dus<span className="block font-normal">sebelum PPN</span></span>
-              </TableHead>
-              <TableHead className={`${KEPALA} text-right`}>
-                <span className="block leading-tight">Subtotal<span className="block font-normal">sebelum PPN</span></span>
-              </TableHead>
+              {isAdmin && (
+                <>
+                  <TableHead className={`${KEPALA} text-right`}>
+                    <span className="block leading-tight">Harga per dus<span className="block font-normal">sebelum PPN</span></span>
+                  </TableHead>
+                  <TableHead className={`${KEPALA} text-right`}>
+                    <span className="block leading-tight">Subtotal<span className="block font-normal">sebelum PPN</span></span>
+                  </TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -80,21 +93,25 @@ function Isi({ faktur }: { faktur: KelompokFaktur }) {
                   <span className="ml-1 text-xs text-muted-foreground">{r.satuan}</span>
                   <span className="block text-xs text-muted-foreground">{formatAngka(Number(r.jumlah_dus), 2)} dus</span>
                 </TableCell>
-                <TableCell className="whitespace-nowrap py-2.5 text-right tabular-nums">
-                  {r.harga_beli != null && r.jumlah_dus > 0 && (1 - (Number(r.diskon_pct) || 0) / 100) > 0
-                    ? formatRupiah(((r.harga_beli / ((1 + (Number(r.ppn_pct) || 0) / 100) * (1 - (Number(r.diskon_pct) || 0) / 100))) * r.jumlah_satuan) / Number(r.jumlah_dus))
-                    : <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
-                </TableCell>
-                <TableCell className="whitespace-nowrap py-2.5 text-right font-medium tabular-nums">
-                  {r.harga_beli != null
-                    ? formatRupiah((r.harga_beli / (1 + (Number(r.ppn_pct) || 0) / 100)) * r.jumlah_satuan)
-                    : <span className="font-normal text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
-                </TableCell>
+                {isAdmin && (
+                  <>
+                    <TableCell className="whitespace-nowrap py-2.5 text-right tabular-nums">
+                      {r.harga_beli != null && r.jumlah_dus > 0 && (1 - (Number(r.diskon_pct) || 0) / 100) > 0
+                        ? formatRupiah(((r.harga_beli / ((1 + (Number(r.ppn_pct) || 0) / 100) * (1 - (Number(r.diskon_pct) || 0) / 100))) * r.jumlah_satuan) / Number(r.jumlah_dus))
+                        : <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap py-2.5 text-right font-medium tabular-nums">
+                      {r.harga_beli != null
+                        ? formatRupiah((r.harga_beli / (1 + (Number(r.ppn_pct) || 0) / 100)) * r.jumlah_satuan)
+                        : <span className="font-normal text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>}
+                    </TableCell>
+                  </>
+                )}
               </TableRow>
             ))}
           </TableBody>
           {/* Total rata kanan, tepat di bawah kolom Subtotal (sama dengan rincian transaksi Stok keluar) */}
-          {adaHarga && (
+          {isAdmin && adaHarga && (
             <TableFooter>
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={4} className="py-2 text-right text-sm text-muted-foreground">Total sebelum PPN</TableCell>
@@ -114,8 +131,8 @@ function Isi({ faktur }: { faktur: KelompokFaktur }) {
       </div>
 
       <section aria-label="Catatan faktur" className="space-y-2">
-        {!adaHarga && <p className="text-sm text-muted-foreground">Harga beli belum diisi untuk faktur ini, jadi total belum bisa dihitung.</p>}
-        {adaHarga && faktur.tanpaHarga > 0 && (
+        {isAdmin && !adaHarga && <p className="text-sm text-muted-foreground">Harga beli belum diisi untuk faktur ini, jadi total belum bisa dihitung.</p>}
+        {isAdmin && adaHarga && faktur.tanpaHarga > 0 && (
           <p className="text-sm text-muted-foreground">{faktur.tanpaHarga} obat belum berharga dan belum ikut dijumlahkan.</p>
         )}
         <p className="text-sm text-muted-foreground">Untuk mengubah atau menghapus, buka tampilan Per obat.</p>

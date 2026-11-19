@@ -95,7 +95,8 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
   const habis = obat.stok <= 0
   const perluPesan = habis || obat.status === 'HARUS_REORDER'
   // Rincian: harga dan biaya terisi dari Barang masuk, lama pengiriman dari Supplier.
-  const adaYangKosong = !(obat.harga_beli > 0) || !(obat.harga_jual > 0) || !(obat.lead_time > 0) || !obat.nama_supplier
+  // Harga beli adalah uang: khusus admin (backend tidak mengirimnya ke staf); staf melihat harga jual saja.
+  const adaYangKosong = (isAdmin && !(obat.harga_beli > 0)) || !(obat.harga_jual > 0) || !(obat.lead_time > 0) || !obat.nama_supplier
 
   const tombolUbah = (
     <Button variant={perluPesan ? 'outline' : 'default'} size="lg" className="h-10 rounded-xl px-4" asChild>
@@ -177,13 +178,13 @@ export default function DetailObatPage({ params }: { params: Promise<{ id: strin
         action={
           adaYangKosong ? (
             <span className="text-sm font-normal text-muted-foreground">
-              Harga dan biaya terisi dari Barang masuk, lama pengiriman dari Supplier
+              {isAdmin ? 'Harga dan biaya terisi dari Barang masuk, lama pengiriman dari Supplier' : 'Yang kosong dilengkapi admin'}
             </span>
           ) : undefined
         }
       >
-        <FactList className="sm:grid-cols-3 lg:grid-cols-6">
-          <Fact label={`Harga beli per ${obat.satuan}`}>{rupiahAtauBelum(obat.harga_beli)}</Fact>
+        <FactList className={isAdmin ? 'sm:grid-cols-3 lg:grid-cols-6' : 'sm:grid-cols-3 lg:grid-cols-5'}>
+          {isAdmin && <Fact label={`Harga beli per ${obat.satuan}`}>{rupiahAtauBelum(obat.harga_beli)}</Fact>}
           <Fact label={`Harga jual per ${obat.satuan}`}>{rupiahAtauBelum(obat.harga_jual)}</Fact>
           <Fact label="Isi per dus">{obat.satuan_per_dus} {obat.satuan}</Fact>
           <Fact label="Lama pengiriman">{obat.lead_time > 0 ? `${obat.lead_time} hari` : BELUM_DIISI}</Fact>

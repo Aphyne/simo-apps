@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Fact, FactList } from '@/components/shared/FactList'
 import ExpiredCell from '@/components/shared/ExpiredCell'
 import JatuhTempoCell from '@/components/transaksi/JatuhTempoCell'
+import { useAuthStore } from '@/store/auth.store'
 import { isRiwayatFaktur } from '@/lib/barangMasuk'
 import { formatAngka, formatRupiah, formatTanggal } from '@/lib/utils'
 import type { BarangMasuk } from '@/types/obat'
@@ -27,6 +28,8 @@ export default function BarangMasukDetailDialog({ item, onClose }: Props) {
 }
 
 function Isi({ item }: { item: BarangMasuk }) {
+  // Harga beli, harga jual, dan subtotal adalah uang: khusus admin.
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const ppnPct = Number(item.ppn_pct) || 0
   const spd = item.jumlah_dus > 0 ? item.jumlah_satuan / item.jumlah_dus : 1
   const adaHarga = item.harga_beli != null
@@ -64,27 +67,29 @@ function Isi({ item }: { item: BarangMasuk }) {
         <Fact label="Supplier">{item.nama_supplier}</Fact>
         <Fact label="No. batch">{item.no_batch ? <span className="font-mono text-sm">{item.no_batch}</span> : null}</Fact>
         <Fact label="Tanggal expired"><ExpiredCell tanggal={item.expired_batch} /></Fact>
-        <Fact label={`Harga jual per ${item.satuan}`}>{item.harga_jual != null ? formatRupiah(item.harga_jual) : BELUM_DIISI}</Fact>
+        {isAdmin && <Fact label={`Harga jual per ${item.satuan}`}>{item.harga_jual != null ? formatRupiah(item.harga_jual) : BELUM_DIISI}</Fact>}
         <Fact label="Jatuh tempo faktur"><JatuhTempoCell tanggal={item.jatuh_tempo} /></Fact>
-        <Fact label="Dicatat oleh">{item.nama_user}</Fact>
+        <Fact label="Dicatat oleh">{item.nama_user ? `${item.nama_user} (${item.role_user === 'admin' ? 'Admin' : 'Staf'})` : <span className="font-normal text-muted-foreground">Tidak tercatat</span>}</Fact>
         {item.catatan && <Fact label="Catatan" className="col-span-2">{item.catatan}</Fact>}
       </FactList>
 
-      <section aria-labelledby="harga-judul" className="border-t pt-5">
-        <h3 id="harga-judul" className="text-[15px] font-semibold text-foreground">
-          Harga beli {ppnPct > 0 ? `(PPN ${formatAngka(ppnPct, 2)}%)` : '(tanpa PPN)'}
-        </h3>
-        {adaHarga ? (
-          <FactList className="mt-4">
-            <Fact label="Per dus, sebelum PPN">{formatRupiah(hargaDusSebelum)}</Fact>
-            <Fact label="Per dus, sesudah PPN">{formatRupiah(hargaDusSesudah)}</Fact>
-            <Fact label="Subtotal sebelum PPN">{formatRupiah(subSebelum)}</Fact>
-            <Fact label="Subtotal sesudah PPN"><span className="font-semibold">{formatRupiah(subSesudah)}</span></Fact>
-          </FactList>
-        ) : (
-          <p className="mt-2 text-sm text-muted-foreground">Harga beli belum diisi untuk baris ini, jadi subtotal belum bisa dihitung.</p>
-        )}
-      </section>
+      {isAdmin && (
+        <section aria-labelledby="harga-judul" className="border-t pt-5">
+          <h3 id="harga-judul" className="text-[15px] font-semibold text-foreground">
+            Harga beli {ppnPct > 0 ? `(PPN ${formatAngka(ppnPct, 2)}%)` : '(tanpa PPN)'}
+          </h3>
+          {adaHarga ? (
+            <FactList className="mt-4">
+              <Fact label="Per dus, sebelum PPN">{formatRupiah(hargaDusSebelum)}</Fact>
+              <Fact label="Per dus, sesudah PPN">{formatRupiah(hargaDusSesudah)}</Fact>
+              <Fact label="Subtotal sebelum PPN">{formatRupiah(subSebelum)}</Fact>
+              <Fact label="Subtotal sesudah PPN"><span className="font-semibold">{formatRupiah(subSesudah)}</span></Fact>
+            </FactList>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">Harga beli belum diisi untuk baris ini, jadi subtotal belum bisa dihitung.</p>
+          )}
+        </section>
+      )}
     </>
   )
 }

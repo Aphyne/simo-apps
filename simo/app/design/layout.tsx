@@ -52,9 +52,10 @@ export default function DesignLayout({ children }: { children: React.ReactNode }
         <aside className="flex w-full shrink-0 flex-col bg-background md:sticky md:top-0 md:h-screen md:w-60 md:overflow-y-auto">
           <a
             href="#top"
-            className="flex h-16 shrink-0 items-center gap-2.5 px-6 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            className="flex h-16 shrink-0 items-center gap-2 px-7 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
           >
-            <Image src="/logo.png" alt="" width={30} height={30} className="shrink-0" />
+            {/* Sama dengan sidebar aplikasi: logo 40px, -ml-1.5 membuang tepi kosong gambar supaya lambangnya sejajar dengan ikon menu. */}
+            <Image src="/logo.png" alt="" width={40} height={40} className="-ml-1.5 shrink-0" />
             <span className="text-lg font-bold tracking-tight">SIMO Design</span>
           </a>
 

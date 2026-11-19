@@ -70,6 +70,9 @@ export interface BarangMasuk {
   username: string | null
   role_user: string | null
   created_at: string
+  user_id?: number | null
+  // Hanya terisi untuk staf: catatan miliknya sendiri yang masih dalam batas waktu pembatalan (backend aksesStaf.js).
+  bisa_dibatalkan?: boolean
 }
 
 export interface BarangMasukFormData {
@@ -157,6 +160,9 @@ export interface BarangKeluar {
   username: string | null
   role_user: string | null
   created_at: string
+  user_id?: number | null
+  // Hanya terisi untuk staf: catatan miliknya sendiri yang masih dalam batas waktu pembatalan (backend aksesStaf.js).
+  bisa_dibatalkan?: boolean
 }
 
 export interface BarangKeluarFormData {

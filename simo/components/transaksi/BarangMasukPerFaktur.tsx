@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import IconAction from '@/components/shared/IconAction'
 import Pagination from '@/components/shared/Pagination'
 import StateMessage from '@/components/shared/StateMessage'
+import { useAuthStore } from '@/store/auth.store'
 import JatuhTempoCell from '@/components/transaksi/JatuhTempoCell'
 import { formatRupiah, formatTanggalPendek } from '@/lib/utils'
 import type { KelompokFaktur } from '@/lib/barangMasuk'
@@ -31,6 +32,8 @@ interface Props {
 // Isi panel riwayat dalam tampilan "Per faktur": satu baris per faktur dengan jumlah obat dan totalnya.
 // Dihitung di klien dari seluruh riwayat (sama seperti ringkasan dan grafik), jadi paginasinya juga di klien.
 export default function BarangMasukPerFaktur({ kelompok, isLoading, isError, onRetry, adaFilter, onAturUlang, page, onPageChange, onBuka, aksiKosong }: Props) {
+  // Total faktur adalah uang: khusus admin.
+  const isAdmin = useAuthStore((s) => s.isAdmin())
   const lastPage = Math.max(1, Math.ceil(kelompok.length / PER_HALAMAN))
   const tampil = kelompok.slice((page - 1) * PER_HALAMAN, page * PER_HALAMAN)
 
@@ -44,12 +47,16 @@ export default function BarangMasukPerFaktur({ kelompok, isLoading, isError, onR
             <TableHead className={KEPALA}>No. faktur</TableHead>
             <TableHead className={`${KEPALA} hidden md:table-cell`}>Jatuh tempo</TableHead>
             <TableHead className={`${KEPALA} text-right`}>Jumlah obat</TableHead>
-            <TableHead className={`${KEPALA} hidden text-right xl:table-cell`}>
-              <span className="block leading-tight">Total<span className="block font-normal">sebelum PPN</span></span>
-            </TableHead>
-            <TableHead className={`${KEPALA} text-right`}>
-              <span className="block leading-tight">Total<span className="block font-normal">sesudah PPN</span></span>
-            </TableHead>
+            {isAdmin && (
+              <>
+                <TableHead className={`${KEPALA} hidden text-right xl:table-cell`}>
+                  <span className="block leading-tight">Total<span className="block font-normal">sebelum PPN</span></span>
+                </TableHead>
+                <TableHead className={`${KEPALA} text-right`}>
+                  <span className="block leading-tight">Total<span className="block font-normal">sesudah PPN</span></span>
+                </TableHead>
+              </>
+            )}
             <TableHead className={`${KEPALA} pr-4 text-right`}>Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -62,8 +69,8 @@ export default function BarangMasukPerFaktur({ kelompok, isLoading, isError, onR
                 <TableCell className="py-3"><Skeleton className="h-4 w-28" /></TableCell>
                 <TableCell className="hidden py-3 md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-12" /></TableCell>
-                <TableCell className="hidden py-3 xl:table-cell"><Skeleton className="ml-auto h-4 w-20" /></TableCell>
-                <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-20" /></TableCell>
+                {isAdmin && <TableCell className="hidden py-3 xl:table-cell"><Skeleton className="ml-auto h-4 w-20" /></TableCell>}
+                {isAdmin && <TableCell className="py-3"><Skeleton className="ml-auto h-4 w-20" /></TableCell>}
                 <TableCell className="py-3 pr-4"><Skeleton className="ml-auto h-8 w-10" /></TableCell>
               </TableRow>
             ))
@@ -86,19 +93,23 @@ export default function BarangMasukPerFaktur({ kelompok, isLoading, isError, onR
                   <span className="font-semibold text-foreground">{k.rows.length}</span>{' '}
                   <span className="text-xs text-muted-foreground">obat</span>
                 </TableCell>
-                <TableCell className="hidden whitespace-nowrap py-3 text-right tabular-nums xl:table-cell">
-                  {k.tanpaHarga === k.rows.length ? <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span> : formatRupiah(k.totalSebelumPPN)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap py-3 text-right tabular-nums">
-                  {k.tanpaHarga === k.rows.length ? (
-                    <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>
-                  ) : (
-                    <>
-                      <span className="font-medium text-foreground">{formatRupiah(k.totalSesudahPPN)}</span>
-                      {k.tanpaHarga > 0 && <span className="block text-xs text-muted-foreground">{k.tanpaHarga} obat belum berharga</span>}
-                    </>
-                  )}
-                </TableCell>
+                {isAdmin && (
+                  <>
+                    <TableCell className="hidden whitespace-nowrap py-3 text-right tabular-nums xl:table-cell">
+                      {k.tanpaHarga === k.rows.length ? <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span> : formatRupiah(k.totalSebelumPPN)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap py-3 text-right tabular-nums">
+                      {k.tanpaHarga === k.rows.length ? (
+                        <span className="text-muted-foreground">-<span className="sr-only"> Harga belum diisi</span></span>
+                      ) : (
+                        <>
+                          <span className="font-medium text-foreground">{formatRupiah(k.totalSesudahPPN)}</span>
+                          {k.tanpaHarga > 0 && <span className="block text-xs text-muted-foreground">{k.tanpaHarga} obat belum berharga</span>}
+                        </>
+                      )}
+                    </TableCell>
+                  </>
+                )}
                 <TableCell className="py-1.5 pr-3">
                   <div className="flex justify-end">
                     <IconAction label={`Lihat rincian faktur ${k.noFaktur ?? ''}`.trim()} onClick={() => onBuka(k)}>

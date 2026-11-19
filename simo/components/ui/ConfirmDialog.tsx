@@ -18,6 +18,9 @@ interface Props {
   description?: string
   onConfirm: () => void
   loading?: boolean
+  // Tulisan tombol aksi dan keadaan memproses; bawaan untuk menghapus.
+  confirmLabel?: string
+  loadingLabel?: string
 }
 
 export default function ConfirmDialog({
@@ -26,6 +29,8 @@ export default function ConfirmDialog({
   description = 'Tindakan ini tidak bisa dibatalkan. Data akan dihapus permanen.',
   onConfirm,
   loading,
+  confirmLabel = 'Hapus',
+  loadingLabel = 'Menghapus...',
 }: Props) {
   return (
     <AlertDialog>
@@ -42,7 +47,7 @@ export default function ConfirmDialog({
             disabled={loading}
             className="bg-destructive text-white hover:bg-destructive/90"
           >
-            {loading ? 'Menghapus...' : 'Hapus'}
+            {loading ? loadingLabel : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

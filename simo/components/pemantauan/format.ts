@@ -15,6 +15,12 @@ export function formatWaktu(iso: string | null | undefined): string {
   })
 }
 
+// "8 Nov, 14.32" (WIB): untuk tabel yang sempit; tahun dan detik ada di ekspor.
+export function formatWaktuSingkat(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('id-ID', { timeZone: TZ, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
 // "3 menit lalu", "2 jam lalu", "5 hari lalu"
 export function waktuRelatif(iso: string | null | undefined): string {
   if (!iso) return 'Belum pernah'
@@ -25,6 +31,31 @@ export function waktuRelatif(iso: string | null | undefined): string {
   const jam = Math.floor(menit / 60)
   if (jam < 24) return `${jam} jam lalu`
   return `${Math.floor(jam / 24)} hari lalu`
+}
+
+// 394 -> "6 jam 34 menit", 45 -> "45 menit"
+export function formatMenit(menit: number): string {
+  if (menit < 60) return `${menit} menit`
+  const j = Math.floor(menit / 60)
+  const m = menit % 60
+  return m ? `${j} jam ${m} menit` : `${j} jam`
+}
+
+// 394 -> "6j 34m": untuk ubin sempit; kalimat lengkap memakai formatMenit.
+export function formatMenitRingkas(menit: number): string {
+  if (menit < 60) return `${menit}m`
+  const j = Math.floor(menit / 60)
+  const m = menit % 60
+  // Spasi tak-terputus ( ) supaya "6j 34m" tidak terpecah ke dua baris di ubin sempit.
+  return m ? `${j}j${String.fromCharCode(160)}${m}m` : `${j}j`
+}
+
+// User-agent mentah -> "Chrome · Windows". Hanya untuk dibaca manusia; teks mentah tetap ada di ekspor.
+export function ringkasPerangkat(ua: string | null | undefined): string {
+  if (!ua) return '—'
+  const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Peramban lain'
+  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad|iOS/.test(ua) ? 'iOS' : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : ''
+  return os ? `${browser} · ${os}` : browser
 }
 
 export function getPageNumbers(current: number, total: number): (number | '...')[] {

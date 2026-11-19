@@ -16,6 +16,7 @@ import {
   Users,
   Settings,
   Activity,
+  TrendingUp,
   ShoppingCart,
   LogOut,
   X,
@@ -37,10 +38,8 @@ const navItems: NavItem[] = [
   { label: 'Stok Keluar', href: '/barang-keluar', icon: PackageMinus },
   { label: 'Reorder', href: '/reorder', icon: ShoppingCart, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/simulasi/page.tsx
-  // (saat diaktifkan kembali, impor ikon FlaskConical, TrendingUp, dan Calculator dari lucide-react)
+  // (saat diaktifkan kembali, impor ikon FlaskConical dan Calculator dari lucide-react)
   // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },
-  // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/analisis/page.tsx
-  // { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, adminOnly: true },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/perhitungan/page.tsx
   // { label: 'Perhitungan EOQ/ROP', href: '/perhitungan', icon: Calculator, adminOnly: true },
   { label: 'Laporan', href: '/laporan', icon: FileText },
@@ -49,6 +48,8 @@ const navItems: NavItem[] = [
   { label: 'Pengaturan', href: '/pengaturan', icon: Settings, adminOnly: true },
   // Khusus akun peneliti (superadmin): pemantauan aktivitas pengguna untuk keperluan skripsi
   { label: 'Pemantauan', href: '/pemantauan', icon: Activity, superadminOnly: true },
+  // Perbandingan biaya sebelum vs sesudah EOQ: bahan skripsi, jadi juga khusus peneliti
+  { label: 'Analisis Komparatif', href: '/analisis', icon: TrendingUp, superadminOnly: true },
 ]
 
 interface SidebarProps {

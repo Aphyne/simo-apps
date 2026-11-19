@@ -1,101 +1,101 @@
 'use client'
 
-import { Eye } from 'lucide-react'
-import { AnalisisDetail, AnalisisRingkasan } from '@/hooks/useAnalisis'
-import { formatRupiah } from '@/lib/utils'
+import { useMemo, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { TabelData, type KolomData } from '@/components/shared/TabelData'
+import type { AnalisisDetail, AnalisisRingkasan } from '@/hooks/useAnalisis'
+import { formatAngka, formatRupiah } from '@/lib/utils'
 
 interface Props {
   detail: AnalisisDetail[]
   ringkasan: AnalisisRingkasan | undefined
   isLoading: boolean
+  isError: boolean
+  onCobaLagi: () => void
   onSelectItem: (item: AnalisisDetail) => void
 }
 
-export default function AnalisisTable({ detail, ringkasan, isLoading, onSelectItem }: Props) {
-  return (
-    <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
-      <div className="px-5 py-3 border-b border-line">
-        <h2 className="text-sm font-semibold text-fg-secondary">Detail Perbandingan per Obat</h2>
-      </div>
+const PER_HALAMAN = 15
+const persen = (n: number) => `${n > 0 ? '+' : ''}${n.toLocaleString('id-ID')}%`
 
-      {isLoading ? (
-        <div className="space-y-3 p-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse bg-surface-muted rounded-xl" />
-          ))}
+// Tabel rincian per obat, urut dari penghematan terbesar. Kolom bertahap menurut lebar konten (jumlah sekali pesan dan
+// frekuensi mulai xl). Baris penutup menjumlahkan semua obat (bukan hanya halaman ini) dan sama dengan ubin di atas.
+export default function AnalisisTable({ detail, ringkasan, isLoading, isError, onCobaLagi, onSelectItem }: Props) {
+  const [halaman, setHalaman] = useState<number | null>(null)
+  const baris = useMemo(() => [...detail].sort((a, b) => b.penghematan - a.penghematan), [detail])
+
+  const kolom: KolomData<AnalisisDetail>[] = [
+    {
+      id: 'obat',
+      judul: 'Obat',
+      skeleton: ['w-36', 'w-24'],
+      sel: (d) => (
+        <div className="min-w-0">
+          <button type="button" onClick={() => onSelectItem(d)} className="rounded-md text-left font-medium text-foreground outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring">
+            {d.nama}
+          </button>
+          <p className="mt-0.5 font-mono text-xs text-muted-foreground">{d.kode} · {d.satuan}</p>
         </div>
-      ) : detail.length === 0 ? (
-        <p className="text-center py-10 text-fg-muted text-sm">
-          Belum ada data. Lengkapi parameter biaya pada data obat terlebih dahulu.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wide">Obat</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Biaya Sebelum EOQ</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-brand-600 uppercase tracking-wide">Biaya Dengan EOQ</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">Penghematan</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wide">% Hemat</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-fg-muted uppercase tracking-wide">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.map((item) => (
-                <tr key={item.id} className="border-b border-line-subtle hover:bg-surface-subtle transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-fg">{item.nama}</div>
-                    <div className="text-xs text-fg-muted font-mono">{item.kode} · {item.satuan}</div>
-                  </td>
-                  <td className="px-4 py-3 text-right text-fg-secondary">
-                    {formatRupiah(item.tc_tradisional)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-brand-600 font-medium">
-                    {formatRupiah(item.tc_eoq)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium text-success-700">
-                    {formatRupiah(item.penghematan)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      item.persen_hemat > 0
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {item.persen_hemat > 0 ? '+' : ''}{item.persen_hemat}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => onSelectItem(item)}
-                      className="text-fg-muted hover:text-fg-secondary hover:bg-surface-muted rounded-lg p-2 transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            {ringkasan && (
-              <tfoot>
-                <tr className="border-t-2 border-line bg-surface-subtle font-semibold text-gray-800">
-                  <td className="px-4 py-3 text-sm">Total</td>
-                  <td className="px-4 py-3 text-right text-sm">{formatRupiah(ringkasan.total_tc_tradisional)}</td>
-                  <td className="px-4 py-3 text-right text-sm text-brand-600">{formatRupiah(ringkasan.total_tc_eoq)}</td>
-                  <td className="px-4 py-3 text-right text-sm text-success-700">{formatRupiah(ringkasan.total_penghematan)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
-                      +{ringkasan.persen_hemat_total}%
-                    </span>
-                  </td>
-                  <td />
-                </tr>
-              </tfoot>
-            )}
-          </table>
+      ),
+    },
+    {
+      id: 'jumlah',
+      judul: 'Sekali pesan',
+      kelas: 'hidden xl:table-cell',
+      skeleton: ['w-32', 'w-32'],
+      sel: (d) => (
+        <div className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+          <p>Sebelum: <span className="text-foreground">{formatAngka(d.q_tradisional, 0)}</span> ({formatAngka(d.asumsi_dus, 0)} dus)</p>
+          <p className="mt-0.5">EOQ: <span className="text-foreground">{formatAngka(d.q_eoq, 0)}</span> ({formatAngka(d.q_eoq_dus, 1)} dus)</p>
         </div>
-      )}
-    </div>
+      ),
+    },
+    {
+      id: 'frekuensi',
+      judul: 'Pesan per tahun',
+      kelas: 'hidden xl:table-cell',
+      skeleton: ['w-28', 'w-28'],
+      sel: (d) => (
+        <div className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+          <p>Sebelum: <span className="text-foreground">{formatAngka(d.frek_tradisional, 1)}×</span></p>
+          <p className="mt-0.5">EOQ: <span className="text-foreground">{formatAngka(d.frek_eoq, 1)}×</span></p>
+        </div>
+      ),
+    },
+    { id: 'sebelum', judul: 'Biaya sebelum EOQ', kanan: true, skeleton: 'w-24', sel: (d) => <span className="whitespace-nowrap tabular-nums text-muted-foreground">{formatRupiah(d.tc_tradisional)}</span> },
+    { id: 'eoq', judul: 'Biaya dengan EOQ', kanan: true, skeleton: 'w-24', sel: (d) => <span className="whitespace-nowrap font-medium tabular-nums text-foreground">{formatRupiah(d.tc_eoq)}</span> },
+    { id: 'hemat', judul: 'Penghematan', kanan: true, kelas: 'hidden md:table-cell', skeleton: 'w-24', sel: (d) => <span className="whitespace-nowrap font-medium tabular-nums text-primary">{formatRupiah(d.penghematan)}</span> },
+    { id: 'persen', judul: '% hemat', kanan: true, kelas: 'hidden sm:table-cell', skeleton: 'w-14', sel: (d) => <Badge variant="secondary" className="tabular-nums">{persen(d.persen_hemat)}</Badge> },
+  ]
+
+  return (
+    <TabelData
+      kolom={kolom}
+      baris={baris}
+      kunci={(d) => d.id}
+      isLoading={isLoading}
+      isError={isError}
+      onCobaLagi={onCobaLagi}
+      judulGagal="Perbandingan belum bisa dimuat"
+      kosong={{ judul: 'Belum ada obat yang bisa dibandingkan', keterangan: 'Lengkapi biaya pesan, biaya simpan, isi per dus, dan pastikan ada penjualan 30 hari terakhir pada data obat.' }}
+      footer={
+        ringkasan
+          ? [{
+              label: 'Total semua obat',
+              nilai: {
+                sebelum: formatRupiah(ringkasan.total_tc_tradisional),
+                eoq: formatRupiah(ringkasan.total_tc_eoq),
+                hemat: <span className="text-primary">{formatRupiah(ringkasan.total_penghematan)}</span>,
+                persen: persen(ringkasan.persen_hemat_total),
+              },
+            }]
+          : undefined
+      }
+      halaman={halaman}
+      onHalaman={setHalaman}
+      perHalaman={PER_HALAMAN}
+      barisSkeleton={6}
+      noun="obat"
+    />
   )
 }

@@ -1,49 +1,48 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, RotateCcw } from 'lucide-react'
+import { CircleAlert, Download, ListX } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
 import api from '@/lib/api'
-import {
-  useLogAktivitas,
-  type JenisAktivitas,
-  type LogAktivitas,
-  type LogFilter,
-  type RingkasanUser,
-} from '@/hooks/useAktivitas'
-import { formatWaktu, getPageNumbers } from './format'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import PilihanCombobox from '@/components/ui/PilihanCombobox'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import Panel from '@/components/dashboard/Panel'
+import { FilterBar } from '@/components/shared/FilterBar'
+import Pagination from '@/components/shared/Pagination'
+import StateMessage from '@/components/shared/StateMessage'
+import TabelSkeleton from '@/components/shared/TabelSkeleton'
+import { useLogAktivitas, type JenisAktivitas, type LogAktivitas, type LogFilter, type RingkasanUser } from '@/hooks/useAktivitas'
+import { cn } from '@/lib/utils'
+import { formatWaktu, formatWaktuSingkat, ringkasPerangkat } from './format'
 
-const JENIS_LABEL: Record<JenisAktivitas, { label: string; cls: string }> = {
-  login: { label: 'Login', cls: 'bg-success-100 text-success-700' },
-  logout: { label: 'Logout', cls: 'bg-surface-muted text-fg-tertiary' },
-  halaman: { label: 'Halaman', cls: 'bg-brand-100 text-brand-700' },
-  aksi: { label: 'Aksi Data', cls: 'bg-purple-100 text-purple-700' },
-  login_gagal: { label: 'Login Gagal', cls: 'bg-danger-100 text-danger-700' },
+export const JENIS_LABEL: Record<JenisAktivitas, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; kelas?: string }> = {
+  login: { label: 'Login', variant: 'secondary' },
+  logout: { label: 'Logout', variant: 'outline' },
+  halaman: { label: 'Halaman', variant: 'outline' },
+  aksi: { label: 'Aksi data', variant: 'default' },
+  login_gagal: { label: 'Login gagal', variant: 'destructive', kelas: 'text-danger-700' },
 }
 
-const inputCls =
-  'border border-line-strong rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500'
-
-const pageBtn =
-  'px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-fg-muted hover:bg-surface-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
+export const PER_HALAMAN_LOG = 20
 
 interface Props {
   users: RingkasanUser[]
+  // Filter lengkap, termasuk rentang tanggal dari periode halaman dan nomor halaman dari URL.
   filter: LogFilter
-  setFilter: (f: LogFilter) => void
+  onUbah: (patch: { user?: string | null; jenis?: string | null }) => void
+  onHalaman: (n: number) => void
 }
 
-export default function LogAktivitasTable({ users, filter, setFilter }: Props) {
-  const { data, isLoading } = useLogAktivitas(filter)
+// Daftar log dengan paginasi di server. Rentang tanggal mengikuti periode di kepala halaman; di sini hanya pengguna dan jenis.
+export default function LogAktivitasTable({ users, filter, onUbah, onHalaman }: Props) {
+  const { data, isLoading, isError, refetch } = useLogAktivitas(filter)
   const [exporting, setExporting] = useState(false)
   const rows = data?.data ?? []
   const meta = data?.meta
-  const page = filter.page ?? 1
-  const limit = filter.limit ?? 20
-
-  const ubah = (patch: Partial<LogFilter>) => setFilter({ ...filter, ...patch, page: 1 })
-  const reset = () => setFilter({ page: 1, limit })
+  const aktif = Boolean(filter.user_id || filter.jenis)
 
   async function exportExcel() {
     setExporting(true)
@@ -87,137 +86,100 @@ export default function LogAktivitasTable({ users, filter, setFilter }: Props) {
     }
   }
 
+  const opsiUser = [{ value: '', label: 'Semua pengguna' }, ...users.map((u) => ({ value: String(u.id), label: `${u.nama} (@${u.username})` }))]
+  const opsiJenis = [{ value: '', label: 'Semua jenis' }, ...Object.entries(JENIS_LABEL).map(([k, v]) => ({ value: k, label: v.label }))]
+
   return (
-    <div className="rounded-xl border border-line bg-surface shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-line-subtle space-y-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-sm font-semibold text-fg-secondary">Log Aktivitas</h2>
-            <p className="text-xs text-fg-muted mt-0.5">Diperbarui otomatis tiap 30 detik · waktu dalam WIB</p>
-          </div>
-          <button
-            onClick={exportExcel}
-            disabled={exporting}
-            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-fg-inverse font-medium rounded-lg px-4 py-2 text-sm"
-          >
-            <Download className="w-4 h-4" />
+    <Panel
+      title="Log aktivitas"
+      count={meta?.total}
+      action={<span className="hidden text-sm font-normal text-muted-foreground sm:inline">Diperbarui otomatis tiap 30 detik · waktu WIB</span>}
+      bodyClassName="px-0 pb-0"
+      className="scroll-mt-4"
+    >
+      <div id="log-aktivitas" className="px-5 pb-4">
+        <FilterBar className="grid grid-cols-2 sm:flex sm:flex-wrap">
+          <PilihanCombobox aria-label="Pengguna" options={opsiUser} value={filter.user_id ?? ''} onChange={(v) => onUbah({ user: v || null })} placeholder="Semua pengguna" noun="pengguna" className="col-span-2 sm:w-56" />
+          <PilihanCombobox aria-label="Jenis aktivitas" options={opsiJenis} value={filter.jenis ?? ''} onChange={(v) => onUbah({ jenis: v || null })} placeholder="Semua jenis" noun="jenis" className="col-span-2 sm:w-44" />
+          {aktif && (
+            <Button variant="ghost" size="lg" className="h-10 rounded-xl px-3" onClick={() => onUbah({ user: null, jenis: null })}>
+              Atur ulang
+            </Button>
+          )}
+          <Button size="lg" className="col-span-2 h-10 rounded-xl px-4 sm:ml-auto" onClick={exportExcel} disabled={exporting}>
+            <Download data-icon="inline-start" aria-hidden="true" />
             {exporting ? 'Mengekspor...' : 'Ekspor Excel'}
-          </button>
-        </div>
-
-        <div className="flex items-end gap-3 flex-wrap">
-          <label className="text-xs font-medium text-fg-tertiary space-y-1 block">
-            Pengguna
-            <select
-              className={`${inputCls} block min-w-[180px]`}
-              value={filter.user_id ?? ''}
-              onChange={(e) => ubah({ user_id: e.target.value || undefined })}
-            >
-              <option value="">Semua pengguna</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.nama} (@{u.username})</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs font-medium text-fg-tertiary space-y-1 block">
-            Jenis
-            <select
-              className={`${inputCls} block`}
-              value={filter.jenis ?? ''}
-              onChange={(e) => ubah({ jenis: e.target.value || undefined })}
-            >
-              <option value="">Semua jenis</option>
-              {Object.entries(JENIS_LABEL).map(([k, v]) => (
-                <option key={k} value={k}>{v.label}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs font-medium text-fg-tertiary space-y-1 block">
-            Dari tanggal
-            <input type="date" className={`${inputCls} block`} value={filter.dari ?? ''} onChange={(e) => ubah({ dari: e.target.value || undefined })} />
-          </label>
-          <label className="text-xs font-medium text-fg-tertiary space-y-1 block">
-            Sampai tanggal
-            <input type="date" className={`${inputCls} block`} value={filter.sampai ?? ''} onChange={(e) => ubah({ sampai: e.target.value || undefined })} />
-          </label>
-          <button onClick={reset} className="flex items-center gap-1.5 border border-line-strong text-fg-secondary hover:bg-surface-subtle rounded-lg px-3 py-2 text-sm">
-            <RotateCcw className="w-3.5 h-3.5" /> Reset
-          </button>
-        </div>
+          </Button>
+        </FilterBar>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line">
-              {['Waktu', 'Pengguna', 'Jenis', 'Aktivitas', 'Halaman / Endpoint', 'IP'].map((h) => (
-                <th key={h} className="text-xs font-semibold text-fg-muted uppercase tracking-wide py-3 px-3 text-left">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr><td colSpan={6} className="py-6 px-3"><div className="animate-pulse bg-surface-muted rounded-xl h-24" /></td></tr>
-            )}
-            {!isLoading && rows.length === 0 && (
-              <tr><td colSpan={6} className="text-center py-10 text-fg-muted text-sm">Belum ada aktivitas yang tercatat untuk filter ini.</td></tr>
-            )}
-            {rows.map((r) => {
-              const j = JENIS_LABEL[r.jenis]
-              return (
-                <tr key={r.id} className="border-b border-line-subtle hover:bg-surface-subtle transition-colors">
-                  <td className="py-3 px-3 text-xs text-fg-tertiary whitespace-nowrap tabular-nums">{formatWaktu(r.created_at)}</td>
-                  <td className="py-3 px-3">
-                    <span className="block font-medium text-fg">{r.nama ?? r.username ?? '—'}</span>
-                    {r.username && <span className="text-xs text-fg-muted font-mono">@{r.username}</span>}
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${j?.cls ?? 'bg-surface-muted text-fg-tertiary'}`}>
-                      {j?.label ?? r.jenis}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-fg-secondary">{r.deskripsi ?? '—'}</td>
-                  <td className="py-3 px-3 text-xs text-fg-muted font-mono">{r.path ?? '—'}</td>
-                  <td className="py-3 px-3 text-xs text-fg-muted font-mono">{r.ip ?? '—'}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {meta && meta.last_page > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-line bg-surface-subtle/50">
-          <p className="text-xs text-fg-muted tabular-nums">
-            {(page - 1) * limit + 1}–{Math.min(page * limit, meta.total)} dari {meta.total} aktivitas
-          </p>
-          <div className="flex items-center gap-1">
-            <button disabled={page <= 1} onClick={() => setFilter({ ...filter, page: page - 1 })} className={pageBtn}>
-              Sebelumnya
-            </button>
-            {getPageNumbers(page, meta.last_page).map((n, i) =>
-              n === '...' ? (
-                <span key={`e${i}`} className="px-1.5 text-xs text-fg-subtle select-none">…</span>
+      {isError ? (
+        <StateMessage
+          icon={CircleAlert}
+          title="Log belum bisa dimuat"
+          description="Ini bukan berarti belum ada aktivitas. Periksa koneksi, lalu coba lagi."
+          action={<Button variant="outline" size="lg" className="h-10 rounded-xl px-4" onClick={() => refetch()}>Coba lagi</Button>}
+          className="border-t"
+        />
+      ) : !isLoading && rows.length === 0 ? (
+        <StateMessage icon={ListX} title="Belum ada aktivitas untuk filter ini" description="Ubah pengguna, jenis, atau periode di kepala halaman." className="border-t" />
+      ) : (
+        <div aria-busy={isLoading}>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="h-10 whitespace-nowrap pl-5 text-xs font-medium text-muted-foreground">Waktu</TableHead>
+                <TableHead className="h-10 text-xs font-medium text-muted-foreground">Pengguna</TableHead>
+                <TableHead className="h-10 text-xs font-medium text-muted-foreground">Aktivitas</TableHead>
+                <TableHead className="hidden h-10 text-xs font-medium text-muted-foreground xl:table-cell">Halaman / endpoint</TableHead>
+                <TableHead className="hidden h-10 text-xs font-medium text-muted-foreground 2xl:table-cell">Perangkat</TableHead>
+                <TableHead className="hidden h-10 pr-5 text-xs font-medium text-muted-foreground 2xl:table-cell">IP</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TabelSkeleton
+                  baris={8}
+                  kolom={[
+                    { garis: ['w-24'] },
+                    { garis: ['w-28', 'w-16'] },
+                    { garis: ['w-44'] },
+                    { garis: ['w-36'], kelas: 'hidden xl:table-cell' },
+                    { garis: ['w-28'], kelas: 'hidden 2xl:table-cell' },
+                    { garis: ['w-20'], kelas: 'hidden 2xl:table-cell' },
+                  ]}
+                />
               ) : (
-                <button
-                  key={n}
-                  onClick={() => setFilter({ ...filter, page: n })}
-                  className={
-                    n === page
-                      ? 'min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium bg-brand-600 text-white border border-brand-600'
-                      : 'min-w-[30px] px-2.5 py-1.5 rounded-lg text-xs font-medium border border-line text-gray-600 hover:bg-surface-muted transition-colors'
-                  }
-                >
-                  {n}
-                </button>
-              )
-            )}
-            <button disabled={page >= meta.last_page} onClick={() => setFilter({ ...filter, page: page + 1 })} className={pageBtn}>
-              Berikutnya
-            </button>
-          </div>
+                rows.map((r) => {
+                  const j = JENIS_LABEL[r.jenis]
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="whitespace-nowrap py-2.5 pl-5 tabular-nums text-muted-foreground">{formatWaktuSingkat(r.created_at)}</TableCell>
+                      <TableCell className="py-2.5">
+                        <span className="block font-medium text-foreground">{r.nama ?? r.username ?? '—'}</span>
+                        {r.username && r.nama && <span className="font-mono text-xs text-muted-foreground">@{r.username}</span>}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <Badge variant={j?.variant ?? 'outline'} className={cn(j?.kelas)}>{j?.label ?? r.jenis}</Badge>
+                          <span className="text-foreground">{r.deskripsi ?? '—'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden py-2.5 font-mono text-xs text-muted-foreground xl:table-cell">{r.path ?? '—'}</TableCell>
+                      <TableCell className="hidden whitespace-nowrap py-2.5 text-muted-foreground 2xl:table-cell">{ringkasPerangkat(r.user_agent)}</TableCell>
+                      <TableCell className="hidden py-2.5 pr-5 font-mono text-xs text-muted-foreground 2xl:table-cell">{r.ip ?? '—'}</TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+          {!isLoading && meta && meta.last_page > 1 && (
+            <Pagination page={meta.current_page} lastPage={meta.last_page} total={meta.total} perPage={meta.per_page} noun="aktivitas" onPageChange={onHalaman} />
+          )}
+          {!isLoading && meta && meta.last_page <= 1 && <p role="status" className="sr-only">{meta.total} aktivitas</p>}
         </div>
       )}
-    </div>
+    </Panel>
   )
 }
