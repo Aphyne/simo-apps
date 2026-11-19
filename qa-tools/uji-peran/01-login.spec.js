@@ -173,6 +173,9 @@ test.describe('Login', () => {
     await expect(page).toHaveURL(/\/login$/);
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/\/login$/);
+    // Logout mencabut semua token staf1 yang diterbitkan PADA ATAU SEBELUM detik ini (authMiddleware, resolusi 1 detik).
+    // Tunggu lewat satu detik supaya login staf1 di uji berikutnya (02-staf) tidak ikut tercabut (401, kembali ke /login).
+    await page.waitForTimeout(1100);
   });
 
   test('backend lokal yang dipakai uji: login peneliti tidak dicatat di log aktivitas', async ({ request }) => {

@@ -54,7 +54,7 @@ Menjalankan uji per peran (44) lalu suite e2e dengan build (151), kemudian mengg
 - Fitur baru: tambahkan skenarionya ke `e2e/` atau `uji-peran/`, bukan membuat laporan terpisah.
 - Jangan menjalankan `playwright test --list` dengan config uji: perintah itu menimpa laporan web dengan daftar uji yang tampak "dilewati".
 
-Hasil 19 Nov 2026: 196 skenario, 195 lulus, 1 dilewati sengaja (uji sidebar di HP), 0 gagal.
+Hasil 19 Nov 2026 (setelah Monitoring, Simulasi, Perhitungan ditutup): 200 skenario, 199 lulus, 1 dilewati sengaja (uji sidebar di HP), 0 gagal.
 
 ### Membuka laporan hasil uji (web)
 
