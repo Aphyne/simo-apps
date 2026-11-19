@@ -3,7 +3,7 @@
 // "Mengikuti" = isi halaman sudah memakai token dan pola v2. Shell (sidebar, header, latar, huruf)
 // sudah v2 di semua halaman, jadi halaman "Belum" hanya berarti isinya masih gaya v1.
 
-export type StatusPenataan = 'Mengikuti' | 'Belum' | 'Belum tercatat'
+export type StatusPenataan = 'Mengikuti' | 'Belum' | 'Belum tercatat' | 'Nonaktif'
 
 export interface BarisProgres {
   halaman: string
@@ -19,10 +19,10 @@ export const PROGRES_PENATAAN: BarisProgres[] = [
   { halaman: 'Data Obat (list, tambah, detail, edit)', rute: '/obat/**', status: 'Mengikuti', catatan: 'Dikerjakan 16 Nov 2026; menunggu acc Boss. Pola baru di 4.8' },
   { halaman: 'Barang Masuk (Stok masuk)', rute: '/barang-masuk', status: 'Mengikuti', catatan: 'Dikerjakan 17 Nov 2026; menunggu acc Boss. Pola baru di 4.8' },
   { halaman: 'Barang Keluar (Stok keluar)', rute: '/barang-keluar', status: 'Mengikuti', catatan: 'Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola Stok masuk' },
-  { halaman: 'Monitoring', rute: '/monitoring', status: 'Belum', catatan: 'Menu nonaktif; isi gaya v1' },
-  { halaman: 'Perhitungan EOQ/ROP', rute: '/perhitungan', status: 'Belum', catatan: 'Hanya admin; menu nonaktif' },
+  { halaman: 'Monitoring', rute: '/monitoring', status: 'Nonaktif', catatan: 'Menu dan alamat ditutup 19 Nov 2026 (dialihkan ke Dashboard)' },
+  { halaman: 'Perhitungan EOQ/ROP', rute: '/perhitungan', status: 'Nonaktif', catatan: 'Menu dan alamat ditutup 19 Nov 2026 (dialihkan ke Dashboard)' },
   { halaman: 'Laporan', rute: '/laporan', status: 'Mengikuti', catatan: 'Dikerjakan 18 Nov 2026; menunggu acc Boss. Lembar kertas pratinjau dan PDF tidak disentuh' },
-  { halaman: 'Simulasi', rute: '/simulasi', status: 'Belum', catatan: 'Hanya admin; menu nonaktif' },
+  { halaman: 'Simulasi', rute: '/simulasi', status: 'Nonaktif', catatan: 'Menu dan alamat ditutup 19 Nov 2026 (dialihkan ke Dashboard)' },
   { halaman: 'Analisis Komparatif', rute: '/analisis', status: 'Mengikuti', catatan: 'Dikerjakan 19 Nov 2026; diuji. Hanya superadmin (peneliti)' },
   { halaman: 'Supplier (list, tambah, edit)', rute: '/supplier/**', status: 'Mengikuti', catatan: 'Dikerjakan 18 Nov 2026; menunggu acc Boss. Daftar berbentuk tabel' },
   { halaman: 'Manajemen User', rute: '/users', status: 'Mengikuti', catatan: 'Dikerjakan 18 Nov 2026; menunggu acc Boss. Hanya admin' },

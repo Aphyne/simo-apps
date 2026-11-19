@@ -13,9 +13,9 @@
 | `/obat/[id]/detail` | `app/(dashboard)/obat/[id]/detail/page.tsx` | Detail Perhitungan | Semua |
 | `/barang-masuk` | `app/(dashboard)/barang-masuk/page.tsx` | Barang Masuk | Semua |
 | `/barang-keluar` | `app/(dashboard)/barang-keluar/page.tsx` | Barang Keluar | Semua |
-| `/perhitungan` | `app/(dashboard)/perhitungan/page.tsx` | Perhitungan EOQ & ROP | Admin |
-| `/simulasi` | `app/(dashboard)/simulasi/page.tsx` | Simulasi Skenario | Admin |
-| `/monitoring` | `app/(dashboard)/monitoring/page.tsx` | Monitoring Stok (menu nonaktif) | Semua |
+| `/perhitungan` | `app/(dashboard)/perhitungan/page.tsx` | Perhitungan EOQ & ROP (nonaktif, dialihkan ke Dashboard) | Admin |
+| `/simulasi` | `app/(dashboard)/simulasi/page.tsx` | Simulasi Skenario (nonaktif, dialihkan ke Dashboard) | Admin |
+| `/monitoring` | `app/(dashboard)/monitoring/page.tsx` | Monitoring Stok (nonaktif, dialihkan ke Dashboard) | Semua |
 | `/analisis` | `app/(dashboard)/analisis/page.tsx` | Analisis Komparatif | Superadmin (peneliti) |
 | `/laporan/stok-harian` | `app/(dashboard)/laporan/stok-harian/page.tsx` | Laporan Stok | Semua |
 | `/laporan/barang-masuk` | `app/(dashboard)/laporan/barang-masuk/page.tsx` | Laporan Barang Masuk | Semua |
@@ -68,7 +68,7 @@
 ### `Sidebar.tsx`
 - Render menu berbeda berdasarkan `user.role`
 - Menu staf: Dashboard, Data Obat, Barang Masuk, Barang Keluar, Laporan, Supplier
-- Menu admin: semua menu staf + Simulasi, Analisis, Manajemen User, Pengaturan
+- Menu admin: semua menu staf + Reorder, Supplier, Manajemen User, Pengaturan (Analisis dan Pemantauan khusus peneliti)
 - Highlight menu aktif sesuai route saat ini
 - Grup menu: "Utama", "Transaksi", "Analitik", "Laporan", "Pengaturan"
 

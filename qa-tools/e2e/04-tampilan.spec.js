@@ -7,7 +7,6 @@ const { masuk, tenang } = require('./_bantu');
 const HALAMAN = [
   ['dashboard', '/dashboard'],
   ['obat', '/obat'],
-  ['monitoring', '/monitoring'],
   ['barang-masuk', '/barang-masuk'],
   ['barang-keluar', '/barang-keluar'],
   ['laporan', '/laporan'],
@@ -34,6 +33,15 @@ for (const [nama, rute] of HALAMAN) {
     expect(sw, `scrollWidth ${sw} > clientWidth ${cw}`).toBeLessThanOrEqual(cw);
     // Teks di dalam <select> bawaan browser kadang berbeda antialiasing antar-run (kedipan render); ditutup mask.
     await expect(page).toHaveScreenshot(`${nama}.png`, { fullPage: true, mask: [page.locator('select')] });
+  });
+}
+
+// Monitoring, Simulasi, Perhitungan dinonaktifkan (19 Nov 2026): alamat langsung dialihkan ke Dashboard, menu tidak ada.
+for (const rute of ['/monitoring', '/simulasi', '/perhitungan']) {
+  test(`${rute.slice(1)} nonaktif: ${rute} dialihkan ke /dashboard dan tidak ada di menu`, async ({ page }) => {
+    await page.goto(rute);
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.locator(`a[href="${rute}"]`)).toHaveCount(0);
   });
 }
 
