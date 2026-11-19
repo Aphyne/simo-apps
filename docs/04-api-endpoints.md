@@ -383,9 +383,17 @@ List semua skenario tersimpan. **Query params:** `obat_id`, `page`
 
 ---
 
+## AKSES STAF (uang dan pembatalan)
+
+Staf tidak menerima bidang uang di respons (`harga_beli`, `biaya_pesan`, `biaya_simpan`, `total_biaya`, `ppn_pct`, `diskon_pct`; `harga_jual` hanya di `/api/obat/**` dan `/api/barang-keluar`) tetapi boleh MENGISI semua isian harga (harga beli, harga jual, PPN, diskon, biaya simpan %) lewat `POST /api/barang-masuk` (hanya menulis; yang tersimpan tidak dikembalikan). `DELETE /api/barang-masuk/:id` dan `DELETE /api/barang-keluar/:id`: admin selalu boleh; staf hanya untuk catatan buatannya sendiri dalam 10 menit (selain itu 403). Baris riwayat memuat `bisa_dibatalkan` untuk staf. `GET /api/laporan/eoq-rop` hanya admin. Lihat `docs/design/halaman/staf.md`.
+
+---
+
 ## ANALISIS KOMPARATIF
 
 ### GET `/api/analisis/kondisi-sesudah`
+**Auth:** superadmin only (peneliti)
+
 Data kondisi sesudah sistem (dari data aktual).
 
 ### POST `/api/analisis/simpan-kondisi-sebelum`
@@ -394,6 +402,8 @@ Data kondisi sesudah sistem (dari data aktual).
 Input kondisi sebelum sistem (dari arsip SP apotek).
 
 ### GET `/api/analisis/perbandingan`
+**Auth:** superadmin only (peneliti)
+
 Hasil perbandingan lengkap sebelum vs sesudah.
 
 ---

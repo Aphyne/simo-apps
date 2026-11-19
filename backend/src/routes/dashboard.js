@@ -8,7 +8,8 @@ router.use(verifyToken);
 
 router.get('/summary', getSummary);
 router.get('/tren-permintaan', getTrenPermintaan);
-router.get('/perbandingan-biaya', getPerbandinganBiaya);
+// Perbandingan biaya memuat uang: tidak untuk staf (superadmin tetap boleh, dipakai halaman /design).
+router.get('/perbandingan-biaya', requireRole('admin', 'superadmin'), getPerbandinganBiaya);
 // Memuat harga beli dan pendapatan: hanya admin.
 router.get('/pembelian-penjualan', requireRole('admin'), getPembelianPenjualan);
 

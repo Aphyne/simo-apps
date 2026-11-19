@@ -13,59 +13,83 @@ async function getPerbandingan(req, res) {
   try {
     const asumsiDus = await getAsumsiDusTradisional();
 
-    const { rows } = await pool.query(`
+    // Semua obat diambil supaya halaman bisa menyebut berapa yang TIDAK ikut dihitung dan kenapa
+    // (alasan ditentukan berurutan, jadi tiap obat hanya masuk satu alasan).
+    const { rows: semua } = await pool.query(`
       SELECT id, kode, nama, satuan,
-             demand_tahunan, biaya_pesan, biaya_simpan,
-             satuan_per_dus, eoq, total_biaya
+             demand_tahunan, biaya_pesan, biaya_simpan, satuan_per_dus, eoq
       FROM obat
-      WHERE biaya_pesan > 0
-        AND biaya_simpan > 0
-        AND demand_tahunan > 0
-        AND satuan_per_dus > 0
-        AND eoq IS NOT NULL
       ORDER BY nama ASC
     `);
 
-    const detail = rows.map((o) => {
-      const D = parseFloat(o.demand_tahunan);
-      const S = parseFloat(o.biaya_pesan);
-      const H = parseFloat(o.biaya_simpan);
+    const tidakDihitung = { tanpa_biaya_pesan: 0, tanpa_biaya_simpan: 0, tanpa_demand: 0, tanpa_isi_dus: 0 };
+    let eoqTersimpanBeda = 0;
+    const detail = [];
+
+    for (const o of semua) {
+      const D = parseFloat(o.demand_tahunan) || 0;
+      const S = parseFloat(o.biaya_pesan) || 0;
+      const H = parseFloat(o.biaya_simpan) || 0;
+      const isi = parseFloat(o.satuan_per_dus) || 0;
+
+      if (S <= 0) { tidakDihitung.tanpa_biaya_pesan++; continue; }
+      if (H <= 0) { tidakDihitung.tanpa_biaya_simpan++; continue; }
+      if (D <= 0) { tidakDihitung.tanpa_demand++; continue; }
+      if (isi <= 0) { tidakDihitung.tanpa_isi_dus++; continue; }
+
+      // Kedua skenario dihitung dari D, S, H yang SAMA dan rumus yang sama: TC = (D/Q × S) + (Q/2 × H).
+      // Sebelumnya biaya "dengan EOQ" memakai total_biaya tersimpan (hasil hitung ulang terakhir) sedangkan biaya
+      // "sebelum EOQ" dihitung dari data sekarang; bila keduanya beda waktu hitung, selisihnya tidak sepadan.
       // Q tradisional = asumsi jumlah dus per pemesanan (setting, default 2) × isi per dus.
-      // Bukan dihitung dari riwayat barang_masuk — lihat docs/08-development-roadmap.md
-      // Fase 6 "Revisi Q Tradisional" untuk alasannya.
-      const Q_trad = asumsiDus * parseFloat(o.satuan_per_dus);
-      const Q_eoq = parseFloat(o.eoq);
+      // Bukan dihitung dari riwayat barang_masuk — lihat docs/08-development-roadmap.md Fase 6 "Revisi Q Tradisional".
+      const Q_trad = asumsiDus * isi;
+      const Q_eoq = Math.sqrt((2 * D * S) / H);
 
-      const tc_tradisional = (D / Q_trad) * S + (Q_trad / 2) * H;
-      const tc_eoq =
-        o.total_biaya !== null
-          ? parseFloat(o.total_biaya)
-          : (D / Q_eoq) * S + (Q_eoq / 2) * H;
-
+      // Komponen dibulatkan ke rupiah, total = jumlah komponen yang tampil, supaya angka di tabel dan di rincian
+      // selalu cocok dijumlahkan (penting untuk lampiran skripsi).
+      const bp_trad = Math.round((D / Q_trad) * S);
+      const bs_trad = Math.round((Q_trad / 2) * H);
+      const bp_eoq = Math.round((D / Q_eoq) * S);
+      const bs_eoq = Math.round((Q_eoq / 2) * H);
+      const tc_tradisional = bp_trad + bs_trad;
+      const tc_eoq = bp_eoq + bs_eoq;
       const penghematan = tc_tradisional - tc_eoq;
-      const persen_hemat =
-        tc_tradisional > 0 ? (penghematan / tc_tradisional) * 100 : 0;
+      const persen_hemat = tc_tradisional > 0 ? (penghematan / tc_tradisional) * 100 : 0;
 
-      return {
+      // EOQ yang tersimpan di data obat (dipakai halaman lain) harus sama dengan hitungan sekarang; bila beda,
+      // obat itu perlu "hitung ulang" sebelum angka dipakai.
+      const eoqTersimpan = o.eoq === null ? null : parseFloat(o.eoq);
+      if (eoqTersimpan === null || Math.abs(eoqTersimpan - Q_eoq) / Q_eoq > 0.01) eoqTersimpanBeda++;
+
+      detail.push({
         id: o.id,
         kode: o.kode,
         nama: o.nama,
         satuan: o.satuan,
+        satuan_per_dus: isi,
         demand_tahunan: Math.round(D),
-        biaya_pesan: Math.round(S),
-        biaya_simpan: Math.round(H),
-        q_tradisional: Q_trad,
+        biaya_pesan: S,
+        biaya_simpan: H,
         asumsi_dus: asumsiDus,
+        q_tradisional: Q_trad,
         q_eoq: Math.round(Q_eoq),
-        tc_tradisional: Math.round(tc_tradisional),
-        tc_eoq: Math.round(tc_eoq),
-        penghematan: Math.round(penghematan),
+        q_eoq_dus: parseFloat((Q_eoq / isi).toFixed(2)),
+        frek_tradisional: parseFloat((D / Q_trad).toFixed(2)),
+        frek_eoq: parseFloat((D / Q_eoq).toFixed(2)),
+        bp_tradisional: bp_trad,
+        bs_tradisional: bs_trad,
+        bp_eoq,
+        bs_eoq,
+        tc_tradisional,
+        tc_eoq,
+        penghematan,
         persen_hemat: parseFloat(persen_hemat.toFixed(1)),
-      };
-    });
+      });
+    }
 
-    const total_tc_trad = detail.reduce((s, d) => s + d.tc_tradisional, 0);
-    const total_tc_eoq = detail.reduce((s, d) => s + d.tc_eoq, 0);
+    const jumlah = (f) => detail.reduce((s, d) => s + d[f], 0);
+    const total_tc_trad = jumlah('tc_tradisional');
+    const total_tc_eoq = jumlah('tc_eoq');
     const total_penghematan = total_tc_trad - total_tc_eoq;
     const persen_hemat_total =
       total_tc_trad > 0
@@ -76,9 +100,16 @@ async function getPerbandingan(req, res) {
       success: true,
       data: {
         ringkasan: {
+          total_obat: semua.length,
           total_obat_dihitung: detail.length,
+          tidak_dihitung: tidakDihitung,
+          eoq_tersimpan_beda: eoqTersimpanBeda,
           total_tc_tradisional: total_tc_trad,
           total_tc_eoq,
+          total_bp_tradisional: jumlah('bp_tradisional'),
+          total_bs_tradisional: jumlah('bs_tradisional'),
+          total_bp_eoq: jumlah('bp_eoq'),
+          total_bs_eoq: jumlah('bs_eoq'),
           total_penghematan,
           persen_hemat_total,
           asumsi_dus_tradisional: asumsiDus,
