@@ -16,7 +16,7 @@
 | `/perhitungan` | `app/(dashboard)/perhitungan/page.tsx` | Perhitungan EOQ & ROP | Admin |
 | `/simulasi` | `app/(dashboard)/simulasi/page.tsx` | Simulasi Skenario | Admin |
 | `/monitoring` | `app/(dashboard)/monitoring/page.tsx` | Monitoring Stok | Semua |
-| `/analisis` | `app/(dashboard)/analisis/page.tsx` | Analisis Komparatif | Admin |
+| `/analisis` | `app/(dashboard)/analisis/page.tsx` | Analisis Komparatif | Superadmin (peneliti) |
 | `/laporan/stok-harian` | `app/(dashboard)/laporan/stok-harian/page.tsx` | Laporan Stok | Semua |
 | `/laporan/barang-masuk` | `app/(dashboard)/laporan/barang-masuk/page.tsx` | Laporan Barang Masuk | Semua |
 | `/laporan/barang-keluar` | `app/(dashboard)/laporan/barang-keluar/page.tsx` | Laporan Barang Keluar | Semua |

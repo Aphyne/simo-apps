@@ -1,6 +1,6 @@
 # DESIGN — Sumber Tunggal Design System SIMO
 
-Versi 2.17 · 18 Nov 2026 · Gaya: Flat + Bento · Keputusan per halaman: `docs/design/halaman/`
+Versi 2.18 · 19 Nov 2026 · Gaya: Flat + Bento · Keputusan per halaman: `docs/design/halaman/`
 
 Dokumen ini satu-satunya panduan desain SIMO (Sistem Informasi Manajemen Persediaan Obat, Apotek Rezky Medika). Ia berisi **nama dan peran** token, pola komponen, dan daftar penyimpangan yang diketahui. **Nilai warna tidak ditulis di sini**: nilai hanya ada di `simo/app/globals.css` (kecuali tabel rasio kontras di 2.2, yang berupa angka rasio hasil ukur).
 
@@ -153,6 +153,7 @@ Dibuat untuk halaman Data Obat (16 Nov 2026) dan dipakai ulang halaman berikutny
 - **Halaman Pengaturan** (`/pengaturan`): empat ubin bagian form, bilah simpan menempel yang memberi tahu ada perubahan, pemeriksaan angka sama dengan backend. Rincian lengkap: [`docs/design/halaman/pengaturan.md`](design/halaman/pengaturan.md).
 - **Halaman Manajemen user** (`/users`): tabel berpanel, tiga ubin, dialog Tambah, Ubah, dan Reset password dengan input password bertombol tampilkan. Rincian lengkap: [`docs/design/halaman/users.md`](design/halaman/users.md).
 - **Halaman Supplier** (`/supplier/**`): kartu per supplier (bawaan) dengan tombol Kartu | Tabel, tiga ubin, form dengan pasangan kontak. Rincian lengkap: [`docs/design/halaman/supplier.md`](design/halaman/supplier.md).
+- **Peran Staf** (19 Nov 2026): tanpa uang yang tersimpan (dibuang di backend; staf boleh mengisi harga di Stok masuk, hanya menulis), tanpa Tambah obat, boleh membatalkan catatan stok buatannya sendiri dalam 10 menit, Dashboard dengan panel Obat hampir habis. Rincian: [`docs/design/halaman/staf.md`](design/halaman/staf.md).
 - **Istilah teknis (`shared/Istilah.tsx`, 18 Nov 2026)**: istilah seperti ROP, EOQ, dan Service level ditulis bergaris titik-titik dan bisa difokus keyboard; penjelasan dalam bahasa sehari-hari muncul saat disorot atau difokus dan dibacakan pembaca layar. **Penjelasan muncul ke bawah** (bawaan): di kepala tabel, ke atas menutupi bilah filter di atasnya (temuan Boss pada tabel Data Obat). Tooltip tidak muncul di layar sentuh, jadi arti yang penting juga ditulis sebagai keterangan di bawah kolom (mis. Service level di Pengaturan). Satu komponen untuk semua halaman; jangan menulis tooltip istilah sendiri.
 - **Pola bersama di kode (18 Nov 2026)**: tiga bagian dipakai ulang supaya perubahan pola cukup di satu tempat. (1) `useFilterUrl` dan `useCariTertunda` (`components/shared/useFilterUrl.ts`): filter, urutan, dan halaman di URL lewat History API, kolom cari dengan jeda 300 ms; halaman yang memakainya dibungkus `<Suspense>`. Dipakai Data Obat, Stok masuk, Stok keluar, Reorder, Supplier, dan Laporan. (2) `TabelSkeleton` (`shared/TabelSkeleton.tsx`): kerangka pemuatan tabel dari daftar kolom (lebar garis, kolom bertahap, rata kanan, bentuk badge atau tombol). (3) `TabelData` (`shared/TabelData.tsx`): tabel generik untuk daftar yang dimuat penuh di klien, yaitu kolom bertahap menurut lebar konten, kerangka, keadaan kosong dan gagal yang jujur, baris penutup total, dan paginasi di klien (`perHalaman={Infinity}` untuk tanpa paginasi). Dipakai Laporan, Supplier, dan daftar Reorder. Tabel yang paginasinya di server atau barisnya punya interaksi khusus (Data Obat dengan pengurutan, Stok masuk, Stok keluar) memakai `Table` langsung dan hanya berbagi `TabelSkeleton` dan hook. Halaman baru: pakai ketiganya dulu sebelum menulis ulang.
 - **Keadaan** (`StateMessage`): ikon 24px, satu kalimat tebal, satu kalimat arah, dan satu aksi. Kosong mengajak mengisi; tidak cocok menawarkan "Atur ulang filter"; gagal menyatakan bahwa itu bukan berarti datanya nol.
@@ -170,7 +171,7 @@ Dibuat untuk halaman Data Obat (16 Nov 2026) dan dipakai ulang halaman berikutny
 7. **Hex di luar token**: PDF `lib/export.ts` (larik RGB) dan grafik Recharts pada halaman v1 masih literal.
 8. **`prefers-reduced-motion`**: kode v2 memakai `motion-safe:`; halaman v1 masih sebagian.
 9. **Sisa kelas warna lama** (cacahan 10 Nov 2026): 276 kemunculan di 53 berkas, 99 pasangan konflik kaskade; belum dihitung ulang setelah v2.
-10. **Halaman nonaktif**: menu Simulasi, Analisis, Perhitungan dinonaktifkan di Sidebar (dikomentari) meski halamannya ada.
+10. **Halaman nonaktif**: menu Simulasi dan Perhitungan dinonaktifkan di Sidebar (dikomentari) meski halamannya ada. Analisis Komparatif kini menu khusus peneliti (superadmin).
 11. **Uji tampilan** (`qa-tools/e2e/04-tampilan.spec.js`): teks di dalam `<select>` bawaan browser ditutup mask karena antialiasing-nya berkedip antar-run.
 12. **Belum dicocokkan dengan data produksi**: angka pendapatan hari ini (jumlah × `harga_jual`) di Dashboard.
 
@@ -190,13 +191,13 @@ Sumber satu-satunya checklist halaman. "Mengikuti" = isi halaman sudah memakai t
 | Perhitungan EOQ/ROP | `/perhitungan` | Belum | Hanya admin; menu nonaktif |
 | Laporan | `/laporan` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola di docs/design/halaman/laporan.md. Lembar kertas pratinjau dan PDF tidak disentuh |
 | Simulasi | `/simulasi` | Belum | Hanya admin; menu nonaktif |
-| Analisis Komparatif | `/analisis` | Belum | Hanya admin; menu nonaktif |
+| Analisis Komparatif | `/analisis` | Mengikuti | Dikerjakan 19 Nov 2026; diuji (uji per peran 19 Nov). Hanya superadmin (peneliti); dua skenario dihitung backend dari D, S, H yang sama |
 | Supplier (list, tambah, edit) | `/supplier/**` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola di docs/design/halaman/supplier.md |
 | Manajemen User | `/users` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola di docs/design/halaman/users.md |
 | Pengaturan | `/pengaturan` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola di docs/design/halaman/pengaturan.md |
 | Reorder | `/reorder` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola di docs/design/halaman/reorder.md. Format PDF Surat Pesanan tidak disentuh |
-| Pemantauan | `/pemantauan` | Belum | Hanya superadmin |
-| Login | `/login` | Belum | Isi gaya v1 |
+| Pemantauan | `/pemantauan` | Mengikuti | Dikerjakan 18-19 Nov 2026; diuji (uji per peran 19 Nov). Hanya superadmin; ubin, grafik, perlu perhatian, dialog pengguna |
+| Login | `/login` | Mengikuti | Dikerjakan 18-19 Nov 2026; diuji (uji per peran 19 Nov). Kartu terbelah: panel biru + form v2 |
 | Error / not-found | `app/error.tsx`, `not-found.tsx` | Belum | `ErrorPanel` masih gaya v1 |
 
 Hak akses per peran (admin, staf, superadmin) mengikuti aplikasi; UI tidak menjadi sumber keamanan (keamanan di backend).
@@ -212,6 +213,7 @@ Hak akses per peran (admin, staf, superadmin) mengikuti aplikasi; UI tidak menja
 | Versi | Tanggal | Perubahan |
 |---|---|---|
 | 1.0 | 2026-11-10 | Pertama (T-D1): menggantikan `FE-AGENT.md` penuh dan `07-ui-guidelines.md` (dihapus). Berdasarkan token T-D2 dan migrasi Tahap B. |
+| 2.18 | 2026-11-19 | Login, Pemantauan, dan Analisis Komparatif kini **Mengikuti** (tabel progres bagian 6 dan `/design/progres`). Peran Staf: tanpa uang yang tersimpan, rincian di `docs/design/halaman/staf.md`. Analisis Komparatif menjadi menu khusus peneliti. Diuji lewat laporan gabungan 19 Nov (196 skenario, 195 lulus, 1 dilewati sengaja). |
 | 2.17 | 2026-11-18 | **Semua pilihan dari daftar memakai `PilihanCombobox`** (satu pola, satu perubahan berlaku di semua): filter di Reorder, Stok Masuk, Stok Keluar, Users, Data Obat, Laporan; form (kategori, satuan, supplier, keterangan stok keluar, peran, service level); pemilih bulan dan tahun di grafik. Komponen `ui/select.tsx` tidak lagi dipakai halaman mana pun (hanya contoh di `/design`); jangan memakainya untuk pilihan baru. `PilihanCombobox` mendapat prop `disabled`. Membuat nilai baru (`tambahBaru`) hanya diberikan di form **Tambah** Obat (Dashboard memakai form yang sama); form Ubah hanya memilih yang sudah ada (keputusan Boss). Sebelum pilihan "Tambah ... baru", teks yang hampir sama dengan pilihan yang ada (selisih 1-2 huruf, `cariMirip` di `lib/opsiObat.ts`) menampilkan "Maksud Anda “...”?" dan menjadi pilihan bawaan saat Enter, supaya salah ketik tidak menjadi kategori/satuan baru. |
 | 2.16 | 2026-11-18 | `PilihanCombobox` bisa membuat nilai baru (`tambahBaru`): mengetik kategori atau satuan yang belum ada menampilkan pilihan terakhir "Tambah '…' sebagai kategori baru". Daftar = konstanta `lib/constants.ts` + nilai yang sudah dipakai obat (`GET /api/obat/opsi`, `lib/opsiObat.ts`); server menyamakan ejaan dengan yang sudah ada (tanpa membedakan huruf) dan merapikan nilai baru. Filter kategori Laporan tidak lagi menolak kategori di luar daftar baku. |
 | 2.15 | 2026-11-18 | Komponen bersama `ui/PilihanCombobox.tsx`: kolom pilihan dari daftar tertutup (kategori, satuan, supplier) dengan pola yang sama dengan kolom cari obat (ketik untuk menyaring, panah, Enter, Esc). Menggantikan `Select` di form Tambah/Ubah Obat dan form Stok Masuk (tambah dan ubah). Filter bertuliskan "Semua" di Laporan (`FilterPilihan`) dan Data Obat (kategori, status stok, expired) juga memakainya, dengan "Semua ..." sebagai pilihan pertama bernilai kosong. |
