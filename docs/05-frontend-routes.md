@@ -15,7 +15,7 @@
 | `/barang-keluar` | `app/(dashboard)/barang-keluar/page.tsx` | Barang Keluar | Semua |
 | `/perhitungan` | `app/(dashboard)/perhitungan/page.tsx` | Perhitungan EOQ & ROP | Admin |
 | `/simulasi` | `app/(dashboard)/simulasi/page.tsx` | Simulasi Skenario | Admin |
-| `/monitoring` | `app/(dashboard)/monitoring/page.tsx` | Monitoring Stok | Semua |
+| `/monitoring` | `app/(dashboard)/monitoring/page.tsx` | Monitoring Stok (menu nonaktif) | Semua |
 | `/analisis` | `app/(dashboard)/analisis/page.tsx` | Analisis Komparatif | Superadmin (peneliti) |
 | `/laporan/stok-harian` | `app/(dashboard)/laporan/stok-harian/page.tsx` | Laporan Stok | Semua |
 | `/laporan/barang-masuk` | `app/(dashboard)/laporan/barang-masuk/page.tsx` | Laporan Barang Masuk | Semua |
@@ -67,7 +67,7 @@
 
 ### `Sidebar.tsx`
 - Render menu berbeda berdasarkan `user.role`
-- Menu staf: Dashboard, Data Obat, Barang Masuk, Barang Keluar, Monitoring, Laporan, Supplier
+- Menu staf: Dashboard, Data Obat, Barang Masuk, Barang Keluar, Laporan, Supplier
 - Menu admin: semua menu staf + Simulasi, Analisis, Manajemen User, Pengaturan
 - Highlight menu aktif sesuai route saat ini
 - Grup menu: "Utama", "Transaksi", "Analitik", "Laporan", "Pengaturan"

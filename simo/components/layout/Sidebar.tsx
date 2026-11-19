@@ -37,6 +37,9 @@ const navItems: NavItem[] = [
   { label: 'Stok Masuk', href: '/barang-masuk', icon: PackagePlus },
   { label: 'Stok Keluar', href: '/barang-keluar', icon: PackageMinus },
   { label: 'Reorder', href: '/reorder', icon: ShoppingCart, adminOnly: true },
+  // Dinonaktifkan atas keputusan Boss (19 Nov 2026); halaman masih ada, lihat app/(dashboard)/monitoring/page.tsx
+  // (saat diaktifkan kembali, impor ikon Gauge dari lucide-react)
+  // { label: 'Monitoring Stok', href: '/monitoring', icon: Gauge },
   // Dinonaktifkan — cukup 1 screenshot final untuk lampiran laporan, lihat app/(dashboard)/simulasi/page.tsx
   // (saat diaktifkan kembali, impor ikon FlaskConical dan Calculator dari lucide-react)
   // { label: 'Simulasi Skenario', href: '/simulasi', icon: FlaskConical, adminOnly: true },

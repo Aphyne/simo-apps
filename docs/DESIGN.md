@@ -171,7 +171,7 @@ Dibuat untuk halaman Data Obat (16 Nov 2026) dan dipakai ulang halaman berikutny
 7. **Hex di luar token**: PDF `lib/export.ts` (larik RGB) dan grafik Recharts pada halaman v1 masih literal.
 8. **`prefers-reduced-motion`**: kode v2 memakai `motion-safe:`; halaman v1 masih sebagian.
 9. **Sisa kelas warna lama** (cacahan 10 Nov 2026): 276 kemunculan di 53 berkas, 99 pasangan konflik kaskade; belum dihitung ulang setelah v2.
-10. **Halaman nonaktif**: menu Simulasi dan Perhitungan dinonaktifkan di Sidebar (dikomentari) meski halamannya ada. Analisis Komparatif kini menu khusus peneliti (superadmin).
+10. **Halaman nonaktif**: menu Monitoring, Simulasi, dan Perhitungan dinonaktifkan di Sidebar (dikomentari) meski halamannya ada. Analisis Komparatif kini menu khusus peneliti (superadmin).
 11. **Uji tampilan** (`qa-tools/e2e/04-tampilan.spec.js`): teks di dalam `<select>` bawaan browser ditutup mask karena antialiasing-nya berkedip antar-run.
 12. **Belum dicocokkan dengan data produksi**: angka pendapatan hari ini (jumlah × `harga_jual`) di Dashboard.
 
@@ -187,7 +187,7 @@ Sumber satu-satunya checklist halaman. "Mengikuti" = isi halaman sudah memakai t
 | Data Obat (list, tambah, detail, edit) | `/obat/**` | Mengikuti | Dikerjakan 16 Nov 2026; menunggu acc Boss. Pola baru di 4.8 |
 | Barang Masuk (Stok masuk) | `/barang-masuk` | Mengikuti | Dikerjakan 17 Nov 2026; menunggu acc Boss. Pola baru di 4.8 |
 | Barang Keluar (Stok keluar) | `/barang-keluar` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Mengikuti pola Stok masuk (4.8) |
-| Monitoring | `/monitoring` | Belum | Isi gaya v1 |
+| Monitoring | `/monitoring` | Belum | Menu nonaktif (19 Nov 2026); isi gaya v1 |
 | Perhitungan EOQ/ROP | `/perhitungan` | Belum | Hanya admin; menu nonaktif |
 | Laporan | `/laporan` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola di docs/design/halaman/laporan.md. Lembar kertas pratinjau dan PDF tidak disentuh |
 | Simulasi | `/simulasi` | Belum | Hanya admin; menu nonaktif |
