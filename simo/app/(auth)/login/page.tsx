@@ -87,22 +87,21 @@ export default function LoginPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(color-mix(in_oklab,var(--primary)_30%,transparent)_1px,transparent_1.5px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
       />
 
-      {/* Jalan kembali ke halaman depan (domain utama bila domain dipisah, lihat lib/domain.ts). */}
-      <div className="mb-4 flex w-full max-w-5xl">
-        <a
-          href={URL_BERANDA}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-card/80 px-4 text-sm font-medium text-foreground ring-1 ring-foreground/10 outline-none backdrop-blur transition-colors hover:bg-card focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Kembali ke beranda
-        </a>
-      </div>
-
       {/* Satu kartu besar terbelah dua: panel pengantar berbingkai bulat (hanya layar lebar) dan form. */}
       <div className="relative grid w-full max-w-5xl rounded-3xl bg-card p-3 shadow-xl ring-1 ring-foreground/5 lg:grid-cols-2">
         <LoginPanel className="hidden lg:flex" />
 
-        <section className="flex flex-col justify-center px-3 py-8 sm:px-10 lg:px-12" aria-labelledby="judul-masuk">
+        <section className="relative flex flex-col justify-center px-3 py-8 sm:px-10 lg:px-12 lg:py-20" aria-labelledby="judul-masuk">
+          {/* Jalan kembali ke halaman depan (domain utama bila domain dipisah, lihat lib/domain.ts). Di layar lebar menempel
+              di pojok kanan atas kartu, sejajar baris logo panel biru; di HP di atas merek. Tautan halus, tidak bersaing dengan tombol Masuk. */}
+          <a
+            href={URL_BERANDA}
+            className="-ml-3 mb-6 inline-flex h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:ml-[calc(50%-12rem-0.75rem)] lg:absolute lg:right-6 lg:top-8 lg:mb-0 lg:ml-0"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Kembali ke beranda
+          </a>
+
           <div className="mx-auto w-full max-w-sm">
             {/* Di HP panel pengantar disembunyikan, jadi merek ikut di sini. */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
