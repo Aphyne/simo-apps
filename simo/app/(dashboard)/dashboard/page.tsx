@@ -9,7 +9,7 @@ import { Banknote, CalendarX, Hourglass, PackagePlus, PackageMinus, Plus } from 
 import { StatTile, ReorderTile } from '@/components/dashboard/StatTile'
 import Panel from '@/components/dashboard/Panel'
 import { Button } from '@/components/ui/button'
-import { useNow } from '@/hooks/useNow'
+import { useNow, useSudahDiBrowser } from '@/hooks/useNow'
 import { formatRupiah } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth.store'
 import PembelianPenjualanChart from '@/components/dashboard/PembelianPenjualanChart'
@@ -35,6 +35,7 @@ function sapaan(jam: number) {
 export default function DashboardPage() {
   const router = useRouter()
   const sekarang = useNow()
+  const diBrowser = useSudahDiBrowser()
   const user = useAuthStore((s) => s.user)
 
   const { data: summary, isLoading: loadingSummary, isError: gagalSummary } = useDashboardSummary()
@@ -84,11 +85,15 @@ export default function DashboardPage() {
       {/* ── Sapaan + aksi utama ──────────────────────────────────────── */}
       <section className="col-span-12 flex flex-col justify-between gap-4 rounded-2xl bg-card p-5 lg:col-span-8">
         <div>
+          {/* Tanggal dan sapaan bergantung zona waktu setempat: baru ditampilkan di browser (lihat useSudahDiBrowser).
+              Spasi tak terputus menjaga tinggi baris sebelum itu, supaya tata letak tidak bergeser. */}
           <p className="text-sm font-medium text-muted-foreground">
-            {format(sekarang, 'EEEE, d MMMM yyyy', { locale: localeId })}
+            {diBrowser ? format(sekarang, 'EEEE, d MMMM yyyy', { locale: localeId }) : ' '}
           </p>
           <h1 className="mt-1.5 text-3xl font-semibold tracking-tight text-foreground">
-            {sapaan(sekarang.getHours())}{user?.nama ? `, ${user.nama.split(' ')[0]}` : ''}
+            {diBrowser
+              ? `${sapaan(sekarang.getHours())}${user?.nama ? `, ${user.nama.split(' ')[0]}` : ''}`
+              : ' '}
           </h1>
           {dataGagal && !loadingSummary && (
             <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
