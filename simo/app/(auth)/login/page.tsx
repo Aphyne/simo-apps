@@ -146,8 +146,10 @@ export default function LoginPage() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            {/* Tombol Google dirender Google: lebarnya mengikuti kolom, bentuknya tidak bisa kita ubah. */}
-            <div ref={googleRef} className="flex min-h-10 justify-center">
+            {/* Tombol Google digambar Google di dalam iframe: isinya tidak bisa kita ubah (dan sengaja tidak ditutup, supaya
+                akun yang akan dipakai tetap terlihat). Pembungkus ini hanya menyamakan sudut (rounded-xl) dan garis tepi dengan
+                kolom isian: iframe dipotong bulat, lalu garis tepi kita digambar di atasnya (after:). */}
+            <div ref={googleRef} className="relative mx-auto h-10 overflow-hidden rounded-xl after:pointer-events-none after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-inset after:ring-input" style={googleWidth !== null ? { width: googleWidth } : undefined}>
               {googleWidth !== null && (
                 <GoogleLogin
                   onSuccess={(res) => {
