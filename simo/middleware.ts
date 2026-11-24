@@ -3,11 +3,9 @@ import type { NextRequest } from 'next/server'
 import { APP_URL, arahDomain } from '@/lib/domain'
 
 const PUBLIC_PATHS = ['/login']
-// Halaman mandiri (style guide komponen) — tetap bisa dibuka meski sudah login
-// (beda dari /login yang redirect ke dashboard). Hanya di mode pengembangan
-// terbuka tanpa login; di produksi /design wajib cookie login, lalu pembatasan
-// ke superadmin dilakukan komponen SuperadminOnly di app/design/layout.tsx.
-const STANDALONE_PATHS = process.env.NODE_ENV === 'production' ? [] : ['/design']
+// Halaman mandiri: panduan desain SIMO (/design), publik tanpa login (keputusan Boss 24 Nov 2026).
+// Isinya statis (token dan contoh komponen), tidak memuat data apotek.
+const STANDALONE_PATHS = ['/design']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

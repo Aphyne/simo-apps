@@ -32,8 +32,9 @@ export function arahDomain(appUrl: string, host: string, pathname: string, searc
   const h = host.toLowerCase().replace(/^www\./, '')
 
   if (h === hostDepan) {
-    // Domain utama hanya untuk halaman depan; alamat aplikasi dipindah ke subdomain app.
-    return pathname === '/' ? { jenis: 'lanjut' } : { jenis: 'alihkan', ke: `${app.origin}${pathname}${search}` }
+    // Domain utama untuk halaman depan dan panduan desain publik (/design); alamat aplikasi dipindah ke subdomain app.
+    if (pathname === '/' || pathname === '/design' || pathname.startsWith('/design/')) return { jenis: 'lanjut' }
+    return { jenis: 'alihkan', ke: `${app.origin}${pathname}${search}` }
   }
   if (h === hostApp && pathname === '/') {
     // Subdomain aplikasi tidak punya halaman depan: langsung ke Dashboard atau halaman masuk.

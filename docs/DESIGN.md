@@ -10,7 +10,7 @@ Versi 2.0 menggantikan v1 (Inter, kartu bergaris dan bershadow, ikon dalam lingk
 
 Alur satu arah: **token (`simo/app/globals.css`) → halaman `/design` → `docs/DESIGN.md`**.
 1. `globals.css` menyimpan nilai. Komponen v2 memakai token shadcn (`bg-card`, `text-muted-foreground`, `bg-primary`).
-2. Halaman `/design` (`simo/app/design/`, rute `/design`) memperlihatkan token dan komponen secara hidup; nilai warna dibaca langsung dari CSS. Hanya superadmin di produksi; bebas tanpa login di mode pengembangan. Di produksi: tanpa login ke `/login`, admin/staf ke `/dashboard` (dijaga `middleware.ts` dan `simo/components/layout/SuperadminOnly.tsx`; guard sisi klien, bukan keamanan data).
+2. Halaman `/design` (`simo/app/design/`, rute `/design`) memperlihatkan token dan komponen secara hidup; nilai warna dibaca langsung dari CSS. Publik tanpa login sejak 24 Nov 2026 (keputusan Boss), di alamat **simoo.online/design**: isinya statis (token dan contoh komponen), tanpa data apotek. `middleware.ts` membukanya (`STANDALONE_PATHS`), dan `lib/domain.ts` mengizinkannya di domain utama.
 3. Dokumen ini menjelaskan aturan dan peran. Bila bertentangan dengan `globals.css`, `globals.css` yang benar.
 
 ### Aturan wajib untuk agent dan pengembang
@@ -184,7 +184,7 @@ Sumber satu-satunya checklist halaman. "Mengikuti" = isi halaman sudah memakai t
 |---|---|---|---|
 | Layout (Sidebar + Header) | `components/layout/*` | Mengikuti | Drawer di `< lg`; target sentuh 44px |
 | Dashboard | `/dashboard` | Mengikuti | |
-| Design (style guide) | `/design` | Mengikuti | Hanya superadmin |
+| Design (style guide) | `/design` | Mengikuti | Publik tanpa login (simoo.online/design) |
 | Data Obat (list, tambah, detail, edit) | `/obat/**` | Mengikuti | Dikerjakan 16 Nov 2026; menunggu acc Boss. Pola baru di 4.8 |
 | Barang Masuk (Stok masuk) | `/barang-masuk` | Mengikuti | Dikerjakan 17 Nov 2026; menunggu acc Boss. Pola baru di 4.8 |
 | Barang Keluar (Stok keluar) | `/barang-keluar` | Mengikuti | Dikerjakan 18 Nov 2026; menunggu acc Boss. Mengikuti pola Stok masuk (4.8) |

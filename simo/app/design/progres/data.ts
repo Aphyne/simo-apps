@@ -15,7 +15,7 @@ export interface BarisProgres {
 export const PROGRES_PENATAAN: BarisProgres[] = [
   { halaman: 'Layout (Sidebar + Header)', rute: 'components/layout/*', status: 'Mengikuti', catatan: 'Drawer di < lg; target sentuh 44px' },
   { halaman: 'Dashboard', rute: '/dashboard', status: 'Mengikuti', catatan: '' },
-  { halaman: 'Design (style guide)', rute: '/design', status: 'Mengikuti', catatan: 'Hanya superadmin' },
+  { halaman: 'Design (style guide)', rute: '/design', status: 'Mengikuti', catatan: 'Publik tanpa login (simoo.online/design)' },
   { halaman: 'Data Obat (list, tambah, detail, edit)', rute: '/obat/**', status: 'Mengikuti', catatan: 'Dikerjakan 16 Nov 2026; menunggu acc Boss. Pola baru di 4.8' },
   { halaman: 'Barang Masuk (Stok masuk)', rute: '/barang-masuk', status: 'Mengikuti', catatan: 'Dikerjakan 17 Nov 2026; menunggu acc Boss. Pola baru di 4.8' },
   { halaman: 'Barang Keluar (Stok keluar)', rute: '/barang-keluar', status: 'Mengikuti', catatan: 'Dikerjakan 18 Nov 2026; menunggu acc Boss. Pola Stok masuk' },

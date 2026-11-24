@@ -1,8 +1,8 @@
 // Layout untuk halaman style guide SIMO (/design). Satu halaman scroll,
 // navigasi samping hanya hash-anchor ke section (/design#motion), bukan route terpisah.
+// Publik tanpa login (keputusan Boss 24 Nov 2026): isinya statis, tanpa data apotek. Alamat: simoo.online/design.
 
 import Image from 'next/image'
-import SuperadminOnly from '@/components/layout/SuperadminOnly'
 
 interface NavGroup {
   label: string
@@ -47,8 +47,7 @@ const NAV_GROUPS: NavGroup[] = [
 
 export default function DesignLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SuperadminOnly>
-      <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
+    <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
         <aside className="flex w-full shrink-0 flex-col bg-background md:sticky md:top-0 md:h-screen md:w-60 md:overflow-y-auto">
           <a
             href="#top"
@@ -78,7 +77,7 @@ export default function DesignLayout({ children }: { children: React.ReactNode }
             ))}
           </nav>
 
-          <p className="shrink-0 px-6 py-4 text-xs text-muted-foreground">Referensi internal, khusus superadmin</p>
+          <p className="shrink-0 px-6 py-4 text-xs text-muted-foreground">Panduan desain SIMO, terbuka untuk umum</p>
         </aside>
 
         <main className="min-w-0 flex-1 px-4 py-8 md:px-10 md:py-12">
@@ -86,7 +85,6 @@ export default function DesignLayout({ children }: { children: React.ReactNode }
             {children}
           </div>
         </main>
-      </div>
-    </SuperadminOnly>
+    </div>
   )
 }

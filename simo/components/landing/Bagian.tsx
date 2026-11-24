@@ -398,6 +398,9 @@ export function Footer() {
               </li>
             ))}
             <li>
+              <a href="/design" className="inline-flex h-11 items-center rounded-full px-3 text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">Panduan desain</a>
+            </li>
+            <li>
               <Link href={URL_MASUK} className="inline-flex h-11 items-center rounded-full px-3 text-sm font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">Masuk</Link>
             </li>
           </ul>

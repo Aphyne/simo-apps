@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { GoogleLogin } from '@react-oauth/google'
-import { ArrowLeft, Loader2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Loader2, PlayCircle, TriangleAlert } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/auth.store'
 import api from '@/lib/api'
@@ -215,6 +215,19 @@ export default function LoginPage() {
       </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">Sistem Informasi Manajemen Persediaan Obat</p>
+
+      {/* Tombol bulat mengambang ke video tutorial (bagian Demo di halaman depan). Melebar menampilkan tulisan saat disorot/difokus. */}
+      <a
+        href={`${URL_BERANDA}#demo`}
+        aria-label="Video tutorial SIMO"
+        title="Video tutorial"
+        className="group fixed bottom-4 right-4 z-40 inline-flex h-14 items-center rounded-full bg-primary px-[1.125rem] text-primary-foreground shadow-lg ring-4 ring-primary/15 outline-none transition-[background-color,box-shadow] hover:bg-primary/90 focus-visible:ring-ring sm:bottom-6 sm:right-6"
+      >
+        <PlayCircle className="size-5 shrink-0" aria-hidden="true" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-semibold opacity-0 motion-safe:transition-[max-width,margin,opacity] motion-safe:duration-300 group-hover:ml-2 group-hover:max-w-32 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-32 group-focus-visible:opacity-100">
+          Video tutorial
+        </span>
+      </a>
     </main>
   )
 }
