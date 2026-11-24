@@ -44,7 +44,7 @@ const test = base.test.extend({
 });
 const { expect } = base;
 
-// Login lewat API backend lokal lalu pasang sesi seperti aplikasi (cookie + sessionStorage). Untuk uji yang bukan
+// Login lewat API backend lokal lalu pasang sesi seperti aplikasi (cookie + localStorage). Untuk uji yang bukan
 // tentang halaman login, supaya cepat. Password semua akun uji lokal: 'password'.
 async function masukAPI(page, username) {
   const r = await page.request.post(`${BE}/api/auth/login`, { data: { username, password: 'password' } });
@@ -52,9 +52,9 @@ async function masukAPI(page, username) {
   const { data } = await r.json();
   await page.context().addCookies([{ name: 'simo_token', value: data.token, domain: 'localhost', path: '/' }]);
   await page.addInitScript(([t, u]) => {
-    if (!sessionStorage.getItem('simo_token')) {
-      sessionStorage.setItem('simo_token', t);
-      sessionStorage.setItem('simo_user', u);
+    if (!localStorage.getItem('simo_token')) {
+      localStorage.setItem('simo_token', t);
+      localStorage.setItem('simo_user', u);
     }
   }, [data.token, JSON.stringify(data.user)]);
   return data;

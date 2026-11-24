@@ -9,9 +9,9 @@ async function masuk(page, username) {
   const url = new URL(process.env.SIMO_FE_URL || 'http://localhost:3010');
   await page.context().addCookies([{ name: 'simo_token', value: data.token, domain: url.hostname, path: '/' }]);
   await page.addInitScript(([t, u]) => {
-    if (!sessionStorage.getItem('simo_token')) {
-      sessionStorage.setItem('simo_token', t);
-      sessionStorage.setItem('simo_user', u);
+    if (!localStorage.getItem('simo_token')) {
+      localStorage.setItem('simo_token', t);
+      localStorage.setItem('simo_user', u);
     }
   }, [data.token, JSON.stringify(data.user)]);
   return data;

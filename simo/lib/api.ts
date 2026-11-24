@@ -11,12 +11,11 @@ const api = axios.create({
   },
 })
 
-// Attach token dari sessionStorage ke setiap request — sessionStorage (bukan
-// localStorage) supaya tiap tab punya sesi sendiri, tidak saling menimpa
-// kalau tab berbeda login dengan akun berbeda.
+// Attach token dari localStorage ke setiap request — localStorage supaya sesi
+// bertahan setelah tab ditutup (semua tab berbagi satu akun).
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = sessionStorage.getItem('simo_token')
+    const token = localStorage.getItem('simo_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -32,8 +31,8 @@ api.interceptors.response.use(
     const urlReq: string = error.config?.url ?? ''
     const isLoginRequest = urlReq.includes('/auth/login')
     if (error.response?.status === 401 && typeof window !== 'undefined' && !isLoginRequest) {
-      sessionStorage.removeItem('simo_token')
-      sessionStorage.removeItem('simo_user')
+      localStorage.removeItem('simo_token')
+      localStorage.removeItem('simo_user')
       clearTokenCookie()
       window.location.href = '/login'
     }

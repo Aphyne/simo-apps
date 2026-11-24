@@ -1,5 +1,5 @@
 // Cookie token untuk middleware Next (hanya penanda login; API tetap memakai
-// token dari sessionStorage). Dipusatkan di sini agar atribut seragam.
+// token dari localStorage). Dipusatkan di sini agar atribut seragam.
 const NAMA = 'simo_token'
 const MAX_AGE_DEFAULT = 7 * 24 * 60 * 60 // selaras JWT_EXPIRES_IN default backend (7d)
 

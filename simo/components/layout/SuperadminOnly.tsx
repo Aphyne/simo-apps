@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/auth.store'
 // pengembangan terbuka bebas tanpa login. Bukan pengganti keamanan (isi /design
 // statis dan tidak sensitif; data tetap dilindungi backend).
 // /design berada di luar grup (dashboard), jadi hydrate() dari DashboardLayout
-// tidak jalan; penjaga ini memulihkan sesi dari sessionStorage sendiri.
+// tidak jalan; penjaga ini memulihkan sesi dari localStorage sendiri.
 const PRODUKSI = process.env.NODE_ENV === 'production'
 
 export default function SuperadminOnly({ children }: { children: React.ReactNode }) {

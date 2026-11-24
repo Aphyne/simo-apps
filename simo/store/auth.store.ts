@@ -21,10 +21,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   setAuth: (user, token) => {
     if (typeof window !== 'undefined') {
-      // sessionStorage (bukan localStorage) — supaya tiap tab punya sesi sendiri,
-      // tidak saling menimpa kalau tab berbeda login dengan akun berbeda.
-      sessionStorage.setItem(TOKEN_KEY, token)
-      sessionStorage.setItem(USER_KEY, JSON.stringify(user))
+      // localStorage supaya sesi bertahan setelah tab/browser ditutup (sampai token
+      // kedaluwarsa atau logout). Konsekuensinya semua tab berbagi satu akun.
+      localStorage.setItem(TOKEN_KEY, token)
+      localStorage.setItem(USER_KEY, JSON.stringify(user))
       // Cookie diperlukan agar Next.js middleware bisa deteksi auth status
       setTokenCookie(token)
     }
@@ -33,28 +33,31 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   logout: () => {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(TOKEN_KEY)
-      sessionStorage.removeItem(USER_KEY)
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
       clearTokenCookie()
     }
     set({ user: null, token: null })
   },
 
-  // Dipanggil sekali saat app load untuk restore session dari sessionStorage
+  // Dipanggil sekali saat app load untuk restore session dari localStorage
   hydrate: () => {
     if (typeof window === 'undefined') return
-    const token = sessionStorage.getItem(TOKEN_KEY)
-    const userStr = sessionStorage.getItem(USER_KEY)
+    const token = localStorage.getItem(TOKEN_KEY)
+    const userStr = localStorage.getItem(USER_KEY)
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr) as AuthUser
         set({ user, token, isHydrated: true })
+        return
       } catch {
-        set({ isHydrated: true })
+        // data rusak: jatuh ke pembersihan di bawah
       }
-    } else {
-      set({ isHydrated: true })
     }
+    // Tidak ada sesi yang valid: buang cookie penanda yang basi supaya middleware
+    // tidak mengira masih login (cookie hidup 7 hari, penyimpanan bisa kosong).
+    clearTokenCookie()
+    set({ isHydrated: true })
   },
 
   isAdmin: () => get().user?.role === 'admin',
