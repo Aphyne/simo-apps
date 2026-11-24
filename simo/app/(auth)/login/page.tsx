@@ -15,6 +15,18 @@ import { InputPassword } from '@/components/shared/FormParts'
 import { LoginPanel } from '@/components/auth/LoginPanel'
 import type { LoginPayload } from '@/types/user'
 
+// Logo "G" Google (empat warna resmi), dipakai pada tombol Masuk dengan Google.
+function GoogleLogo() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
+      <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81Z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.88-3a7.2 7.2 0 0 1-10.7-3.78H1.33v3.09A12 12 0 0 0 12 24Z" />
+      <path fill="#FBBC05" d="M5.36 14.31a7.2 7.2 0 0 1 0-4.62V6.6H1.33a12 12 0 0 0 0 10.8l4.03-3.09Z" />
+      <path fill="#EA4335" d="M12 4.77c1.76 0 3.34.6 4.58 1.8l3.43-3.43A11.5 11.5 0 0 0 12 0 12 12 0 0 0 1.33 6.6l4.03 3.09A7.15 7.15 0 0 1 12 4.77Z" />
+    </svg>
+  )
+}
+
 export default function LoginPage() {
   const { login, isLoggingIn } = useAuth()
   const setAuth = useAuthStore(s => s.setAuth)
@@ -140,27 +152,43 @@ export default function LoginPage() {
               </FieldGroup>
             </form>
 
-            <div className="my-6 flex items-center gap-3" role="separator" aria-label="atau lanjut dengan">
+            <div className="my-6 flex items-center gap-3" role="separator" aria-label="atau">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-sm text-muted-foreground">atau lanjut dengan</span>
+              <span className="text-sm text-muted-foreground">atau</span>
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            {/* Tombol Google digambar Google di dalam iframe: isinya tidak bisa kita ubah (dan sengaja tidak ditutup, supaya
-                akun yang akan dipakai tetap terlihat). Pembungkus ini hanya menyamakan sudut (rounded-xl) dan garis tepi dengan
-                kolom isian: iframe dipotong bulat, lalu garis tepi kita digambar di atasnya (after:). */}
-            <div ref={googleRef} className="relative mx-auto h-10 overflow-hidden rounded-xl after:pointer-events-none after:absolute after:inset-0 after:rounded-xl after:ring-1 after:ring-inset after:ring-input" style={googleWidth !== null ? { width: googleWidth } : undefined}>
+            {/* Tombol Google: yang terlihat adalah tombol kita sendiri (serasi dengan kolom isian dan tombol Masuk). Di atasnya
+                dipasang tombol asli Google (iframe, bentuknya tidak bisa kita ubah) yang hampir transparan dan diperbesar
+                sedikit agar menutupi seluruh tombol, jadi klik tetap diterima tombol asli dan alur token tidak berubah.
+                Hover dan fokus tombol asli diteruskan lewat group dan focus-within pada pembungkus. */}
+            <div
+              ref={googleRef}
+              className="group relative h-11 w-full rounded-xl focus-within:ring-3 focus-within:ring-ring/50"
+            >
+              <div
+                aria-hidden="true"
+                className="flex h-full w-full items-center justify-center gap-2.5 rounded-xl border border-input bg-card text-[15px] font-medium text-foreground transition-colors group-hover:bg-muted"
+              >
+                <GoogleLogo />
+                Masuk dengan Google
+              </div>
               {googleWidth !== null && (
-                <GoogleLogin
-                  onSuccess={(res) => {
-                    if (res.credential) handleGoogleSuccess(res.credential)
-                  }}
-                  onError={() => setErrorMsg('Login Google gagal atau dibatalkan.')}
-                  width={String(googleWidth)}
-                  text="signin_with"
-                  shape="rectangular"
-                  theme="outline"
-                />
+                <div
+                  className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 scale-y-[1.12] justify-center overflow-hidden rounded-xl opacity-[0.01]"
+                  style={{ width: googleWidth }}
+                >
+                  <GoogleLogin
+                    onSuccess={(res) => {
+                      if (res.credential) handleGoogleSuccess(res.credential)
+                    }}
+                    onError={() => setErrorMsg('Login Google gagal atau dibatalkan.')}
+                    width={String(googleWidth)}
+                    text="signin_with"
+                    shape="rectangular"
+                    theme="outline"
+                  />
+                </div>
               )}
             </div>
 
