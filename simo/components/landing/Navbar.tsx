@@ -13,7 +13,7 @@ import gaya from './landing.module.css'
 export default function Navbar() {
   const [buka, setBuka] = useState(false)
   const [gelap, setGelap] = useState(true)
-  const [ringkas, setRingkas] = useState(false) // pil menyusut setelah halaman digulir
+  const [ringkas, setRingkas] = useState(false) // pil menyempit (lebar saja) setelah halaman digulir
 
   useEffect(() => {
     const panggung = Array.from(document.querySelectorAll<HTMLElement>('[data-panggung]'))
@@ -37,27 +37,24 @@ export default function Navbar() {
 
   const kaca = cn(gaya.pil, gelap ? gaya.pilGelap : gaya.pilTerang)
   const tautan = cn(
-    'inline-flex items-center rounded-full text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    gaya.rapat,
+    'inline-flex h-10 items-center rounded-full px-4 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
     gelap ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-foreground/70 hover:bg-foreground/5 hover:text-foreground'
   )
 
   return (
-    <header className={cn('fixed inset-x-0 z-50 px-3', gaya.rapat, ringkas ? 'top-2 sm:top-3' : 'top-3 sm:top-4')}>
-      <nav aria-label="Navigasi halaman depan" className={cn('mx-auto flex items-center justify-between gap-2 rounded-full', kaca, ringkas ? 'h-12 max-w-[42rem] pl-3.5 pr-1.5' : 'h-14 max-w-4xl pl-4 pr-2')}>
+    <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4">
+      <nav aria-label="Navigasi halaman depan" className={cn('mx-auto flex h-14 items-center justify-between gap-2 rounded-full pl-4 pr-2', kaca, ringkas ? 'max-w-4xl' : 'max-w-7xl')}>
         <Logo gelap={gelap} />
         <ul className="hidden items-center md:flex">
           {TAUTAN_BAGIAN.map((t) => (
-            <li key={t.href}><a href={t.href} className={cn(tautan, ringkas ? 'h-9 px-3' : 'h-10 px-4')}>{t.label}</a></li>
+            <li key={t.href}><a href={t.href} className={tautan}>{t.label}</a></li>
           ))}
         </ul>
         <div className="flex items-center gap-1">
           <Link
             href={URL_MASUK}
             className={cn(
-              'hidden items-center gap-1.5 rounded-full text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex',
-              gaya.rapat,
-              ringkas ? 'h-9 px-3.5' : 'h-10 px-4',
+              'hidden h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex',
               gelap ? 'bg-white text-[oklch(0.19_0.04_264)] hover:bg-white/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'
             )}
           >
@@ -82,7 +79,7 @@ export default function Navbar() {
           <ul>
             {TAUTAN_BAGIAN.map((t) => (
               <li key={t.href}>
-                <a href={t.href} onClick={() => setBuka(false)} className={cn(tautan, 'flex h-12 w-full px-4 text-[15px]')}>{t.label}</a>
+                <a href={t.href} onClick={() => setBuka(false)} className={cn(tautan, 'flex h-12 w-full text-[15px]')}>{t.label}</a>
               </li>
             ))}
           </ul>
