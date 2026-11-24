@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { APP_URL, arahDomain } from '@/lib/domain'
 
 const PUBLIC_PATHS = ['/login']
 // Halaman mandiri (style guide komponen) — tetap bisa dibuka meski sudah login
@@ -26,6 +27,17 @@ export function middleware(request: NextRequest) {
 
   // Cek token dari cookie (dikirim frontend saat login)
   const token = request.cookies.get('simo_token')?.value
+
+  // Produksi dengan dua domain (lib/domain.ts): simoo.online = halaman depan, app.simoo.online = aplikasi.
+  const arah = arahDomain(APP_URL, request.headers.get('host') || '', pathname, request.nextUrl.search, Boolean(token))
+  if (arah?.jenis === 'lanjut') return NextResponse.next()
+  if (arah?.jenis === 'alihkan') return NextResponse.redirect(new URL(arah.ke, request.url))
+
+  // Halaman depan (landing page) untuk calon pengguna: hanya alamat "/" persis.
+  // Yang sudah login langsung ke Dashboard (pemakai harian membuka simoo.online).
+  if (pathname === '/') {
+    return token ? NextResponse.redirect(new URL('/dashboard', request.url)) : NextResponse.next()
+  }
 
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 

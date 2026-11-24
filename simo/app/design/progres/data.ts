@@ -30,5 +30,6 @@ export const PROGRES_PENATAAN: BarisProgres[] = [
   { halaman: 'Reorder', rute: '/reorder', status: 'Mengikuti', catatan: 'Dikerjakan 18 Nov 2026; menunggu acc Boss. Format PDF Surat Pesanan tidak disentuh' },
   { halaman: 'Pemantauan', rute: '/pemantauan', status: 'Mengikuti', catatan: 'Dikerjakan 18-19 Nov 2026; diuji. Hanya superadmin' },
   { halaman: 'Login', rute: '/login', status: 'Mengikuti', catatan: 'Dikerjakan 18-19 Nov 2026; diuji. Kartu terbelah, panel biru + form v2' },
+  { halaman: 'Halaman depan', rute: '/', status: 'Mengikuti', catatan: 'Dikerjakan 24 Nov 2026; menunggu acc Boss. Untuk calon pengguna' },
   { halaman: 'Error / not-found', rute: 'app/error.tsx, not-found.tsx', status: 'Belum', catatan: 'ErrorPanel masih gaya v1' },
 ]
