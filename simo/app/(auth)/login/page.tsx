@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { GoogleLogin } from '@react-oauth/google'
-import { Loader2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Loader2, TriangleAlert } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/auth.store'
 import api from '@/lib/api'
@@ -13,6 +13,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input'
 import { InputPassword } from '@/components/shared/FormParts'
 import { LoginPanel } from '@/components/auth/LoginPanel'
+import { URL_BERANDA } from '@/lib/domain'
 import type { LoginPayload } from '@/types/user'
 
 // Logo "G" Google (empat warna resmi), dipakai pada tombol Masuk dengan Google.
@@ -86,6 +87,17 @@ export default function LoginPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(color-mix(in_oklab,var(--primary)_30%,transparent)_1px,transparent_1.5px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
       />
 
+      {/* Jalan kembali ke halaman depan (domain utama bila domain dipisah, lihat lib/domain.ts). */}
+      <div className="mb-4 flex w-full max-w-5xl">
+        <a
+          href={URL_BERANDA}
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-card/80 px-4 text-sm font-medium text-foreground ring-1 ring-foreground/10 outline-none backdrop-blur transition-colors hover:bg-card focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Kembali ke beranda
+        </a>
+      </div>
+
       {/* Satu kartu besar terbelah dua: panel pengantar berbingkai bulat (hanya layar lebar) dan form. */}
       <div className="relative grid w-full max-w-5xl rounded-3xl bg-card p-3 shadow-xl ring-1 ring-foreground/5 lg:grid-cols-2">
         <LoginPanel className="hidden lg:flex" />
@@ -98,7 +110,7 @@ export default function LoginPage() {
               <Image src="/logo.png" alt="" width={56} height={56} priority className="-ml-2 shrink-0" />
               <div className="-ml-2">
                 <p className="text-xl font-semibold leading-tight tracking-tight text-foreground">SIMO</p>
-                <p className="text-sm text-muted-foreground">Apotek Rezky Medika · Manokwari</p>
+                <p className="text-sm text-muted-foreground">Sistem persediaan obat apotek</p>
               </div>
             </div>
 

@@ -101,7 +101,8 @@ export function LoginPanel({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Atas: merek di kiri, lokasi di kanan. */}
+      {/* Atas: merek. Nama apotek tidak ditulis di sini: halaman masuk adalah pintu umum (juga untuk calon pengguna);
+          nama apotek tampil di header setelah masuk, dari menu Pengaturan. */}
       <div className="relative flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="flex size-11 items-center justify-center rounded-xl bg-card">
@@ -109,7 +110,6 @@ export function LoginPanel({ className }: { className?: string }) {
           </span>
           <span className="text-xl font-semibold tracking-tight">SIMO</span>
         </div>
-        <span className="rounded-full border border-primary-foreground/50 px-3 py-1 text-sm">Apotek Rezky Medika</span>
       </div>
 
       {/* Bawah: pesan bergilir + kendali. Semua pesan ditumpuk di satu sel kisi supaya tingginya tetap. */}

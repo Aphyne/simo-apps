@@ -38,7 +38,9 @@ export function StatTile({ label, value, sublabel, icon: Icon, isLoading, href, 
           <Icon className="size-4 shrink-0" aria-hidden="true" />
           {label}
         </span>
-        <span className="flex items-baseline gap-2">
+        {/* Keterangan di samping angka bila muat; bila tidak (mis. angka rupiah panjang), seluruh keterangan turun
+            ke baris berikutnya, bukan terjepit menjadi dua baris di sebelah angka. */}
+        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           {isLoading ? (
             <span className="block h-8 w-14 rounded-lg bg-muted motion-safe:animate-pulse" aria-hidden="true" />
           ) : (
@@ -46,7 +48,7 @@ export function StatTile({ label, value, sublabel, icon: Icon, isLoading, href, 
               {teks ?? (value === null ? <>-<span className="sr-only"> Data tidak tersedia</span></> : value.toLocaleString('id-ID'))}
             </span>
           )}
-          <span className="min-w-0 text-sm text-muted-foreground">{sublabel}</span>
+          <span className="max-w-full shrink-0 text-sm text-muted-foreground">{sublabel}</span>
         </span>
       </Akar>
     )

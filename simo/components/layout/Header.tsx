@@ -2,6 +2,7 @@
 
 import { ChevronDown, Menu } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { usePengaturan } from '@/hooks/usePengaturan'
 import AlertNotification from '@/components/ui/AlertNotification'
 import NotifikasiPeneliti from '@/components/ui/NotifikasiPeneliti'
 import {
@@ -18,6 +19,9 @@ interface HeaderProps {
 
 export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
   const { user } = useAuth()
+  // Nama apotek dari menu Pengaturan (bisa diubah admin), bukan ditulis di kode. Semua peran boleh membacanya.
+  const { data: pengaturan, isLoading: memuatPengaturan } = usePengaturan()
+  const namaApotek = pengaturan?.nama_apotek?.value?.trim() || (memuatPengaturan ? null : 'SIMO')
 
   const initials = (user?.nama ?? '?')
     .split(' ')
@@ -42,7 +46,11 @@ export default function Header({ menuOpen = false, onMenuClick }: HeaderProps) {
           <Menu className="w-5 h-5" aria-hidden="true" />
         </button>
         {/* Ukuran sama dengan teks SIMO di sidebar (text-lg) mulai lg, saat keduanya berdampingan; di layar kecil sidebar jadi drawer, jadi lebih kecil supaya muat. */}
-        <p className="truncate text-base font-medium tracking-tight text-foreground lg:text-lg">Apotek Rezky Medika</p>
+        {namaApotek ? (
+          <p className="truncate text-base font-medium tracking-tight text-foreground lg:text-lg">{namaApotek}</p>
+        ) : (
+          <span className="block h-5 w-40 rounded-md bg-muted motion-safe:animate-pulse" aria-hidden="true" />
+        )}
       </div>
 
       {/* Kanan — alert + profil */}

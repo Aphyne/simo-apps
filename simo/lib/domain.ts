@@ -7,6 +7,17 @@ export const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/+$/, '
 // Tujuan tombol "Masuk ke SIMO" di halaman depan.
 export const URL_MASUK = APP_URL ? `${APP_URL}/login` : '/login'
 
+// Halaman depan (dari halaman masuk): domain utama tanpa awalan "app.", atau "/" bila satu domain.
+export const URL_BERANDA = (() => {
+  if (!APP_URL) return '/'
+  try {
+    const u = new URL(APP_URL)
+    return u.host.startsWith('app.') ? `${u.protocol}//${u.host.slice(4)}/` : '/'
+  } catch {
+    return '/'
+  }
+})()
+
 export type Arah = { jenis: 'lanjut' } | { jenis: 'alihkan'; ke: string }
 
 // null = tidak ada aturan domain yang berlaku (lanjut ke aturan login biasa).

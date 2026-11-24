@@ -11,8 +11,8 @@ const figtree = Figtree({
 })
 
 export const metadata: Metadata = {
-  title: 'SIMO - Apotek Rezky Medika',
-  description: 'Sistem Informasi Manajemen Persediaan Obat Apotek Rezky Medika',
+  title: 'SIMO - Sistem Informasi Manajemen Persediaan Obat',
+  description: 'Sistem Informasi Manajemen Persediaan Obat untuk apotek: stok, titik pesan ulang (ROP), jumlah pesan (EOQ), dan kedaluwarsa.',
 }
 
 export default function RootLayout({
