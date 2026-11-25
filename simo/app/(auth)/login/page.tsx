@@ -92,11 +92,13 @@ export default function LoginPage() {
         <LoginPanel className="hidden lg:flex" />
 
         <section className="relative flex flex-col justify-center px-3 py-8 sm:px-10 lg:px-12 lg:py-20" aria-labelledby="judul-masuk">
-          {/* Jalan kembali ke halaman depan (domain utama bila domain dipisah, lihat lib/domain.ts). Di layar lebar menempel
-              di pojok kanan atas kartu, sejajar baris logo panel biru; di HP di atas merek. Tautan halus, tidak bersaing dengan tombol Masuk. */}
+          {/* Jalan kembali ke halaman depan (domain utama bila domain dipisah, lihat lib/domain.ts). Selalu rata kiri dengan
+              tepi formulir (kolom max-w-sm di tengah), jadi posisinya sama di HP dan layar lebar. Di layar lebar menempel di
+              baris logo panel biru sehingga judul tidak turun. -0.75rem mengimbangi padding pil agar panahnya lurus dengan teks
+              formulir; max(3rem, ...) menjaga kelurusan saat kolom lebih sempit dari formulir (padding lg:px-12). */}
           <a
             href={URL_BERANDA}
-            className="-ml-3 mb-6 inline-flex h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:ml-[calc(50%-12rem-0.75rem)] lg:absolute lg:right-6 lg:top-8 lg:mb-0 lg:ml-0"
+            className="-ml-3 mb-6 inline-flex h-11 items-center gap-2 self-start rounded-full px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:ml-[calc(50%-12rem-0.75rem)] lg:absolute lg:left-[calc(max(3rem,50%-12rem)-0.75rem)] lg:top-8 lg:mb-0 lg:ml-0"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             Kembali ke beranda
@@ -216,17 +218,15 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">Sistem Informasi Manajemen Persediaan Obat</p>
 
-      {/* Tombol bulat mengambang ke video tutorial (bagian Demo di halaman depan). Melebar menampilkan tulisan saat disorot/difokus. */}
+      {/* Pil mengambang ke video tutorial (bagian Demo di halaman depan). Ikon + tulisan selalu tampil: di HP tidak ada
+          hover, jadi tulisan yang hanya muncul saat disorot tidak pernah terlihat (aturan nav-label-icon). */}
       <a
         href={`${URL_BERANDA}#demo`}
         aria-label="Video tutorial SIMO"
-        title="Video tutorial"
-        className="group fixed bottom-4 right-4 z-40 inline-flex h-14 items-center rounded-full bg-primary px-[1.125rem] text-primary-foreground shadow-lg ring-4 ring-primary/15 outline-none transition-[background-color,box-shadow] hover:bg-primary/90 focus-visible:ring-ring sm:bottom-6 sm:right-6"
+        className="fixed bottom-4 right-4 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-primary pl-4 pr-5 text-sm font-semibold text-primary-foreground shadow-lg ring-4 ring-primary/15 outline-none transition-[background-color,box-shadow] hover:bg-primary/90 focus-visible:ring-ring sm:bottom-6 sm:right-6"
       >
         <PlayCircle className="size-5 shrink-0" aria-hidden="true" />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-semibold opacity-0 motion-safe:transition-[max-width,margin,opacity] motion-safe:duration-300 group-hover:ml-2 group-hover:max-w-32 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-32 group-focus-visible:opacity-100">
-          Video tutorial
-        </span>
+        Video tutorial
       </a>
     </main>
   )
