@@ -11,7 +11,7 @@ async function getLaporanStok(req, res) {
 
     const { rows } = await pool.query(`
       SELECT id, kode, nama, kategori, satuan, stok,
-             eoq, safety_stock, rop, total_biaya,
+             CEIL(eoq) AS eoq, safety_stock, CEIL(rop) AS rop, total_biaya,
              expired_terdekat, demand_harian, harga_beli
       FROM obat
       ${where}
@@ -233,7 +233,7 @@ async function getLaporanEoqRop(req, res) {
       SELECT id, kode, nama, satuan, kategori,
              demand_harian, demand_tahunan, std_dev_demand,
              biaya_pesan, biaya_simpan, lead_time, service_level,
-             eoq, safety_stock, rop, total_biaya
+             CEIL(eoq) AS eoq, safety_stock, CEIL(rop) AS rop, total_biaya
       FROM obat
       ${where}
       ORDER BY nama ASC

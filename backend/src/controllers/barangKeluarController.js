@@ -167,8 +167,10 @@ async function create(req, res) {
     console.error('barangKeluar.create — hitung ulang gagal:', err);
   }
 
-  const rop = obatUpdated ? obatUpdated.rop : obat.rop;
-  const reorder_alert = rop !== null && rop !== undefined && stok_sesudah <= parseFloat(rop);
+  // ROP dibandingkan sebagai satuan utuh, dibulatkan ke atas (sama dengan tampilan dan status di obatController).
+  const ropMentah = obatUpdated ? obatUpdated.rop : obat.rop;
+  const rop = ropMentah !== null && ropMentah !== undefined ? Math.ceil(parseFloat(ropMentah)) : ropMentah;
+  const reorder_alert = rop !== null && rop !== undefined && stok_sesudah <= rop;
 
   res.status(201).json({
     success: true,
@@ -250,7 +252,7 @@ async function update(req, res) {
     }
     await updateExpiredTerdekat(obat.id);
     const obatUpdated = await hitungUlangObat(obat.id);
-    const reorder_alert = obatUpdated.rop !== null && stok_baru <= parseFloat(obatUpdated.rop);
+    const reorder_alert = obatUpdated.rop !== null && stok_baru <= Math.ceil(parseFloat(obatUpdated.rop));
 
     res.json({
       success: true,
@@ -431,12 +433,12 @@ async function createBulk(req, res) {
       await updateExpiredTerdekat(h.obat_id);
       const obatUpdated = await hitungUlangObat(h.obat_id);
 
-      if (obatUpdated.rop !== null && h.stok_sesudah <= parseFloat(obatUpdated.rop)) {
+      if (obatUpdated.rop !== null && h.stok_sesudah <= Math.ceil(parseFloat(obatUpdated.rop))) {
         reorder_alerts.push({
           obat_id: h.obat_id,
           nama_obat: h.nama_obat,
           stok_sesudah: h.stok_sesudah,
-          rop: obatUpdated.rop,
+          rop: Math.ceil(parseFloat(obatUpdated.rop)),
         });
       }
     } catch (err) {

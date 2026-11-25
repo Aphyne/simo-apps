@@ -24,7 +24,8 @@ async function getMonitoring(req, res) {
 
     const data = rows.map((o) => {
       const stok = parseInt(o.stok) || 0;
-      const rop = o.rop !== null ? parseFloat(o.rop) : null;
+      // ROP sebagai satuan utuh, dibulatkan ke atas (sama dengan status di obatController).
+      const rop = o.rop !== null ? Math.ceil(parseFloat(o.rop)) : null;
       const ss = parseFloat(o.safety_stock) || 0;
       const demand = parseFloat(o.demand_harian);
       const estimasi_habis_hari = hitungEstimasiHabis(stok, demand);

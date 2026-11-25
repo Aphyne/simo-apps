@@ -50,6 +50,13 @@ function hitungTotalCost(D, S, eoq, H) {
   return (D / eoq) * S + (eoq / 2) * H;
 }
 
+// Bulat ke atas ke satuan utuh. Dibulatkan dulu ke 2 desimal supaya galat pecahan biner (mis. 12.000000001)
+// tidak menaikkan angka yang sebenarnya sudah bulat.
+function bulatAtas(nilai) {
+  if (nilai === null || nilai === undefined || !Number.isFinite(nilai)) return null;
+  return Math.ceil(parseFloat(nilai.toFixed(2)));
+}
+
 // Kalkulasi lengkap — return nilai yang disimpan ke DB
 function kalkulasiLengkap(obat) {
   const D = parseFloat(obat.demand_tahunan) || 0;
@@ -60,17 +67,29 @@ function kalkulasiLengkap(obat) {
   const LT = normalisasiLeadTime(obat.lead_time);
   const sl = obat.service_level || 95;
 
-  const eoq = hitungEOQ(D, S, H);
+  const eoqRumus = hitungEOQ(D, S, H);
   const safety_stock = hitungSafetyStock(sl, sigma, LT);
-  const rop = hitungROP(d, LT, safety_stock);
+  // EOQ dan ROP dibulatkan ke atas ke satuan utuh (keputusan Boss 25 Nov 2026): obat dipesan dan dihitung per
+  // satuan utuh, dan membulatkan ke atas menjaga stok tidak kurang dari hasil rumus. Total biaya memakai EOQ
+  // yang sudah dibulatkan, karena itulah jumlah yang benar-benar dipesan.
+  const eoq = bulatAtas(eoqRumus);
+  const rop = bulatAtas(hitungROP(d, LT, safety_stock));
   const total_biaya = hitungTotalCost(D, S, eoq, H);
 
   return {
-    eoq: eoq !== null ? parseFloat(eoq.toFixed(2)) : null,
+    eoq,
     safety_stock: parseFloat(safety_stock.toFixed(2)),
-    rop: parseFloat(rop.toFixed(2)),
+    rop,
     total_biaya: total_biaya !== null ? parseFloat(total_biaya.toFixed(2)) : null,
   };
+}
+
+// Keterangan pembulatan untuk tampilan langkah: hasil rumus apa adanya, lalu dibulatkan ke atas.
+// Kosong bila hasil rumus sudah bulat.
+function pesanPembulatan(nilai) {
+  const duaDesimal = parseFloat(nilai.toFixed(2));
+  if (Number.isInteger(duaDesimal)) return undefined;
+  return `Hasil rumus ${duaDesimal.toFixed(2).replace('.', ',')}, dibulatkan ke atas menjadi ${bulatAtas(nilai)} karena obat dipesan per satuan utuh.`;
 }
 
 // Step-by-step untuk tampilan skripsi
@@ -107,7 +126,8 @@ function kalkulasiStepByStep(obat) {
       rumus: 'EOQ = √(2 × D × S / H)',
       substitusi: `EOQ = √(2 × ${D} × ${S} / ${H})`,
       langkah: `EOQ = √(${(2 * D * S).toFixed(0)} / ${H}) = √${((2 * D * S) / H).toFixed(4)}`,
-      hasil: parseFloat(eoqRaw.toFixed(2)),
+      hasil: bulatAtas(eoqRaw),
+      pembulatan: pesanPembulatan(eoqRaw),
     };
   }
 
@@ -127,7 +147,8 @@ function kalkulasiStepByStep(obat) {
     rumus: 'ROP = (d × LT) + SS',
     substitusi: `ROP = (${d} × ${LT}) + ${ssRaw.toFixed(2)}`,
     langkah: `ROP = ${(d * LT).toFixed(2)} + ${ssRaw.toFixed(2)}`,
-    hasil: parseFloat(ropRaw.toFixed(2)),
+    hasil: bulatAtas(ropRaw),
+    pembulatan: pesanPembulatan(ropRaw),
   };
 
   // ── Langkah Total Cost ───────────────────────────────────────────────────

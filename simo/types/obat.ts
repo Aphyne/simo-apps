@@ -220,6 +220,8 @@ export interface LangkahPerhitungan {
   substitusi: string
   langkah?: string
   hasil: number | null
+  // EOQ dan ROP: hasil rumus sebelum dibulatkan ke atas ke satuan utuh. Kosong bila hasil rumus sudah bulat.
+  pembulatan?: string
   catatan?: string
 }
 

@@ -66,6 +66,9 @@ function LangkahDetail({
         ) : (
           <p className="mt-0.5 text-sm text-muted-foreground">Belum bisa dihitung dari data yang ada.</p>
         )}
+        {langkah.hasil !== null && langkah.pembulatan && (
+          <p className="mt-1 text-sm text-muted-foreground">{langkah.pembulatan}</p>
+        )}
       </div>
       {langkah.catatan && (
         <p className="rounded-lg bg-warning-50 px-3 py-2 text-sm text-warning-700">{langkah.catatan}</p>

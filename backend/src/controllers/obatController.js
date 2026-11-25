@@ -8,22 +8,32 @@ const { bangunOrderBy, kondisiExpired } = require('../utils/urutObat');
 // Ekspresi SQL yang HARUS persis sama logikanya dengan hitungStatus() di bawah —
 // dipakai di WHERE clause getAll() supaya filter status difilter di database
 // (sebelum LIMIT/OFFSET), bukan di memori setelah data sudah dipotong per halaman.
+// ROP selalu dibandingkan setelah dibulatkan ke atas (CEIL), sama dengan yang ditampilkan. Hitungan baru sudah
+// bulat (eoqService); CEIL menjaga baris lama yang masih tersimpan desimal tetap konsisten.
 const STATUS_SQL = `(
   CASE
     WHEN o.rop IS NULL OR o.rop <= 0 THEN 'AMAN'
-    WHEN o.stok <= o.rop THEN 'HARUS_REORDER'
-    WHEN o.stok <= o.rop * 1.5 THEN 'MENDEKATI_ROP'
+    WHEN o.stok <= CEIL(o.rop) THEN 'HARUS_REORDER'
+    WHEN o.stok <= CEIL(o.rop) * 1.5 THEN 'MENDEKATI_ROP'
     ELSE 'AMAN'
   END
 )`;
+
+// EOQ dan ROP ditampilkan dan dibandingkan sebagai satuan utuh, dibulatkan ke atas (keputusan Boss 25 Nov 2026).
+// null tetap null (belum bisa dihitung).
+function bulatAtas(nilai) {
+  if (nilai === null || nilai === undefined) return null;
+  const n = parseFloat(nilai);
+  return Number.isFinite(n) ? Math.ceil(n) : null;
+}
 
 function hitungStatus(stok, rop) {
   // ROP <= 0 berarti belum bisa dihitung (demand_tahunan belum ada histori
   // penjualan), bukan ambang reorder di titik 0 unit — perlakukan sama seperti
   // ROP null, jangan tandai HARUS_REORDER/MENDEKATI_ROP untuk semua obat berstok rendah.
   if (rop === null || rop === undefined) return 'AMAN';
-  const ropNum = parseFloat(rop);
-  if (ropNum <= 0) return 'AMAN';
+  const ropNum = bulatAtas(rop);
+  if (!(ropNum > 0)) return 'AMAN';
   if (stok <= ropNum) return 'HARUS_REORDER';
   if (stok <= ropNum * 1.5) return 'MENDEKATI_ROP';
   return 'AMAN';
@@ -32,6 +42,8 @@ function hitungStatus(stok, rop) {
 function formatObat(row) {
   return {
     ...row,
+    eoq: bulatAtas(row.eoq),
+    rop: bulatAtas(row.rop),
     status: hitungStatus(row.stok, row.rop),
     estimasi_habis_hari: hitungEstimasiHabis(row.stok, row.demand_harian),
   };
@@ -424,7 +436,7 @@ const HARI_COVER_SARAN = 7;
 function hitungSaranPesan(o) {
   const spd = parseInt(o.satuan_per_dus) || 1;
   const eoq = parseFloat(o.eoq);
-  const rop = parseFloat(o.rop) || 0;
+  const rop = bulatAtas(o.rop) || 0;
   const demandHarian = parseFloat(o.demand_harian) || 0;
 
   let satuanTerkecil;
@@ -451,13 +463,13 @@ async function getReorderAlert(req, res) {
               s.nama AS supplier_nama, s.whatsapp AS supplier_whatsapp, s.alamat AS supplier_alamat
        FROM obat o
        LEFT JOIN supplier s ON s.id = o.supplier_id
-       WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= o.rop
-       ORDER BY (o.stok - o.rop) ASC`
+       WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= CEIL(o.rop)
+       ORDER BY (o.stok - CEIL(o.rop)) ASC`
     );
     const data = rows.map((o) => ({
       ...o,
-      rop: parseFloat(o.rop),
-      eoq: o.eoq !== null ? parseFloat(o.eoq) : null,
+      rop: bulatAtas(o.rop),
+      eoq: bulatAtas(o.eoq),
       safety_stock: parseFloat(o.safety_stock),
       demand_harian: parseFloat(o.demand_harian) || 0,
       ...hitungSaranPesan(o),

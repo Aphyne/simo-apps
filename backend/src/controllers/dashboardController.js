@@ -56,7 +56,8 @@ async function getSummary(req, res) {
       pool.query('SELECT COUNT(*) FROM obat'),
       // rop > 0: ROP=0 berarti belum ada histori demand (belum valid dihitung),
       // bukan ambang reorder di titik 0 unit — jangan ikut dihitung "perlu reorder".
-      pool.query('SELECT COUNT(*) FROM obat WHERE rop IS NOT NULL AND rop > 0 AND stok <= rop'),
+      // ROP dibandingkan setelah dibulatkan ke atas (CEIL), sama dengan status di obatController.
+      pool.query('SELECT COUNT(*) FROM obat WHERE rop IS NOT NULL AND rop > 0 AND stok <= CEIL(rop)'),
       pool.query(`SELECT COALESCE(SUM(jumlah), 0) AS total FROM barang_keluar WHERE keterangan = 'Penjualan' AND tanggal = (NOW() AT TIME ZONE 'Asia/Jakarta')::date`),
       pool.query(`
         SELECT
@@ -79,11 +80,11 @@ async function getSummary(req, res) {
           AND expired_terdekat <= (NOW() AT TIME ZONE 'Asia/Jakarta')::date + INTERVAL '90 days'
       `),
       pool.query(`
-        SELECT id, kode, nama, satuan, stok, rop, eoq, safety_stock,
-               (stok - rop) AS selisih
+        SELECT id, kode, nama, satuan, stok, CEIL(rop) AS rop, CEIL(eoq) AS eoq, safety_stock,
+               (stok - CEIL(rop)) AS selisih
         FROM obat
-        WHERE rop IS NOT NULL AND rop > 0 AND stok <= rop
-        ORDER BY (stok - rop) ASC
+        WHERE rop IS NOT NULL AND rop > 0 AND stok <= CEIL(rop)
+        ORDER BY (stok - CEIL(rop)) ASC
         LIMIT 5
       `),
       pool.query(`
@@ -114,18 +115,18 @@ async function getSummary(req, res) {
         LIMIT 30
       `),
       pool.query(`
-        SELECT o.id, o.kode, o.nama, o.satuan, o.stok, o.rop, o.eoq,
-               (o.stok - o.rop) AS selisih
+        SELECT o.id, o.kode, o.nama, o.satuan, o.stok, CEIL(o.rop) AS rop, CEIL(o.eoq) AS eoq,
+               (o.stok - CEIL(o.rop)) AS selisih
         FROM obat o
-        WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= o.rop * 1.5
-        ORDER BY (o.stok::float / NULLIF(o.rop, 0)) ASC
+        WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= CEIL(o.rop) * 1.5
+        ORDER BY (o.stok::float / NULLIF(CEIL(o.rop), 0)) ASC
         LIMIT 5
       `),
       // Habis dalam 7 hari = belum habis, tetapi stok dibagi kebutuhan harian <= 7 hari, di antara obat yang perlu reorder
       // (aturan yang sama dengan ubin "Habis dalam 7 hari" di halaman Reorder, supaya tautan ?kondisi=segera cocok).
       pool.query(`
         SELECT COUNT(*) FROM obat
-        WHERE rop IS NOT NULL AND rop > 0 AND stok <= rop
+        WHERE rop IS NOT NULL AND rop > 0 AND stok <= CEIL(rop)
           AND stok > 0 AND demand_harian > 0 AND stok / demand_harian <= 7
       `),
       // Sudah lewat tanggal tetapi masih tercatat berstok: satu baris per BATCH (perkiraan FIFO, dibatasi stok obat sekarang),
