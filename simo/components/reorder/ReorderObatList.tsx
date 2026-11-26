@@ -38,9 +38,13 @@ interface Props {
 
 // Kolom tampil bertahap menurut lebar konten (bukan lebar layar): sidebar 256px muncul mulai lg, dan daftar berdampingan
 // dengan keranjang mulai xl. Selalu: Obat, Saran pesan, Aksi. md: Status (di bawah md ikut di bawah nama). 2xl: Stok dan ROP.
+// Isi per dus: md sampai sebelum xl, lalu 2xl.
 const KOLOM = {
   status: 'hidden md:table-cell',
   stok: 'hidden 2xl:table-cell',
+  // Isi per dus: tampil saat daftar selebar halaman (md sampai sebelum xl) dan lagi di 2xl; disembunyikan di xl saat
+  // daftar berdampingan dengan keranjang supaya kolom tidak berdesakan.
+  isi: 'hidden md:table-cell xl:hidden 2xl:table-cell',
 }
 
 export default function ReorderObatList({
@@ -107,10 +111,32 @@ export default function ReorderObatList({
       kanan: true, kelas: KOLOM.stok, skeleton: 'w-16',
       sel: (it) => (
         <span className="tabular-nums">
-          <span className="block font-medium text-foreground">{formatAngka(it.stok, 0)} / {formatAngka(it.rop, 2)}</span>
+          <span className="block font-medium text-foreground">{formatAngka(it.stok, 0)} / {formatAngka(it.rop, 0)}</span>
           <span className="block text-xs text-muted-foreground">{it.satuan}</span>
         </span>
       ),
+    },
+    {
+      // Isi per dus di kiri Saran pesan, supaya "N dus" bisa langsung dibaca dalam satuan obat (permintaan Boss 26 Nov 2026).
+      // Obat yang tidak dipesan per dus (isi 1) ditulis "-" karena sarannya sudah dalam satuan obat.
+      id: 'isi', judul: 'Isi per dus', kanan: true, kelas: KOLOM.isi, skeleton: 'w-14',
+      sel: (it) => {
+        const isi = Number(it.satuan_per_dus) || 1
+        if (isi <= 1) {
+          return (
+            <span className="text-muted-foreground">
+              <span aria-hidden="true">-</span>
+              <span className="sr-only">Tidak dipesan per dus</span>
+            </span>
+          )
+        }
+        return (
+          <span className="tabular-nums">
+            <span className="block font-medium text-foreground">{formatAngka(isi, 0)}</span>
+            <span className="block text-xs text-muted-foreground">{it.satuan}</span>
+          </span>
+        )
+      },
     },
     {
       id: 'saran', judul: 'Saran pesan', kanan: true, skeleton: 'w-14',
