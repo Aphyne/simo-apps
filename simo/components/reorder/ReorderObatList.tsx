@@ -45,6 +45,9 @@ const KOLOM = {
   // Isi per dus: tampil saat daftar selebar halaman (md sampai sebelum xl) dan lagi di 2xl; disembunyikan di xl saat
   // daftar berdampingan dengan keranjang supaya kolom tidak berdesakan.
   isi: 'hidden md:table-cell xl:hidden 2xl:table-cell',
+  // Kolom Obat boleh turun baris (sel tabel bawaan whitespace-nowrap), supaya kode dan supplier yang panjang tidak
+  // melebarkan tabel melewati panel.
+  obat: 'whitespace-normal min-w-40',
 }
 
 export default function ReorderObatList({
@@ -76,7 +79,7 @@ export default function ReorderObatList({
 
   const kolom: KolomData<ReorderAlertItem>[] = [
     {
-      id: 'obat', judul: 'Obat', skeleton: ['w-40', 'w-24'],
+      id: 'obat', judul: 'Obat', kelas: KOLOM.obat, skeleton: ['w-40', 'w-24'],
       sel: (it) => {
         const supplier = it.supplier_nama ?? it.nama_supplier
         return (
@@ -118,18 +121,10 @@ export default function ReorderObatList({
     },
     {
       // Isi per dus di kiri Saran pesan, supaya "N dus" bisa langsung dibaca dalam satuan obat (permintaan Boss 26 Nov 2026).
-      // Obat yang tidak dipesan per dus (isi 1) ditulis "-" karena sarannya sudah dalam satuan obat.
+      // Selalu tampil apa adanya, termasuk isi 1 (mis. 1 tube per dus), sesuai data obat.
       id: 'isi', judul: 'Isi per dus', kanan: true, kelas: KOLOM.isi, skeleton: 'w-14',
       sel: (it) => {
         const isi = Number(it.satuan_per_dus) || 1
-        if (isi <= 1) {
-          return (
-            <span className="text-muted-foreground">
-              <span aria-hidden="true">-</span>
-              <span className="sr-only">Tidak dipesan per dus</span>
-            </span>
-          )
-        }
         return (
           <span className="tabular-nums">
             <span className="block font-medium text-foreground">{formatAngka(isi, 0)}</span>

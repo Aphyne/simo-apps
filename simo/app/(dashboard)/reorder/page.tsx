@@ -200,8 +200,10 @@ function IsiReorderPage() {
         </div>
       )}
 
+      {/* Daftar dan keranjang berdampingan mulai xl (7/5). Di 2xl daftar mendapat 8/12 karena memuat dua kolom tambahan
+          (Stok / ROP dan Isi per dus); halaman dibatasi max-w-7xl, jadi lebarnya tidak ikut bertambah di layar lebar. */}
       <div className="col-span-12 grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <div className="xl:col-span-7">
+        <div className="xl:col-span-7 2xl:col-span-8">
           <ReorderObatList
             items={tampil}
             filters={filters}
@@ -220,7 +222,7 @@ function IsiReorderPage() {
             jumlahKeranjang={isiKeranjang.length}
           />
         </div>
-        <div className="xl:col-span-5">
+        <div className="xl:col-span-5 2xl:col-span-4">
           <ReorderKeranjang
             isi={isiKeranjang}
             apotek={apotek}
