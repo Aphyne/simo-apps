@@ -9,7 +9,7 @@ export default function AnalisisCatatan({ ringkasan: r }: { ringkasan: AnalisisR
   const alasan = [
     t.tanpa_biaya_pesan > 0 && `${t.tanpa_biaya_pesan} belum punya biaya pesan`,
     t.tanpa_biaya_simpan > 0 && `${t.tanpa_biaya_simpan} belum punya biaya simpan`,
-    t.tanpa_demand > 0 && `${t.tanpa_demand} tanpa penjualan 30 hari terakhir`,
+    t.tanpa_demand > 0 && `${t.tanpa_demand} tanpa penjualan sejak tanggal cut-off`,
     t.tanpa_isi_dus > 0 && `${t.tanpa_isi_dus} belum punya isi per dus`,
   ].filter(Boolean)
 
@@ -42,7 +42,7 @@ export default function AnalisisCatatan({ ringkasan: r }: { ringkasan: AnalisisR
         <li className="flex items-start gap-2.5">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
-            <b className="font-semibold text-foreground">Kebutuhan per tahun (D)</b> = rata-rata penjualan harian selama 30 hari terakhir × 365. Ini proyeksi dari 30 hari, bukan data setahun penuh, sehingga pola musiman belum tercakup.
+            <b className="font-semibold text-foreground">Kebutuhan per tahun (D)</b> = rata-rata penjualan harian sejak tanggal cut-off (paling lama 365 hari terakhir) × 365. Selama datanya belum setahun penuh, ini proyeksi, sehingga pola musiman belum tercakup.
           </span>
         </li>
         <li className="flex items-start gap-2.5">

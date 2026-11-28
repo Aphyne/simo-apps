@@ -77,7 +77,7 @@ export default function AnalisisTable({ detail, ringkasan, isLoading, isError, o
       isError={isError}
       onCobaLagi={onCobaLagi}
       judulGagal="Perbandingan belum bisa dimuat"
-      kosong={{ judul: 'Belum ada obat yang bisa dibandingkan', keterangan: 'Lengkapi biaya pesan, biaya simpan, isi per dus, dan pastikan ada penjualan 30 hari terakhir pada data obat.' }}
+      kosong={{ judul: 'Belum ada obat yang bisa dibandingkan', keterangan: 'Lengkapi biaya pesan, biaya simpan, isi per dus, dan pastikan ada penjualan sejak tanggal cut-off pada data obat.' }}
       footer={
         ringkasan
           ? [{

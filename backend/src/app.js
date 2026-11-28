@@ -107,4 +107,5 @@ process.on('uncaughtException', (err) => {
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`SIMO Backend berjalan di http://localhost:${PORT}`);
+  require('./jobs/hitungUlangHarian').mulaiHitungUlangHarian();
 });

@@ -10,11 +10,16 @@ const { bangunOrderBy, kondisiExpired } = require('../utils/urutObat');
 // (sebelum LIMIT/OFFSET), bukan di memori setelah data sudah dipotong per halaman.
 // ROP selalu dibandingkan setelah dibulatkan ke atas (CEIL), sama dengan yang ditampilkan. Hitungan baru sudah
 // bulat (eoqService); CEIL menjaga baris lama yang masih tersimpan desimal tetap konsisten.
+// Lead time efektif = lead time supplier bila ada, lalu lead time obat, minimal 1 hari (sama dengan hitungUlangObat).
+const LT_SQL = `GREATEST(1, COALESCE((SELECT s_lt.lead_time_avg FROM supplier s_lt WHERE s_lt.id = o.supplier_id), o.lead_time, 1))`;
+// Mendekati ROP = stok akan menyentuh ROP dalam satu kali lead time: stok <= ROP + ceil(d x LT)
+// (keputusan Boss 28 Nov 2026, menggantikan 1,5 x ROP). Kedua suku dibulatkan ke atas, sama dengan tampilan.
+const BATAS_KUNING_SQL = `(CEIL(o.rop) + CEIL(ROUND((COALESCE(o.demand_harian, 0) * ${LT_SQL})::numeric, 2)))`;
 const STATUS_SQL = `(
   CASE
     WHEN o.rop IS NULL OR o.rop <= 0 THEN 'AMAN'
     WHEN o.stok <= CEIL(o.rop) THEN 'HARUS_REORDER'
-    WHEN o.stok <= CEIL(o.rop) * 1.5 THEN 'MENDEKATI_ROP'
+    WHEN o.stok <= ${BATAS_KUNING_SQL} THEN 'MENDEKATI_ROP'
     ELSE 'AMAN'
   END
 )`;
@@ -27,7 +32,14 @@ function bulatAtas(nilai) {
   return Number.isFinite(n) ? Math.ceil(n) : null;
 }
 
-function hitungStatus(stok, rop) {
+// Batas kuning = ROP bulat + ceil(d x LT). Dibulatkan dulu ke 2 desimal (galat pecahan biner).
+function batasKuning(ropNum, demand_harian, lead_time) {
+  const d = parseFloat(demand_harian) || 0;
+  const lt = normalisasiLeadTime(lead_time);
+  return ropNum + Math.ceil(parseFloat((d * lt).toFixed(2)));
+}
+
+function hitungStatus(stok, rop, demand_harian, lead_time) {
   // ROP <= 0 berarti belum bisa dihitung (demand_tahunan belum ada histori
   // penjualan), bukan ambang reorder di titik 0 unit — perlakukan sama seperti
   // ROP null, jangan tandai HARUS_REORDER/MENDEKATI_ROP untuk semua obat berstok rendah.
@@ -35,7 +47,7 @@ function hitungStatus(stok, rop) {
   const ropNum = bulatAtas(rop);
   if (!(ropNum > 0)) return 'AMAN';
   if (stok <= ropNum) return 'HARUS_REORDER';
-  if (stok <= ropNum * 1.5) return 'MENDEKATI_ROP';
+  if (stok <= batasKuning(ropNum, demand_harian, lead_time)) return 'MENDEKATI_ROP';
   return 'AMAN';
 }
 
@@ -44,7 +56,7 @@ function formatObat(row) {
     ...row,
     eoq: bulatAtas(row.eoq),
     rop: bulatAtas(row.rop),
-    status: hitungStatus(row.stok, row.rop),
+    status: hitungStatus(row.stok, row.rop, row.demand_harian, row.lead_time_efektif ?? row.lead_time),
     estimasi_habis_hari: hitungEstimasiHabis(row.stok, row.demand_harian),
   };
 }
@@ -90,7 +102,7 @@ async function getAll(req, res) {
 
     params.push(limit, offset);
     const { rows } = await pool.query(
-      `SELECT o.* FROM obat o ${where} ORDER BY ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      `SELECT o.*, ${LT_SQL} AS lead_time_efektif FROM obat o ${where} ORDER BY ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );
 
@@ -338,7 +350,7 @@ async function create(req, res) {
       );
     }
 
-    const { rows: final } = await pool.query('SELECT * FROM obat WHERE id = $1', [obatBaru.id]);
+    const { rows: final } = await pool.query(`SELECT o.*, ${LT_SQL} AS lead_time_efektif FROM obat o WHERE o.id = $1`, [obatBaru.id]);
     res.status(201).json({ success: true, data: formatObat(final[0]), message: 'Obat berhasil ditambahkan' });
   } catch (err) {
     console.error('obat.create:', err);
@@ -574,4 +586,4 @@ async function getBatchSummary(req, res) {
   }
 }
 
-module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary, getOpsi };
+module.exports = { getAll, getById, create, update, remove, getReorderAlert, getPerhitungan, hitungUlang, getBatchSummary, getOpsi, BATAS_KUNING_SQL };

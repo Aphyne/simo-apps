@@ -1,7 +1,7 @@
 const pool = require('../db/pool');
 const { bacaPaginasi, metaPaginasi } = require('../utils/paginasi');
 const { hitungUlangObat, updateExpiredTerdekat } = require('../services/stokService');
-const { hitungDemandDariRiwayat } = require('../services/demandService');
+const { perbaruiDemandObat } = require('../services/demandService');
 const { HttpError, bulatPositif, idValid, tanggalValid, balasHttpError } = require('../utils/validasi');
 
 const KETERANGAN_VALID = ['Penjualan', 'Retur', 'Rusak', 'Kedaluarsa', 'Lainnya'];
@@ -153,13 +153,7 @@ async function create(req, res) {
   let obatUpdated = null;
   try {
     if (keterangan === 'Penjualan') {
-      const demand = await hitungDemandDariRiwayat(obatId);
-      if (demand) {
-        await pool.query(
-          'UPDATE obat SET demand_harian = $1, demand_tahunan = $2, std_dev_demand = $3 WHERE id = $4',
-          [demand.demand_harian, demand.demand_tahunan, demand.std_dev_demand, obatId]
-        );
-      }
+      await perbaruiDemandObat(obatId);
     }
     await updateExpiredTerdekat(obatId);
     obatUpdated = await hitungUlangObat(obatId);
@@ -242,13 +236,7 @@ async function update(req, res) {
     client.release();
 
     if (keterangan === 'Penjualan' || old.keterangan === 'Penjualan') {
-      const demand = await hitungDemandDariRiwayat(obat.id);
-      if (demand) {
-        await pool.query(
-          'UPDATE obat SET demand_harian = $1, demand_tahunan = $2, std_dev_demand = $3 WHERE id = $4',
-          [demand.demand_harian, demand.demand_tahunan, demand.std_dev_demand, obat.id]
-        );
-      }
+      await perbaruiDemandObat(obat.id);
     }
     await updateExpiredTerdekat(obat.id);
     const obatUpdated = await hitungUlangObat(obat.id);
@@ -300,13 +288,7 @@ async function remove(req, res) {
     client.release();
 
     if (old.keterangan === 'Penjualan') {
-      const demand = await hitungDemandDariRiwayat(obat.id);
-      if (demand) {
-        await pool.query(
-          'UPDATE obat SET demand_harian = $1, demand_tahunan = $2, std_dev_demand = $3 WHERE id = $4',
-          [demand.demand_harian, demand.demand_tahunan, demand.std_dev_demand, obat.id]
-        );
-      }
+      await perbaruiDemandObat(obat.id);
     }
     await updateExpiredTerdekat(obat.id);
     await hitungUlangObat(obat.id);
@@ -422,13 +404,7 @@ async function createBulk(req, res) {
   for (const h of hasil) {
     try {
       if (keterangan === 'Penjualan') {
-        const demand = await hitungDemandDariRiwayat(h.obat_id);
-        if (demand) {
-          await pool.query(
-            'UPDATE obat SET demand_harian = $1, demand_tahunan = $2, std_dev_demand = $3 WHERE id = $4',
-            [demand.demand_harian, demand.demand_tahunan, demand.std_dev_demand, h.obat_id]
-          );
-        }
+        await perbaruiDemandObat(h.obat_id);
       }
       await updateExpiredTerdekat(h.obat_id);
       const obatUpdated = await hitungUlangObat(h.obat_id);

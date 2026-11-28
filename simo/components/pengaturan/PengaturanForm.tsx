@@ -24,6 +24,7 @@ type FormValues = {
   kota_apotek: string
   default_service_level: string
   default_lead_time: string
+  tanggal_cutoff: string
   asumsi_dus_tradisional: string
   threshold_expired_hari: string
 }
@@ -31,7 +32,7 @@ type FormValues = {
 const MAKS_TEKS = 255
 const URUTAN_FIELD: (keyof FormValues)[] = [
   'nama_apotek', 'alamat_apotek', 'nama_apj', 'nomor_sia', 'nomor_sipa_apj', 'kota_apotek',
-  'default_service_level', 'default_lead_time', 'asumsi_dus_tradisional', 'threshold_expired_hari',
+  'default_service_level', 'default_lead_time', 'tanggal_cutoff', 'asumsi_dus_tradisional', 'threshold_expired_hari',
 ]
 
 function bentukForm(data: PengaturanData): FormValues {
@@ -45,6 +46,7 @@ function bentukForm(data: PengaturanData): FormValues {
     kota_apotek: v('kota_apotek'),
     default_service_level: v('default_service_level', '95'),
     default_lead_time: v('default_lead_time', '1'),
+    tanggal_cutoff: v('tanggal_cutoff'),
     asumsi_dus_tradisional: v('asumsi_dus_tradisional', '2'),
     threshold_expired_hari: v('threshold_expired_hari', '90'),
   }
@@ -57,6 +59,13 @@ const bulat = (min: number, maks: number, nama: string) => (v: string) => {
   if (n < min) return `${nama} minimal ${min}`
   if (n > maks) return `${nama} maksimal ${maks}`
   return true
+}
+// Tanggal hari ini di WIB (YYYY-MM-DD), batas atas cut-off (sama dengan backend).
+const hariIniWib = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+const cekCutoff = (v: string) => {
+  if (v.trim() === '') return true
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return 'Tanggal cut-off tidak valid'
+  return v <= hariIniWib() || 'Tanggal cut-off tidak boleh setelah hari ini'
 }
 const teksPanjang = (v: string) => v.length <= MAKS_TEKS || `Maksimal ${MAKS_TEKS} karakter`
 
@@ -79,6 +88,8 @@ export default function PengaturanForm({ data }: Props) {
     formState: { errors, isDirty, isSubmitting },
   } = useForm<FormValues>({ shouldFocusError: false, defaultValues: nilaiServer })
   const serviceLevel = useWatch({ control, name: 'default_service_level' })
+  const cutoff = useWatch({ control, name: 'tanggal_cutoff' })
+  const adaCutoff = 'tanggal_cutoff' in data
 
   // Peramban memperingatkan bila halaman ditutup atau dimuat ulang saat ada perubahan yang belum disimpan.
   useEffect(() => {
@@ -94,7 +105,10 @@ export default function PengaturanForm({ data }: Props) {
   async function simpan(values: FormValues) {
     clearErrors('root.server')
     try {
-      await update.mutateAsync(values)
+      // Basis data yang belum diberi migrasi 026 belum punya kunci tanggal_cutoff: jangan dikirim (ditolak server).
+      const kirim: Partial<FormValues> = { ...values }
+      if (!adaCutoff) delete kirim.tanggal_cutoff
+      await update.mutateAsync(kirim as Record<string, string>)
       reset(values) // yang baru disimpan menjadi nilai awal: tidak lagi dianggap berubah
     } catch (err) {
       const galat = err as { response?: { data?: { message?: string } } }
@@ -163,7 +177,7 @@ export default function PengaturanForm({ data }: Props) {
       </section>
 
       <section className="rounded-2xl bg-card p-5 sm:p-6">
-        <FormSection title="Nilai bawaan perhitungan" description="Dipakai untuk obat yang baru ditambahkan. Permintaan dihitung otomatis dari penjualan 30 hari terakhir.">
+        <FormSection title="Nilai bawaan perhitungan" description="Service level dan lead time dipakai untuk obat yang baru ditambahkan. Permintaan dihitung otomatis dari penjualan sejak tanggal cut-off, paling lama 365 hari terakhir.">
           <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="default_service_level">
@@ -197,6 +211,24 @@ export default function PengaturanForm({ data }: Props) {
                 <FieldDescription id="default_lead_time-hint">Hari dari pesan sampai barang datang.</FieldDescription>
               )}
             </Field>
+
+            {adaCutoff && <Field data-invalid={!!errors.tanggal_cutoff}>
+              <FieldLabel htmlFor="tanggal_cutoff">Tanggal cut-off data penjualan</FieldLabel>
+              <Input
+                id="tanggal_cutoff" type="date" max={hariIniWib()} className="h-10 rounded-xl tabular-nums"
+                aria-invalid={!!errors.tanggal_cutoff} aria-describedby={errors.tanggal_cutoff ? 'tanggal_cutoff-error' : 'tanggal_cutoff-hint'}
+                {...register('tanggal_cutoff', { validate: (v) => !adaCutoff || cekCutoff(v) })}
+              />
+              {errors.tanggal_cutoff ? (
+                <FieldError id="tanggal_cutoff-error">{errors.tanggal_cutoff.message}</FieldError>
+              ) : (
+                <FieldDescription id="tanggal_cutoff-hint">
+                  {cutoff
+                    ? 'Penjualan sebelum tanggal ini tidak dihitung. Menyimpan perubahan menghitung ulang EOQ dan ROP semua obat.'
+                    : <span className="font-medium text-foreground">Belum diisi: sementara dipakai penjualan 365 hari terakhir.</span>}
+                </FieldDescription>
+              )}
+            </Field>}
 
           </div>
         </FormSection>

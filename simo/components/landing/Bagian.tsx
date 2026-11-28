@@ -294,7 +294,7 @@ export function BagianDemo() {
 
 const LANGKAH = [
   { judul: 'Catat stok masuk dan keluar', isi: 'Obat datang dicatat dari faktur supplier; obat terjual dicatat di stok keluar. Cukup beberapa klik.' },
-  { judul: 'SIMO menghitung otomatis', isi: 'Dari penjualan 30 hari terakhir dan lama pengiriman supplier, SIMO menghitung titik pesan ulang dan jumlah pesan.' },
+  { judul: 'SIMO menghitung otomatis', isi: 'Dari riwayat penjualan (sampai 12 bulan terakhir) dan lama pengiriman supplier, SIMO menghitung titik pesan ulang dan jumlah pesan.' },
   { judul: 'Pesan tepat waktu', isi: 'Dashboard dan lonceng memberi tahu obat yang perlu dipesan, lengkap dengan saran jumlah dan Surat Pesanannya.' },
 ] as const
 
@@ -328,7 +328,7 @@ const TANYA = [
   { t: 'Apa itu SIMO?', j: 'SIMO (Sistem Informasi Manajemen Persediaan Obat) membantu apotek mencatat stok obat dan memberi tahu kapan serta berapa banyak obat harus dipesan ulang.' },
   { t: 'Apakah perlu memasang aplikasi?', j: 'Tidak. SIMO dibuka lewat browser di komputer atau HP. Cukup masuk dengan akun Anda.' },
   { t: 'Apa itu ROP dan EOQ?', j: 'ROP (titik pesan ulang) adalah batas stok untuk mulai memesan, supaya obat tidak habis sebelum pesanan datang. EOQ adalah jumlah sekali pesan yang membuat biaya pesan dan biaya simpan paling hemat. Keduanya dihitung otomatis, dan rumus serta angkanya bisa dilihat di halaman detail obat.' },
-  { t: 'Dari mana SIMO tahu obat harus dipesan?', j: 'Dari rata-rata penjualan obat itu dalam 30 hari terakhir, lama pengiriman supplier, dan stok pengaman. Semakin rutin stok keluar dicatat, semakin tepat perhitungannya.' },
+  { t: 'Dari mana SIMO tahu obat harus dipesan?', j: 'Dari rata-rata penjualan harian obat itu (sampai 12 bulan terakhir), lama pengiriman supplier, dan stok pengaman. Semakin rutin stok keluar dicatat, semakin tepat perhitungannya.' },
   { t: 'Siapa saja yang bisa memakai SIMO?', j: 'Admin (pemilik atau apoteker) mengatur obat, supplier, pemesanan, laporan, dan akun. Staf mencatat stok masuk dan stok keluar, tanpa melihat angka uang.' },
   { t: 'Bagaimana cara mendapatkan akun?', j: 'Akun dibuat oleh admin apotek dari halaman Manajemen User. Setelah itu masuk dengan username dan password, atau dengan akun Google yang sudah didaftarkan admin.' },
   { t: 'Apakah laporan bisa dicetak?', j: 'Bisa. Laporan stok, kartu stok, stok masuk, stok keluar, dan kedaluwarsa bisa dipratinjau lalu diunduh sebagai PDF atau Excel.' },

@@ -25,7 +25,8 @@ export function useUpdatePengaturan() {
       await api.put('/pengaturan', payload)
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pengaturan'] })
+      // Cut-off bisa mengubah EOQ/ROP semua obat, jadi semua data dimuat ulang (bukan hanya pengaturan).
+      qc.invalidateQueries()
       toast.success('Pengaturan berhasil disimpan')
     },
     onError: () => toast.error('Gagal menyimpan pengaturan'),

@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { BATAS_KUNING_SQL } = require('./obatController');
 
 // Perkiraan sisa stok per batch (FIFO menurut tanggal kedaluwarsa: yang paling cepat expired dianggap keluar lebih dulu).
 // Baris "Riwayat faktur" tidak punya batch dan tidak menambah stok, jadi dikecualikan. Dipakai daftar "akan expired" dan "sudah lewat".
@@ -118,7 +119,7 @@ async function getSummary(req, res) {
         SELECT o.id, o.kode, o.nama, o.satuan, o.stok, CEIL(o.rop) AS rop, CEIL(o.eoq) AS eoq,
                (o.stok - CEIL(o.rop)) AS selisih
         FROM obat o
-        WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= CEIL(o.rop) * 1.5
+        WHERE o.rop IS NOT NULL AND o.rop > 0 AND o.stok <= ${BATAS_KUNING_SQL}
         ORDER BY (o.stok::float / NULLIF(CEIL(o.rop), 0)) ASC
         LIMIT 5
       `),

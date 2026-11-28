@@ -27,7 +27,27 @@ async function hitungUlangObat(obat_id) {
     [hasil.eoq, hasil.safety_stock, hasil.rop, hasil.total_biaya, obat_id]
   );
 
-  return updated[0];
+  // lead_time_efektif dipakai aturan status "Mendekati ROP" (stok <= ROP + d x LT).
+  return { ...updated[0], lead_time_efektif: obatForCalc.lead_time };
+}
+
+// Hitung ulang demand (jendela cut-off) + EOQ/SS/ROP untuk SEMUA obat. Dipanggil harian dan saat cut-off
+// diubah, supaya jendela yang bergeser tidak meninggalkan angka basi. Gagal satu obat tidak menghentikan yang lain.
+async function hitungUlangSemua() {
+  const { ambilJendela, perbaruiDemandObat } = require('./demandService');
+  const jendela = await ambilJendela();
+  const { rows } = await pool.query('SELECT id FROM obat ORDER BY id');
+  let gagal = 0;
+  for (const { id } of rows) {
+    try {
+      await perbaruiDemandObat(id, jendela);
+      await hitungUlangObat(id);
+    } catch (err) {
+      gagal++;
+      console.error(`hitungUlangSemua obat ${id}:`, err.message);
+    }
+  }
+  return { jumlah: rows.length, gagal, jendela };
 }
 
 // Update expired_terdekat → batch terdekat yang masih punya estimasi sisa (FIFO)
@@ -67,4 +87,4 @@ async function updateExpiredTerdekat(obat_id) {
   );
 }
 
-module.exports = { hitungUlangObat, updateExpiredTerdekat };
+module.exports = { hitungUlangObat, hitungUlangSemua, updateExpiredTerdekat };
