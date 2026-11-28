@@ -133,7 +133,7 @@ export default function RumusDisplay({ data, satuan = 'unit' }: { data: DetailPe
   const adaKosong = [langkah_eoq.hasil, langkah_safety_stock.hasil, langkah_tc.hasil].some((h) => h === null)
 
   const pD = { label: 'Penjualan setahun (D)', nilai: `${formatAngka(input.D, 0)} ${satuan}/tahun`, arti: 'Perkiraan jumlah obat yang terjual dalam setahun, dihitung dari penjualan harian.' }
-  const pdHarian = { label: 'Penjualan per hari (d)', nilai: `${formatAngka(input.demand_harian, 2)} ${satuan}/hari`, arti: 'Rata-rata obat yang terjual per hari, dari penjualan 30 hari terakhir.' }
+  const pdHarian = { label: 'Penjualan per hari (d)', nilai: `${formatAngka(input.demand_harian, 2)} ${satuan}/hari`, arti: 'Rata-rata obat yang terjual per hari, dihitung dari penjualan sejak tanggal cut-off (paling lama 365 hari terakhir).' }
   const pSigma = { label: 'Naik turun penjualan (standar deviasi, σ)', nilai: `${formatAngka(input.sigma, 4)} ${satuan}/hari`, arti: 'Standar deviasi: seberapa jauh penjualan harian biasanya menyimpang dari rata-ratanya. Makin besar, makin tidak menentu penjualannya, sehingga butuh stok pengaman lebih banyak.' }
   const pS = { label: 'Biaya sekali pesan (S)', nilai: input.S > 0 ? formatRupiah(input.S) : 'Belum diisi', arti: 'Biaya setiap kali memesan ke supplier. Terisi dari Barang masuk: biaya per faktur dibagi rata ke obat yang ada di faktur itu.' }
   const pH = { label: 'Biaya simpan (H)', nilai: input.H > 0 ? `${formatRupiah(input.H)}/${satuan}/tahun` : 'Belum diisi', arti: 'Biaya menyimpan satu satuan obat selama setahun. Bawaannya 20% dari harga beli.' }
